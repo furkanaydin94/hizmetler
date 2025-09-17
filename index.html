@@ -20,6 +20,7 @@
             --warning-bg: #fffbe6;
             --warning-border: #ffe58f;
             --warning-text: #8a6d3b;
+            --error-color: #e53e3e;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -41,13 +42,13 @@
         .header-title { font-size: 1.5rem; font-weight: 600; }
         .card {
             background-color: var(--background-card);
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: 16px;
             border: 1px solid var(--border-color);
             box-shadow: 0 8px 25px var(--shadow-color);
-            margin-bottom: 2rem;
+            margin-bottom: 2rem; 
         }
-        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); font-size: 0.9rem; }
         .form-input, .form-select, .form-textarea {
             width: 100%;
             padding: 12px;
@@ -58,6 +59,10 @@
             color: var(--text-primary);
             transition: all 0.2s ease;
         }
+        .form-input.is-invalid, .form-select.is-invalid, .form-textarea.is-invalid {
+            border-color: var(--error-color);
+        }
+        .form-input::placeholder { color: #adb5bd; }
         .form-input:focus, .form-select:focus, .form-textarea:focus {
             outline: none;
             border-color: var(--primary-accent);
@@ -91,10 +96,12 @@
         }
         .progress-bar { display: flex; justify-content: space-between; align-items: flex-start; }
         .progress-step { flex: 1; text-align: center; position: relative; }
+        .progress-step.clickable { cursor: pointer; }
+        .progress-step.clickable:hover .step-circle { transform: scale(1.1); }
         .progress-step .step-circle {
             width: 32px; height: 32px;
             border-radius: 50%;
-            background-color: var(--background-body);
+            background-color: #fff;
             border: 2px solid var(--border-color);
             color: var(--text-secondary);
             margin: 0 auto 8px;
@@ -102,27 +109,23 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
-        .progress-step .step-label { font-size: 0.8rem; color: var(--text-secondary); }
+        .progress-step .step-label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;}
         .progress-step.active .step-circle { border-color: var(--primary-accent); background-color: var(--primary-accent); color: white; }
         .progress-step.active .step-label { color: var(--text-primary); font-weight: 600; }
+        .progress-step.completed .step-circle { border-color: #28a745; background-color: #28a745; color: white; }
         .progress-connector {
             flex-grow: 1;
             height: 2px;
             background-color: var(--border-color);
-            margin: 0 -1px; /* Overlap slightly */
+            margin: 0 -1px;
             position: relative;
             top: 16px;
         }
-        .progress-step.active ~ .progress-connector { background-color: var(--border-color); }
-        .progress-step.active .progress-connector-fill {
-             height: 100%;
-             width: 100%;
-             background: var(--primary-accent);
-        }
+        .progress-connector.completed { background-color: #28a745; }
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
         .data-table th { font-weight: 600; color: var(--text-secondary); background-color: #f8f9fa; }
-        .data-table tbody tr:hover { background-color: #f8f9fa; }
+        .data-table tbody tr:hover { background-color: #f1f3f5; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -139,15 +142,15 @@
 
     <main class="container">
         <div class="card">
-            <h2 class="text-2xl font-bold text-center mb-2">Hizmet Adı</h2>
-            <p class="text-center text-gray-500 mb-6">Hizmetin adını giriniz.</p>
-            <div class="max-w-xl mx-auto">
-                <input type="text" id="serviceName" class="form-input text-center" placeholder="Örn: İstanbulkart Destek Paketi">
+            <h2 class="text-2xl font-bold mb-1">Hizmet Adı</h2>
+            <p class="text-secondary mb-4">Lütfen üzerine çalıştığınız hizmetin adını giriniz.</p>
+            <div class="max-w-xl">
+                <input type="text" id="serviceName" class="form-input" placeholder="Örn: İstanbulkart Destek Paketi">
             </div>
         </div>
 
         <div class="card">
-            <div id="progress-bar" class="progress-bar mb-8"></div>
+            <div id="progress-bar" class="progress-bar mb-10"></div>
             <div id="wizard">
                 <h2 id="stage-title" class="text-2xl font-bold text-center text-primary mb-2"></h2>
                 <p id="stage-description" class="text-center text-sm p-3 rounded-lg mb-6 hidden" style="background-color: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-text);"></p>
@@ -161,7 +164,7 @@
                 </div>
 
                 <form id="criterion-form" class="hidden" style="border-top: 1px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
-                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.75rem;">
                         <div>
                             <label for="source" class="form-label">1. Bilginin Kaynağı</label>
                             <select id="source" class="form-select">
@@ -289,7 +292,10 @@
                     
                     const step = document.createElement('div');
                     step.className = 'progress-step';
+                    step.dataset.index = index;
                     if(isCurrent) step.classList.add('active');
+                    if(isCompleted) step.classList.add('completed');
+                    if(isCompleted || isCurrent) step.classList.add('clickable');
                     
                     step.innerHTML = `<div class="step-circle">${isCompleted ? '&#10003;' : index + 1}</div><div class="step-label">${stage}</div>`;
                     DOMElements.progressBar.appendChild(step);
@@ -297,11 +303,7 @@
                     if (index < state.stages.length - 1) {
                          const connector = document.createElement('div');
                          connector.className = 'progress-connector';
-                         if(isCurrent || isCompleted) {
-                             const fill = document.createElement('div');
-                             fill.className = 'progress-connector-fill';
-                             connector.appendChild(fill);
-                         }
+                         if(isCompleted) connector.classList.add('completed');
                          DOMElements.progressBar.appendChild(connector);
                     }
                 });
@@ -331,6 +333,7 @@
                     DOMElements.criterionCheckSection.innerHTML = '<p class="text-lg" style="color:#28a745;">Veri toplama işlemi başarıyla tamamlandı. Aşağıdaki tablodan tüm kriterleri kontrol edebilir ve Excel\'e aktarabilirsiniz.</p>';
                     DOMElements.criterionForm.classList.add('hidden');
                     DOMElements.stageDescription.classList.add('hidden');
+                    updateProgressBar();
                     return;
                 }
                 DOMElements.stageTitle.textContent = `Aşama: ${state.stages[state.currentStageIndex]}`;
@@ -373,27 +376,53 @@
             };
 
             const saveCriterion = () => {
-                state.serviceName = DOMElements.serviceNameInput.value.trim();
-                if (!state.serviceName) {
-                    alert('Lütfen önce bir hizmet adı girin.');
-                    DOMElements.serviceNameInput.focus();
+                const showError = (element, message) => {
+                    alert(message);
+                    document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(el => el.classList.remove('is-invalid'));
+                    element.classList.add('is-invalid');
+                    element.focus();
+                };
+
+                // Clear previous errors
+                document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(el => el.classList.remove('is-invalid'));
+
+                if (!DOMElements.serviceNameInput.value.trim()) {
+                    showError(DOMElements.serviceNameInput, 'Lütfen önce bir hizmet adı girin.');
                     return;
                 }
-                const questionInput = document.getElementById('question');
-                if(!questionInput.value.trim()){
-                    alert('Lütfen "Kriter Sorusu" alanını doldurun.');
-                    questionInput.focus();
-                    return;
+                 state.serviceName = DOMElements.serviceNameInput.value.trim();
+
+                const fieldsToValidate = [
+                    { id: 'automation', name: 'Hangi Otomasyon?' },
+                    { id: 'automation-stage', name: 'Otomasyonun Hangi Aşaması?' },
+                    { id: 'question', name: 'Hangi Soru ile Bilgi Alınıyor?' },
+                    { id: 'example-answer', name: 'Örnek Yanıt Girişi' }
+                ];
+                
+                const conditionType = document.querySelector('input[name="condition-type"]:checked').value;
+                if (conditionType === 'precondition') {
+                    fieldsToValidate.push({ id: 'condition-definition', name: 'Ön Koşulu Tanımlayın' });
+                } else {
+                    fieldsToValidate.push({ id: 'condition-effect', name: 'Ek Kriterin Etkisini Tanımlayın' });
                 }
+
+                for (const field of fieldsToValidate) {
+                    const element = document.getElementById(field.id);
+                    if (!element.value.trim()) {
+                        showError(element, `Lütfen "${field.name}" alanını doldurun.`);
+                        return;
+                    }
+                }
+                
                 const currentStageName = state.stages[state.currentStageIndex];
                 const criterion = {
                     serviceName: state.serviceName, stage: currentStageName,
                     source: document.getElementById('source').value, automation: document.getElementById('automation').value,
-                    automationStage: document.getElementById('automation-stage').value, question: questionInput.value,
+                    automationStage: document.getElementById('automation-stage').value, question: document.getElementById('question').value,
                     answerType: document.getElementById('answer-type').value, scope: document.getElementById('scope').value,
                     exampleAnswer: document.getElementById('example-answer').value,
-                    conditionType: document.querySelector('input[name="condition-type"]:checked').value,
-                    conditionDetail: document.querySelector('input[name="condition-type"]:checked').value === 'precondition' ? document.getElementById('condition-definition').value : document.getElementById('condition-effect').value,
+                    conditionType: conditionType,
+                    conditionDetail: conditionType === 'precondition' ? document.getElementById('condition-definition').value : document.getElementById('condition-effect').value,
                     bilgiEdinmeAsamasi: currentStageName === 'EVRAK KONTROL' ? document.getElementById('bilgi-edinme-asama').value : null
                 };
                 state.criteriaData.push(criterion);
@@ -410,6 +439,13 @@
             const deleteCriterion = (index) => {
                 state.criteriaData.splice(index, 1);
                 renderTable();
+            }
+
+            const goToStage = (index) => {
+                if (index <= state.currentStageIndex) {
+                    state.currentStageIndex = index;
+                    updateStageView();
+                }
             }
 
             const goToNextStage = () => { state.currentStageIndex++; updateStageView(); }
@@ -441,6 +477,16 @@
             DOMElements.clearFormBtn.addEventListener('click', clearFullForm);
             DOMElements.exportExcelBtn.addEventListener('click', exportToExcel);
 
+            DOMElements.progressBar.addEventListener('click', (e) => {
+                const stepElement = e.target.closest('.progress-step.clickable');
+                if (stepElement) {
+                    const index = parseInt(stepElement.dataset.index, 10);
+                    if (!isNaN(index)) {
+                        goToStage(index);
+                    }
+                }
+            });
+
             DOMElements.tableBody.addEventListener('click', (e) => {
                 if (e.target && e.target.classList.contains('delete-btn')) {
                     if (confirm(`Bu kriteri silmek istediğinizden emin misiniz?`)) {
@@ -463,5 +509,4 @@
     </script>
 </body>
 </html>
-
 
