@@ -48,7 +48,7 @@
 
         <!-- Başlık ve Hizmet Adı Girişi -->
         <div>
-            <h1 class="text-3xl font-bold text-center text-white mb-2">Hizmet Kriterleri Tanımlama Aracı</h1>
+            <h1 class="text-3xl font-bold text-center text-white mb-2">Akıllı Hizmet Kriterleri Tanımlama Aracı</h1>
             <p class="text-center text-gray-400 mb-6">Lütfen hizmet bilgilerini adım adım giriniz.</p>
             <div class="max-w-md mx-auto">
                 <label for="serviceName" class="block mb-2 text-sm font-medium text-gray-300">Hizmet Adı</label>
@@ -102,6 +102,15 @@
                         <label for="question" class="block mb-2 text-sm font-medium text-gray-300">4. Hangi Soru ile Bilgi Alınıyor?</label>
                         <input type="text" id="question" class="form-input w-full rounded-lg" placeholder="Örn: Toplam Gelir">
                     </div>
+                     <!-- EVRAK KONTROL AŞAMASINA ÖZEL ALAN -->
+                    <div id="evrak-kontrol-wrapper" class="hidden">
+                         <label for="bilgi-edinme-asama" class="block mb-2 text-sm font-medium text-gray-300">Bu bilgi hangi aşamada ediniliyor?</label>
+                         <select id="bilgi-edinme-asama" class="form-select w-full rounded-lg">
+                             <option>Başvuru</option>
+                             <option>Sosyal İnceleme</option>
+                             <option>Evrak Kontrol</option>
+                         </select>
+                    </div>
                     <!-- Yanıt Türü -->
                     <div>
                         <label for="answer-type" class="block mb-2 text-sm font-medium text-gray-300">5. Yanıt Türü</label>
@@ -130,11 +139,11 @@
                         <input type="text" id="example-answer" class="form-input w-full rounded-lg" placeholder="Örn: 50000">
                     </div>
                     <!-- Ön Koşul mu? -->
-                    <div class="lg:col-span-3">
+                    <div class="lg:col-span-3" id="condition-type-wrapper">
                          <label class="block mb-2 text-sm font-medium text-gray-300">8. Bu Bir Ön Koşul mu? Yoksa Ek Kriter mi?</label>
                         <div class="flex items-center space-x-6 mt-2">
                            <label class="flex items-center"><input type="radio" name="condition-type" value="precondition" class="form-radio h-4 w-4 text-blue-600 bg-gray-700 border-gray-600" checked><span class="ml-2">Ön Koşul</span></label>
-                           <label class="flex items-center"><input type="radio" name="condition-type" value="additional" class="form-radio h-4 w-4 text-blue-600 bg-gray-700 border-gray-600"><span class="ml-2">Ek Kriter</span></label>
+                           <label id="ek-kriter-label" class="flex items-center"><input type="radio" name="condition-type" value="additional" class="form-radio h-4 w-4 text-blue-600 bg-gray-700 border-gray-600"><span class="ml-2">Ek Kriter</span></label>
                         </div>
                     </div>
                     <!-- Koşul Tanımı / Etkisi -->
@@ -173,6 +182,7 @@
                         <tr>
                             <th scope="col" class="px-4 py-3">Hizmet</th>
                             <th scope="col" class="px-4 py-3">Aşama</th>
+                            <th scope="col" class="px-4 py-3">Bilginin Edinildiği Aşama</th>
                             <th scope="col" class="px-4 py-3">Otomasyon</th>
                             <th scope="col" class="px-4 py-3">Otomasyon Aşaması</th>
                             <th scope="col" class="px-4 py-3">Kaynak</th>
@@ -188,7 +198,7 @@
                     </thead>
                     <tbody id="criteria-table-body">
                         <tr class="border-b border-gray-700">
-                           <td colspan="13" class="px-4 py-4 text-center text-gray-500">Henüz kriter eklenmedi.</td>
+                           <td colspan="14" class="px-4 py-4 text-center text-gray-500">Henüz kriter eklenmedi.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -229,6 +239,8 @@
             const conditionDefinitionWrapper = document.getElementById('condition-definition-wrapper');
             const conditionEffectWrapper = document.getElementById('condition-effect-wrapper');
             const exportExcelBtn = document.getElementById('export-excel-btn');
+            const ekKriterLabel = document.getElementById('ek-kriter-label');
+            const evrakKontrolWrapper = document.getElementById('evrak-kontrol-wrapper');
 
             // --- FUNCTIONS ---
 
@@ -254,6 +266,24 @@
                 });
             };
 
+            const updateFormForStage = () => {
+                const currentStageName = state.stages[state.currentStageIndex];
+
+                // Reset to default state first
+                ekKriterLabel.classList.remove('hidden');
+                evrakKontrolWrapper.classList.add('hidden');
+
+                // Apply stage-specific rules
+                if (currentStageName === "BAŞVURU" || currentStageName === "SOSYAL İNCELEME") {
+                    ekKriterLabel.classList.add('hidden');
+                    document.querySelector('input[value="precondition"]').checked = true;
+                    // Trigger change to update visibility of textareas
+                    document.querySelector('input[value="precondition"]').dispatchEvent(new Event('change'));
+                } else if (currentStageName === "EVRAK KONTROL") {
+                    evrakKontrolWrapper.classList.remove('hidden');
+                }
+            };
+
             const updateStageView = () => {
                  backStageBtn.disabled = state.currentStageIndex === 0;
                 if(state.currentStageIndex >= state.stages.length) {
@@ -266,6 +296,7 @@
                 criterionCheckSection.classList.remove('hidden');
                 criterionForm.classList.add('hidden');
                 updateProgressBar();
+                updateFormForStage();
             };
             
             const renderTable = () => {
@@ -275,7 +306,7 @@
                 if (state.criteriaData.length === 0) {
                     tableBody.innerHTML = `
                         <tr class="border-b border-gray-700">
-                           <td colspan="13" class="px-4 py-4 text-center text-gray-500">Henüz kriter eklenmedi.</td>
+                           <td colspan="14" class="px-4 py-4 text-center text-gray-500">Henüz kriter eklenmedi.</td>
                         </tr>`;
                     return;
                 }
@@ -286,6 +317,7 @@
                     row.innerHTML = `
                         <td class="px-4 py-3 font-medium text-white">${data.serviceName}</td>
                         <td class="px-4 py-3">${data.stage}</td>
+                        <td class="px-4 py-3">${data.bilgiEdinmeAsamasi || '-'}</td>
                         <td class="px-4 py-3">${data.automation}</td>
                         <td class="px-4 py-3">${data.automationStage}</td>
                         <td class="px-4 py-3">${data.source}</td>
@@ -304,9 +336,7 @@
 
             const clearFullForm = () => {
                  criterionForm.reset();
-                 document.querySelector('input[name="condition-type"][value="precondition"]').checked = true;
-                 conditionDefinitionWrapper.classList.remove('hidden');
-                 conditionEffectWrapper.classList.add('hidden');
+                 updateFormForStage(); // Aşamaya göre formu tekrar ayarla
                  document.getElementById('source').focus();
             };
             
@@ -314,23 +344,20 @@
                 document.getElementById('example-answer').value = '';
                 document.getElementById('condition-definition').value = '';
                 document.getElementById('condition-effect').value = '';
-                document.querySelector('input[name="condition-type"][value="precondition"]').checked = true;
-                conditionDefinitionWrapper.classList.remove('hidden');
-                conditionEffectWrapper.classList.add('hidden');
+                document.querySelector('input[value="precondition"]').checked = true;
+                updateFormForStage(); // Aşamaya göre formu tekrar ayarla
                 document.getElementById('example-answer').focus();
             };
 
             const saveCriterion = () => {
                 state.serviceName = serviceNameInput.value.trim();
                 if (!state.serviceName) {
-                    serviceNameInput.classList.add('border-red-500');
                     alert('Lütfen önce bir hizmet adı girin.');
                     serviceNameInput.focus();
                     return;
                 }
                 serviceNameInput.classList.remove('border-red-500');
 
-                const conditionType = document.querySelector('input[name="condition-type"]:checked').value;
                 const questionInput = document.getElementById('question');
                 if(!questionInput.value.trim()){
                     alert('Lütfen "Kriter Sorusu" alanını doldurun.');
@@ -338,9 +365,11 @@
                     return;
                 }
 
+                const currentStageName = state.stages[state.currentStageIndex];
+                
                 const criterion = {
                     serviceName: state.serviceName,
-                    stage: state.stages[state.currentStageIndex],
+                    stage: currentStageName,
                     source: document.getElementById('source').value,
                     automation: document.getElementById('automation').value,
                     automationStage: document.getElementById('automation-stage').value,
@@ -348,10 +377,11 @@
                     answerType: document.getElementById('answer-type').value,
                     scope: document.getElementById('scope').value,
                     exampleAnswer: document.getElementById('example-answer').value,
-                    conditionType: conditionType,
-                    conditionDetail: conditionType === 'precondition' 
+                    conditionType: document.querySelector('input[name="condition-type"]:checked').value,
+                    conditionDetail: document.querySelector('input[name="condition-type"]:checked').value === 'precondition' 
                         ? document.getElementById('condition-definition').value 
                         : document.getElementById('condition-effect').value,
+                    bilgiEdinmeAsamasi: currentStageName === 'EVRAK KONTROL' ? document.getElementById('bilgi-edinme-asama').value : null
                 };
 
                 state.criteriaData.push(criterion);
@@ -391,6 +421,7 @@
                 const dataForExport = state.criteriaData.map(item => ({
                     'Hizmet Adı': item.serviceName,
                     'Aşama': item.stage,
+                    'Bilginin Edinildiği Aşama': item.bilgiEdinmeAsamasi || '',
                     'Otomasyon': item.automation,
                     'Otomasyon Aşaması': item.automationStage,
                     'Bilginin Kaynağı': item.source,
@@ -452,6 +483,4 @@
     </script>
 </body>
 </html>
-
-
 
