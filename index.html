@@ -332,14 +332,16 @@
                         <h4>Mevcut Kural Grubu (Tüm koşullar sağlanmalı)</h4>
                         <div id="current-rule-conditions"></div>
                      </div>
-                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color);">
-                        <button type="button" id="back-stage-btn" class="action-btn secondary">Geri</button>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <button type="button" id="add-and-condition-btn" class="action-btn secondary" style="background-color: #ffc107; color: #1E214F;">Mevcut Kurala Koşul Ekle</button>
-                            <button type="button" id="save-rule-btn" class="action-btn" style="background-color: var(--success-color);">Yeni Kural Olarak Kaydet</button>
-                            <button type="button" id="finish-stage-btn" class="action-btn">Aşamayı Bitir ve İlerle</button>
-                        </div>
-                    </div>
+
+                     <!-- Main Button Bar -->
+                    <div id="main-action-buttons" style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                       <button type="button" id="back-stage-btn" class="action-btn secondary">Geri</button>
+                       <div style="display: flex; align-items: center; gap: 1rem;">
+                           <button type="button" id="add-condition-to-group-btn" class="action-btn secondary" style="background-color: #ffc107; color: #1E214F;">Koşul Ekle</button>
+                           <button type="button" id="save-rule-btn" class="action-btn" style="background-color: var(--success-color);" disabled>Kuralı Kaydet</button>
+                           <button type="button" id="finish-stage-btn" class="action-btn">Aşamayı Bitir ve İlerle</button>
+                       </div>
+                   </div>
                 </form>
             </div>
         </div>
@@ -394,8 +396,6 @@
                 criterionForm: document.getElementById('criterion-form'),
                 addCriterionYesBtn: document.getElementById('add-criterion-yes'),
                 addCriterionNoBtn: document.getElementById('add-criterion-no'),
-                saveRuleBtn: document.getElementById('save-rule-btn'),
-                addAndConditionBtn: document.getElementById('add-and-condition-btn'),
                 finishStageBtn: document.getElementById('finish-stage-btn'),
                 backStageBtn: document.getElementById('back-stage-btn'),
                 tableBody: document.getElementById('criteria-table-body'),
@@ -411,6 +411,10 @@
                 modal: document.getElementById('custom-modal'),
                 modalMessage: document.getElementById('modal-message'),
                 modalActions: document.getElementById('modal-actions'),
+                questionInput: document.getElementById('question'),
+                // New simplified button IDs
+                addConditionToGroupBtn: document.getElementById('add-condition-to-group-btn'),
+                saveRuleBtn: document.getElementById('save-rule-btn'),
             };
 
             // --- Custom Modal Functions ---
@@ -443,6 +447,11 @@
                     { text: 'İptal', class: 'secondary', handler: null },
                     { text: 'Onayla', class: '', handler: onConfirm }
                 ]);
+            };
+
+            const updateButtonStates = () => {
+                // Enable "Save Rule" button only if there are conditions in the current group
+                DOMElements.saveRuleBtn.disabled = state.currentRuleGroup.length === 0;
             };
 
             const updateProgressBar = () => {
@@ -499,6 +508,7 @@
                 DOMElements.criterionForm.classList.add('hidden');
                 updateProgressBar();
                 updateFormForStage();
+                updateButtonStates();
             };
 
             const renderTable = () => {
@@ -511,10 +521,10 @@
                 state.criteriaData.forEach(rule => {
                     rule.conditions.forEach((condition, index) => {
                         const row = DOMElements.tableBody.insertRow();
-                        let baglacText = index > 0 ? '' : '-';
+                        let baglacText = index > 0 ? '↳' : '';
                         if (index === 0) row.classList.add('rule-start-row');
                         row.innerHTML = `
-                            <td>${index === 0 ? rule.ruleId : ''}</td>
+                            <td style="font-weight: ${index === 0 ? '600' : 'normal'};">${index === 0 ? rule.ruleId : ''}</td>
                             <td>${baglacText}</td>
                             <td>${index === 0 ? rule.serviceName : ''}</td>
                             <td>${index === 0 ? rule.stage : ''}</td>
@@ -548,7 +558,7 @@
                 });
                 document.getElementById('answer-type').selectedIndex = 0;
                 document.getElementById('answer-type').dispatchEvent(new Event('change'));
-                document.getElementById('question').focus();
+                DOMElements.questionInput.focus();
             };
 
             const clearRuleDefinitionFields = () => {
@@ -560,10 +570,9 @@
             }
 
             const addConditionToGroup = () => {
-                const questionInput = document.getElementById('question');
-                if (!questionInput.value.trim()) {
+                if (!DOMElements.questionInput.value.trim()) {
                     showAlert('Lütfen "Hangi Soru ile Bilgi Alınıyor?" alanını doldurun.');
-                    questionInput.focus(); return false;
+                    DOMElements.questionInput.focus(); return false;
                 }
                 let conditionValue = {};
                 let conditionText = '';
@@ -614,7 +623,7 @@
                 const condition = {
                     source: document.getElementById('source').value,
                     automation: document.getElementById('automation').value,
-                    question: questionInput.value,
+                    question: DOMElements.questionInput.value,
                     answerType: answerType,
                     scope: document.getElementById('scope').value,
                     conditionValue: conditionValue,
@@ -624,13 +633,14 @@
                 state.currentRuleGroup.push(condition);
                 renderRuleBuilderPreview();
                 clearConditionFields();
+                updateButtonStates();
                 return true;
             };
 
-            const saveRuleGroup = () => {
+            const saveCurrentRule = () => {
                 if (state.currentRuleGroup.length === 0) {
-                    const success = addConditionToGroup();
-                    if (!success) return;
+                    showAlert("Kaydedilecek bir kural bulunmuyor. Lütfen önce en az bir koşul ekleyin.");
+                    return;
                 }
                 state.serviceName = DOMElements.serviceNameInput.value.trim();
                 if (!state.serviceName) {
@@ -652,10 +662,10 @@
                 renderTable();
                 renderRuleBuilderPreview();
                 clearRuleDefinitionFields();
-                clearConditionFields();
                 DOMElements.conditionTypeRadios.forEach(radio => radio.disabled = false);
                 document.getElementById('condition-definition').disabled = false;
                 document.getElementById('condition-effect').disabled = false;
+                updateButtonStates();
             };
 
             const deleteRule = (ruleId) => {
@@ -663,19 +673,24 @@
                 renderTable();
             };
             
-            const handleNavigation = (action) => {
-                 if (state.currentRuleGroup.length > 0) {
-                     showConfirmation("Kaydedilmemiş bir kural üzerinde çalışıyorsunuz. Değişiklikleriniz kaybolacak. Devam etmek istediğinizden emin misiniz?", action);
-                 } else {
-                     action();
-                 }
+            const handleNavigation = (navigationLogic) => {
+                const performNavigation = () => {
+                    state.currentRuleGroup = [];
+                    renderRuleBuilderPreview();
+                    navigationLogic();
+                    updateButtonStates();
+                };
+
+                if (state.currentRuleGroup.length > 0) {
+                     showConfirmation("Kaydedilmemiş bir kural üzerinde çalışıyorsunuz. Değişiklikleriniz kaybolacak. Devam etmek istediğinizden emin misiniz?", performNavigation);
+                } else {
+                     performNavigation();
+                }
             };
 
             const goToStage = (index) => {
                  handleNavigation(() => {
                     if (index <= state.currentStageIndex) {
-                        state.currentRuleGroup = [];
-                        renderRuleBuilderPreview();
                         state.currentStageIndex = index;
                         updateStageView();
                     }
@@ -684,8 +699,6 @@
 
             const goToNextStage = () => {
                 handleNavigation(() => {
-                    state.currentRuleGroup = [];
-                    renderRuleBuilderPreview();
                     state.currentStageIndex++;
                     updateStageView();
                 });
@@ -694,8 +707,6 @@
             const goToPreviousStage = () => {
                 handleNavigation(() => {
                     if (state.currentStageIndex > 0) {
-                        state.currentRuleGroup = [];
-                        renderRuleBuilderPreview();
                         state.currentStageIndex--;
                         updateStageView();
                     }
@@ -707,7 +718,7 @@
                 const dataForExport = [];
                 state.criteriaData.forEach(rule => {
                     rule.conditions.forEach((condition, index) => {
-                        let baglacText = index > 0 ? '' : '-';
+                        let baglacText = index > 0 ? 'VE' : '-';
                         const flatRow = {
                             'Kural No': rule.ruleId,
                             'Bağlantı': baglacText,
@@ -751,8 +762,8 @@
             DOMElements.addCriterionNoBtn.addEventListener('click', goToNextStage);
             DOMElements.finishStageBtn.addEventListener('click', goToNextStage);
             DOMElements.backStageBtn.addEventListener('click', goToPreviousStage);
-            DOMElements.addAndConditionBtn.addEventListener('click', addConditionToGroup);
-            DOMElements.saveRuleBtn.addEventListener('click', saveRuleGroup);
+            DOMElements.addConditionToGroupBtn.addEventListener('click', addConditionToGroup);
+            DOMElements.saveRuleBtn.addEventListener('click', saveCurrentRule);
             DOMElements.exportExcelBtn.addEventListener('click', exportToExcel);
             DOMElements.progressBar.addEventListener('click', (e) => {
                 const stepElement = e.target.closest('.progress-step.clickable');
