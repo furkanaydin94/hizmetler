@@ -81,13 +81,12 @@
         .matrix-table td:first-child { background: var(--bg-tertiary); font-weight: 500; text-align: right; white-space: nowrap; }
         .matrix-table td input, .matrix-table td select { width: 100%; padding: 0.5rem; font-size: 0.875rem; border-radius: 0.25rem; border: 1px solid var(--border); }
         .matrix-table td input:focus { border-color: var(--primary); }
-        #question-modal {
+        .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
         }
-        #question-modal.active { display: flex; }
+        .modal.active { display: flex; }
         .modal-content { background-color: #fff; padding: 2rem; border-radius: 0.75rem; width: 90%; max-width: 600px; box-shadow: var(--shadow-lg); }
-        
         .progress-bar-container {
             background-color: var(--bg-primary); padding: 2rem; border-radius: 0.75rem;
             margin-bottom: 2rem; box-shadow: var(--shadow); display: none;
@@ -112,41 +111,145 @@
         .progress-step.active .step-label { color: var(--primary); font-weight: 600; }
         .progress-step.completed .step-circle { border-color: var(--success); background-color: var(--success); color: white; }
         .progress-step.completed .step-label { color: var(--text-primary); }
-
+        
         /* Report Screen Styles */
         .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
         .report-actions button { white-space: nowrap; }
-        .report-stage-accordion > details {
-            background: var(--bg-primary); border: 1px solid var(--border);
-            border-radius: 0.5rem; margin-bottom: 1rem;
+
+        #report-content {
+            background-color: var(--bg-primary);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            padding: clamp(1rem, 5vw, 2.5rem);
         }
+
+        .service-report-block {
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .service-report-block:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .service-report-block h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .report-stage-accordion > details {
+            background: transparent;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 1rem;
+        }
+         .report-stage-accordion > details:last-of-type {
+            border-bottom: none;
+        }
+
         .report-stage-accordion > summary {
-            padding: 1rem 1.5rem; font-size: 1.1rem; font-weight: 600;
-            cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .report-stage-accordion > summary::-webkit-details-marker { display: none; }
+        .report-stage-accordion > summary::after {
+            content: '▼';
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+        .report-stage-accordion > details[open] > summary::after {
+            transform: rotate(180deg);
+        }
+
         .report-stage-accordion .summary-stats { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); }
-        .report-stage-accordion .accordion-content { padding: 0 1.5rem 1.5rem; border-top: 1px solid var(--border); }
+        .report-stage-accordion .accordion-content { padding: 1.5rem 0.5rem 0.5rem 0.5rem; }
         
         .report-item-details {
-            border: 1px solid var(--border-light);
-            border-radius: 0.5rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
             margin-top: 1rem;
-            background: #fafbff;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+        .report-item-details[open] {
+            box-shadow: var(--shadow-sm);
         }
         .report-item-details summary {
-            padding: 0.75rem 1rem;
+            padding: 1rem 1.5rem;
             font-weight: 600;
             cursor: pointer;
             list-style: none;
-            color: var(--text-primary);
+            background-color: var(--bg-secondary);
         }
         .report-item-details summary::-webkit-details-marker { display: none; }
+
         .report-item-details .matrix-table-container {
-            padding: 1rem;
-            border-top: 1px solid var(--border);
+            padding: 0;
+            background: var(--bg-primary);
+        }
+        
+        /* NEW STYLES FOR CHIC REPORT TABLES */
+        .report-item-table {
+            border: none;
+            font-size: 0.9rem;
+            width: 100%;
+            border-collapse: collapse;
         }
 
+        .report-item-table th,
+        .report-item-table td {
+            border: none;
+            border-bottom: 1px solid var(--border-light);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .report-item-table th {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .report-item-table td:first-child {
+            background: transparent;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: left;
+            width: 25%;
+        }
+
+        .report-item-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .report-item-table .durum-row td {
+            font-weight: 700;
+            background-color: var(--bg-tertiary);
+        }
+
+        .report-item-table .durum-row td:first-child {
+            color: var(--primary-dark);
+        }
+
+
+        #edit-selection-list .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -169,8 +272,8 @@
                     <p class="card-description" style="margin-top: 0.5rem; margin-bottom: 2rem;">Lütfen yapmak istediğiniz işlemi seçin.</p>
                     <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
                         <button id="start-definition-btn" class="btn btn-primary btn-lg">📝 Yeni Kriter Tanımla</button>
-                        <button id="view-report-btn" class="btn btn-secondary btn-lg">📊 Kriterleri Görüntüle (Excel Yükle)</button>
-                        <input type="file" id="excel-upload-input" accept=".xlsx, .xls" style="display: none;">
+                        <label for="excel-upload-input" class="btn btn-secondary btn-lg" style="cursor: pointer;">📊 Kriterleri Görüntüle (Excel Yükle)</label>
+                        <input type="file" id="excel-upload-input" accept=".xlsx, .xls" style="display: none;" multiple>
                     </div>
                 </div>
             </div>
@@ -215,9 +318,9 @@
             </div>
         </div>
 
-        <!-- Step 3, 4, 5 (Same as before) -->
+        <!-- Step 3, 4, 5 (Same structure as before) -->
         <div id="step-3" class="wizard-step">
-            <div class="card">
+             <div class="card">
                 <div class="card-header"><h2 class="card-title" id="step3-title"></h2></div>
                 <div class="card-content">
                     <div class="form-group">
@@ -261,7 +364,7 @@
                 </div>
             </div>
         </div>
-
+        
         <!-- Step 6: Report Screen -->
         <div id="step-6" class="wizard-step">
             <div class="report-header">
@@ -278,14 +381,13 @@
                     <button id="report-fullscreen-btn" class="btn btn-secondary">⛶ Tam Ekran</button>
                 </div>
             </div>
-            <div id="report-content" class="report-stage-accordion">
+            <div id="report-content">
                 <!-- Report will be generated here -->
             </div>
         </div>
 
-
-        <!-- Question Add/Edit Modal (Same as before) -->
-        <div id="question-modal">
+        <!-- Modals -->
+        <div id="question-modal" class="modal">
             <div class="modal-content">
                 <h3 id="question-modal-title" style="margin-bottom: 1.5rem;">Yeni Soru Ekle</h3>
                 <div class="form-group"><label class="form-label" for="question-text">Soru Metni</label><input type="text" id="question-text" class="form-input" placeholder="Örn: Öğrenci İkameti"></div>
@@ -302,175 +404,251 @@
                 </div>
             </div>
         </div>
+
+        <div id="edit-selection-modal" class="modal">
+            <div class="modal-content">
+                <h3 style="margin-bottom: 1.5rem;">Düzenlenecek Hizmeti Seçin</h3>
+                <div id="edit-selection-list"></div>
+                <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button id="cancel-edit-selection-btn" class="btn btn-secondary">İptal</button>
+                </div>
+            </div>
+        </div>
+
     </main>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // AppState holds the entire state of the application
+    const AppState = {
+        // For single definition flow
+        serviceName: '', 
+        items: [],
+        // For multi-file report view
+        services: [], 
+        isMultiServiceView: false,
+        editingFromMultiView: false,
+        // General state
+        stages: [ 
+            { name: 'BAŞVURU' }, 
+            { name: 'SOSYAL İNCELEME' }, 
+            { name: 'EVRAK KONTROL' }, 
+            { name: 'HİZMETTEN FAYDALANMA' }, 
+            { name: 'HİZMETİN TAMAMLANMASI' } 
+        ],
+        currentStageIndex: 0, 
+        wipItem: null, // Work-in-progress item (rule or criterion)
+        wipQuestionIndex: -1, 
+        currentStep: 0,
+    };
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const AppState = {
-            serviceName: '',
-            stages: [ { name: 'BAŞVURU' }, { name: 'SOSYAL İNCELEME' }, { name: 'EVRAK KONTROL' }, { name: 'HİZMETTEN FAYDALANMA' }, { name: 'HİZMETİN TAMAMLANMASI' } ],
-            currentStageIndex: 0, items: [], wipItem: null, wipQuestionIndex: -1, currentStep: 0,
-        };
+    // DOM element references
+    const DOM = {
+        mainHeader: document.getElementById('main-header-title'),
+        progressBarContainer: document.getElementById('progress-bar-container'),
+        steps: document.querySelectorAll('.wizard-step'),
+        startDefinitionBtn: document.getElementById('start-definition-btn'),
+        excelUploadInput: document.getElementById('excel-upload-input'),
+        serviceNameInput: document.getElementById('service-name'),
+        step1BackBtn: document.getElementById('step1-back'),
+        step1NextBtn: document.getElementById('step1-next'),
+        step2Title: document.getElementById('step2-title'),
+        rulesListContainer: document.getElementById('rules-list-container'),
+        addNewRuleBtn: document.getElementById('add-new-rule-btn'),
+        addNewCriterionBtn: document.getElementById('add-new-criterion-btn'),
+        step2NextStageBtn: document.getElementById('step2-next-stage'),
+        step2FinishBtn: document.getElementById('step2-finish'),
+        step2BackBtn: document.getElementById('step2-back'),
+        step3Title: document.getElementById('step3-title'),
+        step3Label: document.getElementById('step3-label'),
+        itemNameInput: document.getElementById('item-name'),
+        step3BackBtn: document.getElementById('step3-back'),
+        step3NextBtn: document.getElementById('step3-next'),
+        activeRuleText: document.getElementById('active-rule-text'),
+        questionsContainer: document.getElementById('questions-container'),
+        openQuestionModalBtn: document.getElementById('open-question-modal-btn'),
+        step4BackBtn: document.getElementById('step4-back'),
+        step4NextBtn: document.getElementById('step4-next'),
+        activeRuleTextMatrix: document.getElementById('active-rule-text-matrix'),
+        scenarioMatrixContainer: document.getElementById('scenario-matrix'),
+        addScenarioBtn: document.getElementById('add-scenario-btn'),
+        step5BackBtn: document.getElementById('step5-back'),
+        saveItemBtn: document.getElementById('save-item-btn'),
+        questionModal: document.getElementById('question-modal'),
+        questionModalTitle: document.getElementById('question-modal-title'),
+        questionText: document.getElementById('question-text'),
+        questionSource: document.getElementById('question-source'),
+        questionAutomation: document.getElementById('question-automation'),
+        questionAnswerType: document.getElementById('question-answer-type'),
+        questionScope: document.getElementById('question-scope'),
+        questionStageWrapper: document.getElementById('question-stage-wrapper'),
+        questionStageSelect: document.getElementById('question-stage'),
+        cancelQuestionBtn: document.getElementById('cancel-question-btn'),
+        saveQuestionBtn: document.getElementById('save-question-btn'),
+        reportServiceName: document.getElementById('report-service-name'),
+        reportContent: document.getElementById('report-content'),
+        reportEditBtn: document.getElementById('report-edit-btn'),
+        reportDownloadBtn: document.getElementById('report-download-btn'),
+        reportPdfDetailedBtn: document.getElementById('report-pdf-detailed-btn'),
+        reportPdfSummaryBtn: document.getElementById('report-pdf-summary-btn'),
+        toggleDetailsBtn: document.getElementById('toggle-details-btn'),
+        reportFullscreenBtn: document.getElementById('report-fullscreen-btn'),
+        editSelectionModal: document.getElementById('edit-selection-modal'),
+        editSelectionList: document.getElementById('edit-selection-list'),
+        cancelEditSelectionBtn: document.getElementById('cancel-edit-selection-btn'),
+    };
 
-        const DOM = {
-            mainHeader: document.getElementById('main-header-title'), progressBarContainer: document.getElementById('progress-bar-container'),
-            steps: document.querySelectorAll('.wizard-step'),
-            startDefinitionBtn: document.getElementById('start-definition-btn'), viewReportBtn: document.getElementById('view-report-btn'),
-            excelUploadInput: document.getElementById('excel-upload-input'),
-            serviceNameInput: document.getElementById('service-name'),
-            step1BackBtn: document.getElementById('step1-back'), step1NextBtn: document.getElementById('step1-next'),
-            step2Title: document.getElementById('step2-title'), rulesListContainer: document.getElementById('rules-list-container'),
-            addNewRuleBtn: document.getElementById('add-new-rule-btn'), addNewCriterionBtn: document.getElementById('add-new-criterion-btn'),
-            step2NextStageBtn: document.getElementById('step2-next-stage'), step2FinishBtn: document.getElementById('step2-finish'),
-            step2BackBtn: document.getElementById('step2-back'),
-            step3Title: document.getElementById('step3-title'), step3Label: document.getElementById('step3-label'),
-            itemNameInput: document.getElementById('item-name'), step3BackBtn: document.getElementById('step3-back'),
-            step3NextBtn: document.getElementById('step3-next'), activeRuleText: document.getElementById('active-rule-text'),
-            questionsContainer: document.getElementById('questions-container'), openQuestionModalBtn: document.getElementById('open-question-modal-btn'),
-            step4BackBtn: document.getElementById('step4-back'), step4NextBtn: document.getElementById('step4-next'),
-            activeRuleTextMatrix: document.getElementById('active-rule-text-matrix'), scenarioMatrixContainer: document.getElementById('scenario-matrix'),
-            addScenarioBtn: document.getElementById('add-scenario-btn'), step5BackBtn: document.getElementById('step5-back'),
-            saveItemBtn: document.getElementById('save-item-btn'),
-            questionModal: document.getElementById('question-modal'), questionModalTitle: document.getElementById('question-modal-title'),
-            questionText: document.getElementById('question-text'), questionSource: document.getElementById('question-source'),
-            questionAutomation: document.getElementById('question-automation'), questionAnswerType: document.getElementById('question-answer-type'),
-            questionScope: document.getElementById('question-scope'), questionStageWrapper: document.getElementById('question-stage-wrapper'),
-            questionStageSelect: document.getElementById('question-stage'), cancelQuestionBtn: document.getElementById('cancel-question-btn'),
-            saveQuestionBtn: document.getElementById('save-question-btn'),
-            reportServiceName: document.getElementById('report-service-name'), reportContent: document.getElementById('report-content'),
-            reportEditBtn: document.getElementById('report-edit-btn'), reportDownloadBtn: document.getElementById('report-download-btn'),
-            reportPdfDetailedBtn: document.getElementById('report-pdf-detailed-btn'),
-            reportPdfSummaryBtn: document.getElementById('report-pdf-summary-btn'),
-            toggleDetailsBtn: document.getElementById('toggle-details-btn'),
-            reportFullscreenBtn: document.getElementById('report-fullscreen-btn'),
-        };
+    // UIManager handles all DOM manipulations and rendering
+    const UIManager = {
+        goToStep(step) {
+            AppState.currentStep = step;
+            DOM.steps.forEach(s => s.classList.remove('active'));
+            const targetStep = document.getElementById(`step-${step}`);
+            if (targetStep) targetStep.classList.add('active');
 
-        const UIManager = {
-            goToStep(step) {
-                AppState.currentStep = step;
-                DOM.steps.forEach(s => s.classList.remove('active'));
-                const targetStep = document.getElementById(`step-${step}`);
-                if(targetStep) targetStep.classList.add('active');
-                
-                const showProgressBar = step > 0 && step < 6;
-                DOM.progressBarContainer.style.display = showProgressBar ? 'block' : 'none';
-                if(showProgressBar) this.renderProgressBar();
+            const showProgressBar = step > 0 && step < 6 && !AppState.isMultiServiceView;
+            DOM.progressBarContainer.style.display = showProgressBar ? 'block' : 'none';
+            if (showProgressBar) this.renderProgressBar();
 
-                this.updateUIForStep(step);
-            },
-            updateUIForStep(step) {
-                const stageName = AppState.stages[AppState.currentStageIndex]?.name || '';
-                switch (step) {
-                    case 0:
-                        DOM.mainHeader.textContent = 'Hizmet Tanımlama Sistemi';
-                        break;
-                    case 1:
-                        DOM.mainHeader.textContent = '1. Adım: Hizmet Adı';
-                        break;
-                    case 2:
-                        DOM.mainHeader.textContent = `${AppState.serviceName} - Kural Yönetimi`;
-                        DOM.step2Title.textContent = `${stageName} Aşaması Kuralları`;
-                        DOM.addNewCriterionBtn.style.display = AppState.currentStageIndex >= 2 ? 'inline-flex' : 'none';
-                        DOM.step2NextStageBtn.classList.toggle('hidden', AppState.currentStageIndex === AppState.stages.length - 1);
-                        DOM.step2FinishBtn.classList.toggle('hidden', AppState.currentStageIndex !== AppState.stages.length - 1);
-                        this.renderRulesList();
-                        break;
-                    case 3:
-                        const itemType = AppState.wipItem.type === 'rule' ? 'Kural' : 'Kriter';
-                        DOM.mainHeader.textContent = `${stageName} - Yeni ${itemType}`;
-                        DOM.step3Title.textContent = `2. Adım: ${itemType} Tanımı`;
-                        DOM.step3Label.textContent = `Lütfen ${itemType.toLowerCase()}ın tanımını yazınız.`;
-                        DOM.itemNameInput.value = AppState.wipItem.name || '';
-                        DOM.itemNameInput.placeholder = `Örn: ${itemType === 'Kural' ? 'İkametgah kontrolü' : 'Gelir Puanı'}`;
-                        break;
-                    case 4: DOM.activeRuleText.textContent = AppState.wipItem.name; this.renderQuestionsList(); break;
-                    case 5: DOM.activeRuleTextMatrix.textContent = AppState.wipItem.name; this.renderScenarioMatrix(); break;
-                    case 6:
-                        DOM.mainHeader.textContent = `${AppState.serviceName} - Rapor`;
-                        this.renderReport();
-                        break;
-                }
-            },
-            renderProgressBar() {
-                 const container = DOM.progressBarContainer;
-                const { stages, currentStageIndex } = AppState;
-                const progressPercentage = currentStageIndex > 0 ? (currentStageIndex / (stages.length - 1)) * 100 : 0;
-                let stepsHtml = stages.map((stage, index) => {
-                    const statusClass = index < currentStageIndex ? 'completed' : (index === currentStageIndex ? 'active' : '');
-                    return `<div class="progress-step ${statusClass}"><div class="step-circle">${index < currentStageIndex ? '✓' : index + 1}</div><div class="step-label">${stage.name}</div></div>`;
-                }).join('');
-                container.innerHTML = `<div class="progress-bar"><div class="progress-line"><div class="progress-line-fill" style="width: ${progressPercentage}%;"></div></div>${stepsHtml}</div>`;
-            },
-            renderRulesList() {
-                DOM.rulesListContainer.innerHTML = '';
-                const itemsForStage = AppState.items.filter(item => item.stageIndex === AppState.currentStageIndex);
-                if (itemsForStage.length === 0) {
-                    DOM.rulesListContainer.innerHTML = '<p class="text-muted">Bu aşama için bir kural veya kriter tanımlanmadı.</p>';
-                    return;
-                }
-                const list = document.createElement('div');
-                itemsForStage.forEach(item => {
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'card';
-                    itemEl.innerHTML = `<div class="card-content" style="padding: 1rem;"><div style="display: flex; justify-content: space-between; align-items: center;"><div><strong>${item.type === 'rule' ? 'Kural:' : 'Kriter:'}</strong> ${item.name}<br><small class="text-muted">${item.questions.length} soru, ${item.scenarios.length} senaryo</small></div><button class="btn btn-danger-ghost" data-item-id="${item.id}">Sil</button></div></div>`;
-                    itemEl.querySelector('button').addEventListener('click', () => { AppState.items = AppState.items.filter(i => i.id !== item.id); this.renderRulesList(); });
-                    list.appendChild(itemEl);
-                });
-                DOM.rulesListContainer.appendChild(list);
-            },
-             renderQuestionsList() {
-                DOM.questionsContainer.innerHTML = '';
-                AppState.wipItem.questions.forEach((q, index) => {
-                    const el = document.createElement('div');
-                    el.className = 'list-item';
-                    el.innerHTML = `<div class="list-item-content"><strong>${q.text}</strong><div class="text-muted" style="font-size: 0.8rem;">Kaynak: ${q.source} | Kapsam: ${q.scope} | Yanıt: ${q.answerType}</div></div><button class="btn btn-secondary" data-index="${index}">Düzenle</button><button class="btn btn-danger-ghost" data-index="${index}">×</button>`;
-                    el.querySelector('.btn-secondary').addEventListener('click', (e) => Logic.openQuestionModal(parseInt(e.currentTarget.dataset.index)));
-                    el.querySelector('.btn-danger-ghost').addEventListener('click', (e) => { AppState.wipItem.questions.splice(parseInt(e.currentTarget.dataset.index), 1); this.renderQuestionsList(); });
-                    DOM.questionsContainer.appendChild(el);
-                });
-            },
-            renderScenarioMatrix() {
-                const { questions, scenarios, type } = AppState.wipItem;
-                const container = DOM.scenarioMatrixContainer;
-                container.innerHTML = '';
-                const thead = document.createElement('thead');
-                let headerRowHtml = '<tr><th>Sorular</th>';
-                scenarios.forEach((_, i) => { headerRowHtml += `<th>Senaryo ${i + 1} <button class="btn-danger-ghost" data-scenario-index="${i}" style="padding: 2px 5px; border-radius: 50%;">×</button></th>`; });
-                thead.innerHTML = headerRowHtml + '</tr>';
-                container.appendChild(thead);
-                const tbody = document.createElement('tbody');
-                questions.forEach((q, qIndex) => {
-                    let rowHtml = `<tr><td>${q.text}</td>`;
-                    scenarios.forEach((sc, scIndex) => { rowHtml += `<td><input type="text" value="${sc.values[q.text] || ''}" data-q-index="${qIndex}" data-sc-index="${scIndex}"></td>`; });
-                    tbody.innerHTML += rowHtml + '</tr>';
-                });
-                let outcomeRowHtml = '<tr><td><strong>DURUM</strong></td>';
-                scenarios.forEach((sc, scIndex) => {
-                    outcomeRowHtml += type === 'rule' ? `<td><select class="form-select outcome-select" data-sc-index="${scIndex}"><option value="Kural Sağlanıyor" ${sc.outcome === 'Kural Sağlanıyor' ? 'selected' : ''}>Kural Sağlanıyor</option><option value="Kural Sağlanmıyor" ${sc.outcome === 'Kural Sağlanmıyor' ? 'selected' : ''}>Kural Sağlanmıyor</option></select></td>` : `<td><input type="text" class="form-input outcome-input" value="${sc.outcome || ''}" placeholder="+50 Puan..." data-sc-index="${scIndex}"></td>`;
-                });
-                tbody.innerHTML += outcomeRowHtml + '</tr>';
-                container.appendChild(tbody);
-                this.addMatrixEventListeners();
-            },
-            addMatrixEventListeners() {
-                DOM.scenarioMatrixContainer.querySelectorAll('th button').forEach(btn => btn.addEventListener('click', (e) => { AppState.wipItem.scenarios.splice(parseInt(e.currentTarget.dataset.scenarioIndex), 1); this.renderScenarioMatrix(); }));
-                DOM.scenarioMatrixContainer.querySelectorAll('tbody input, tbody select').forEach(el => el.addEventListener('change', e => {
-                    const scIndex = parseInt(e.target.dataset.scIndex);
-                    if (e.target.matches('.outcome-input, .outcome-select')) { AppState.wipItem.scenarios[scIndex].outcome = e.target.value; }
-                    else { const qIndex = parseInt(e.target.dataset.qIndex); AppState.wipItem.scenarios[scIndex].values[AppState.wipItem.questions[qIndex].text] = e.target.value; }
-                }));
-            },
-            renderReport() {
+            this.updateUIForStep(step);
+        },
+
+        updateUIForStep(step) {
+            const stageName = AppState.stages[AppState.currentStageIndex]?.name || '';
+            switch (step) {
+                case 0:
+                    DOM.mainHeader.textContent = 'Hizmet Tanımlama Sistemi';
+                    break;
+                case 1:
+                    DOM.mainHeader.textContent = '1. Adım: Hizmet Adı';
+                    break;
+                case 2:
+                    DOM.mainHeader.textContent = `${AppState.serviceName} - Kural Yönetimi`;
+                    DOM.step2Title.textContent = `${stageName} Aşaması Kuralları`;
+                    DOM.addNewCriterionBtn.style.display = AppState.currentStageIndex >= 2 ? 'inline-flex' : 'none';
+                    DOM.step2NextStageBtn.style.display = AppState.currentStageIndex === AppState.stages.length - 1 ? 'none' : 'inline-flex';
+                    DOM.step2FinishBtn.style.display = AppState.currentStageIndex === AppState.stages.length - 1 ? 'inline-flex' : 'none';
+                    this.renderRulesList();
+                    break;
+                case 3:
+                    const itemType = AppState.wipItem.type === 'rule' ? 'Kural' : 'Kriter';
+                    DOM.mainHeader.textContent = `${stageName} - Yeni ${itemType}`;
+                    DOM.step3Title.textContent = `2. Adım: ${itemType} Tanımı`;
+                    DOM.step3Label.textContent = `Lütfen ${itemType.toLowerCase()}ın tanımını yazınız.`;
+                    DOM.itemNameInput.value = AppState.wipItem.name || '';
+                    DOM.itemNameInput.placeholder = `Örn: ${itemType === 'Kural' ? 'İkametgah kontrolü' : 'Gelir Puanı'}`;
+                    break;
+                case 4:
+                    DOM.activeRuleText.textContent = AppState.wipItem.name;
+                    this.renderQuestionsList();
+                    break;
+                case 5:
+                    DOM.activeRuleTextMatrix.textContent = AppState.wipItem.name;
+                    this.renderScenarioMatrix();
+                    break;
+                case 6:
+                    DOM.mainHeader.textContent = `Rapor Ekranı`;
+                    this.renderReport();
+                    break;
+            }
+        },
+
+        renderProgressBar() {
+            const container = DOM.progressBarContainer;
+            const { stages, currentStageIndex } = AppState;
+            const progressPercentage = currentStageIndex > 0 ? (currentStageIndex / (stages.length - 1)) * 100 : 0;
+            let stepsHtml = stages.map((stage, index) => {
+                const statusClass = index < currentStageIndex ? 'completed' : (index === currentStageIndex ? 'active' : '');
+                return `<div class="progress-step ${statusClass}"><div class="step-circle">${index < currentStageIndex ? '✓' : index + 1}</div><div class="step-label">${stage.name}</div></div>`;
+            }).join('');
+            container.innerHTML = `<div class="progress-bar"><div class="progress-line"><div class="progress-line-fill" style="width: ${progressPercentage}%;"></div></div>${stepsHtml}</div>`;
+        },
+
+        renderRulesList() {
+            DOM.rulesListContainer.innerHTML = '';
+            const itemsForStage = AppState.items.filter(item => item.stageIndex === AppState.currentStageIndex);
+            if (itemsForStage.length === 0) {
+                DOM.rulesListContainer.innerHTML = '<p class="text-muted">Bu aşama için bir kural veya kriter tanımlanmadı.</p>';
+                return;
+            }
+            const list = document.createElement('div');
+            itemsForStage.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'card';
+                itemEl.innerHTML = `<div class="card-content" style="padding: 1rem;"><div style="display: flex; justify-content: space-between; align-items: center;"><div><strong>${item.type === 'rule' ? 'Kural:' : 'Kriter:'}</strong> ${item.name}<br><small class="text-muted">${item.questions.length} soru, ${item.scenarios.length} senaryo</small></div><button class="btn btn-danger-ghost" data-item-id="${item.id}">Sil</button></div></div>`;
+                itemEl.querySelector('button').addEventListener('click', () => { AppState.items = AppState.items.filter(i => i.id !== item.id); this.renderRulesList(); });
+                list.appendChild(itemEl);
+            });
+            DOM.rulesListContainer.appendChild(list);
+        },
+
+        renderQuestionsList() {
+            DOM.questionsContainer.innerHTML = '';
+            AppState.wipItem.questions.forEach((q, index) => {
+                const el = document.createElement('div');
+                el.className = 'list-item';
+                el.innerHTML = `<div class="list-item-content"><strong>${q.text}</strong><div class="text-muted" style="font-size: 0.8rem;">Kaynak: ${q.source} | Kapsam: ${q.scope} | Yanıt: ${q.answerType}</div></div><button class="btn btn-secondary" data-index="${index}">Düzenle</button><button class="btn btn-danger-ghost" data-index="${index}">×</button>`;
+                el.querySelector('.btn-secondary').addEventListener('click', (e) => Logic.openQuestionModal(parseInt(e.currentTarget.dataset.index)));
+                el.querySelector('.btn-danger-ghost').addEventListener('click', (e) => { AppState.wipItem.questions.splice(parseInt(e.currentTarget.dataset.index), 1); this.renderQuestionsList(); });
+                DOM.questionsContainer.appendChild(el);
+            });
+        },
+
+        renderScenarioMatrix() {
+            const { questions, scenarios, type } = AppState.wipItem;
+            const container = DOM.scenarioMatrixContainer;
+            container.innerHTML = '';
+            const thead = document.createElement('thead');
+            let headerRowHtml = '<tr><th>Sorular</th>';
+            scenarios.forEach((_, i) => { headerRowHtml += `<th>Senaryo ${i + 1} <button class="btn-danger-ghost" data-scenario-index="${i}" style="padding: 2px 5px; border-radius: 50%;">×</button></th>`; });
+            thead.innerHTML = headerRowHtml + '</tr>';
+            container.appendChild(thead);
+            const tbody = document.createElement('tbody');
+            questions.forEach((q, qIndex) => {
+                let rowHtml = `<tr><td>${q.text}</td>`;
+                scenarios.forEach((sc, scIndex) => { rowHtml += `<td><input type="text" value="${sc.values[q.text] || ''}" data-q-index="${qIndex}" data-sc-index="${scIndex}"></td>`; });
+                tbody.innerHTML += rowHtml + '</tr>';
+            });
+            let outcomeRowHtml = '<tr><td><strong>DURUM</strong></td>';
+            scenarios.forEach((sc, scIndex) => {
+                outcomeRowHtml += type === 'rule' ? `<td><select class="form-select outcome-select" data-sc-index="${scIndex}"><option value="Kural Sağlanıyor" ${sc.outcome === 'Kural Sağlanıyor' ? 'selected' : ''}>Kural Sağlanıyor</option><option value="Kural Sağlanmıyor" ${sc.outcome === 'Kural Sağlanmıyor' ? 'selected' : ''}>Kural Sağlanmıyor</option></select></td>` : `<td><input type="text" class="form-input outcome-input" value="${sc.outcome || ''}" placeholder="+50 Puan..." data-sc-index="${scIndex}"></td>`;
+            });
+            tbody.innerHTML += outcomeRowHtml + '</tr>';
+            container.appendChild(tbody);
+            this.addMatrixEventListeners();
+        },
+
+        addMatrixEventListeners() {
+            DOM.scenarioMatrixContainer.querySelectorAll('th button').forEach(btn => btn.addEventListener('click', (e) => { AppState.wipItem.scenarios.splice(parseInt(e.currentTarget.dataset.scenarioIndex), 1); this.renderScenarioMatrix(); }));
+            DOM.scenarioMatrixContainer.querySelectorAll('tbody input, tbody select').forEach(el => el.addEventListener('change', e => {
+                const scIndex = parseInt(e.target.dataset.scIndex);
+                if (e.target.matches('.outcome-input, .outcome-select')) { AppState.wipItem.scenarios[scIndex].outcome = e.target.value; }
+                else { const qIndex = parseInt(e.target.dataset.qIndex); AppState.wipItem.scenarios[scIndex].values[AppState.wipItem.questions[qIndex].text] = e.target.value; }
+            }));
+        },
+
+        renderReport() {
+            if (AppState.isMultiServiceView) {
+                DOM.reportServiceName.textContent = 'Birleştirilmiş Rapor';
+                DOM.reportContent.innerHTML = AppState.services.map(service => `
+                    <div class="service-report-block">
+                        <h3>${service.name}</h3>
+                        <div class="report-stage-accordion">
+                            ${this.renderServiceContent(service.items)}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
                 DOM.reportServiceName.textContent = AppState.serviceName;
-                DOM.reportContent.innerHTML = '';
+                DOM.reportContent.innerHTML = `<div class="report-stage-accordion">${this.renderServiceContent(AppState.items)}</div>`;
+            }
+        },
 
-                AppState.stages.forEach((stage, stageIndex) => {
-                    const itemsForStage = AppState.items.filter(item => item.stageIndex === stageIndex);
-                    if (itemsForStage.length === 0) return;
-
-                    const details = document.createElement('details');
-                    details.open = true;
-                    details.innerHTML = `
+        renderServiceContent(items) {
+            return AppState.stages.map((stage, stageIndex) => {
+                const itemsForStage = items.filter(item => item.stageIndex === stageIndex);
+                if (itemsForStage.length === 0) return '';
+                return `
+                    <details open>
                         <summary>
                             ${stage.name}
                             <span class="summary-stats">${itemsForStage.filter(i=>i.type === 'rule').length} Kural, ${itemsForStage.filter(i=>i.type === 'criterion').length} Kriter</span>
@@ -478,310 +656,473 @@
                         <div class="accordion-content">
                             ${itemsForStage.map(item => this.createItemReportTable(item)).join('')}
                         </div>
-                    `;
-                    DOM.reportContent.appendChild(details);
-                });
-            },
-            createItemReportTable(item) {
-                return `
-                    <details class="report-item-details" open>
-                        <summary>${item.type === 'rule' ? 'Kural' : 'Kriter'}: ${item.name}</summary>
-                        <div class="matrix-table-container">
-                             <table class="matrix-table report-item-table">
-                                <thead>
-                                    <tr>
-                                        <th>Sorular</th>
-                                        ${item.scenarios.map((_, i) => `<th>Senaryo ${i+1}</th>`).join('')}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${item.questions.map(q => `
-                                        <tr>
-                                            <td>${q.text}</td>
-                                            ${item.scenarios.map(sc => `<td>${sc.values[q.text] || '-'}</td>`).join('')}
-                                        </tr>
-                                    `).join('')}
-                                    <tr>
-                                        <td><strong>DURUM</strong></td>
-                                        ${item.scenarios.map(sc => `<td><strong>${sc.outcome || '-'}</strong></td>`).join('')}
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
                     </details>
                 `;
+            }).join('');
+        },
+
+        createItemReportTable(item) {
+            return `
+                <details class="report-item-details" open>
+                    <summary>${item.type === 'rule' ? 'Kural' : 'Kriter'}: ${item.name}</summary>
+                    <div class="matrix-table-container">
+                        <table class="report-item-table">
+                            <thead>
+                                <tr>
+                                    <th>Kural Detayı</th>
+                                    ${item.scenarios.map((_, i) => `<th>Senaryo ${i+1}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${item.questions.map(q => `
+                                    <tr>
+                                        <td>${q.text}</td>
+                                        ${item.scenarios.map(sc => `<td>${sc.values[q.text] || '-'}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                                <tr class="durum-row">
+                                    <td>DURUM</td>
+                                    ${item.scenarios.map(sc => `<td>${sc.outcome || '-'}</td>`).join('')}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            `;
+        }
+    };
+
+    // Logic handles user interactions and state changes
+    const Logic = {
+        init() {
+            DOM.startDefinitionBtn.addEventListener('click', () => {
+                Logic.resetToSingleServiceMode();
+                UIManager.goToStep(1);
+            });
+            DOM.excelUploadInput.addEventListener('change', this.handleExcelUpload.bind(this));
+
+            DOM.step1BackBtn.addEventListener('click', () => UIManager.goToStep(0));
+            DOM.step1NextBtn.addEventListener('click', () => {
+                const name = DOM.serviceNameInput.value.trim();
+                if (name) { 
+                    AppState.serviceName = name; 
+                    AppState.currentStageIndex=0; 
+                    AppState.items = []; 
+                    UIManager.goToStep(2); 
+                } else { alert('Lütfen bir hizmet adı girin.'); }
+            });
+            
+            DOM.step2BackBtn.addEventListener('click', () => {
+                if (AppState.currentStageIndex > 0) { AppState.currentStageIndex--; UIManager.goToStep(2); }
+                else { UIManager.goToStep(1); }
+            });
+            DOM.addNewRuleBtn.addEventListener('click', () => this.startNewItem('rule'));
+            DOM.addNewCriterionBtn.addEventListener('click', () => this.startNewItem('criterion'));
+            DOM.step2NextStageBtn.addEventListener('click', () => {
+                if (AppState.currentStageIndex < AppState.stages.length - 1) { AppState.currentStageIndex++; UIManager.goToStep(2); }
+            });
+            DOM.step2FinishBtn.addEventListener('click', () => {
+                if (AppState.editingFromMultiView) {
+                    const serviceToUpdate = AppState.services.find(s => s.name === AppState.serviceName);
+                    if (serviceToUpdate) {
+                        serviceToUpdate.items = JSON.parse(JSON.stringify(AppState.items));
+                    }
+                    AppState.isMultiServiceView = true;
+                    AppState.editingFromMultiView = false;
+                }
+                UIManager.goToStep(6);
+            });
+            
+            DOM.step3BackBtn.addEventListener('click', () => UIManager.goToStep(2));
+            DOM.step3NextBtn.addEventListener('click', () => {
+                const name = DOM.itemNameInput.value.trim();
+                if (name) { AppState.wipItem.name = name; UIManager.goToStep(4); } 
+                else { alert('Lütfen bir tanım girin.'); }
+            });
+
+            DOM.step4BackBtn.addEventListener('click', () => UIManager.goToStep(3));
+            DOM.step4NextBtn.addEventListener('click', () => {
+                if (AppState.wipItem.questions.length > 0) {
+                    if (AppState.wipItem.scenarios.length === 0) this.addScenario();
+                    UIManager.goToStep(5);
+                } else { alert('Lütfen en az bir soru ekleyin.'); }
+            });
+            
+            DOM.step5BackBtn.addEventListener('click', () => UIManager.goToStep(4));
+            DOM.addScenarioBtn.addEventListener('click', this.addScenario);
+            DOM.saveItemBtn.addEventListener('click', this.saveItem);
+            
+            DOM.openQuestionModalBtn.addEventListener('click', () => this.openQuestionModal());
+            DOM.cancelQuestionBtn.addEventListener('click', this.closeQuestionModal);
+            DOM.saveQuestionBtn.addEventListener('click', this.saveQuestion.bind(this));
+            
+            DOM.toggleDetailsBtn.addEventListener('click', this.toggleAllReportDetails);
+            DOM.reportEditBtn.addEventListener('click', this.handleEditRequest);
+            DOM.reportDownloadBtn.addEventListener('click', this.exportToExcel);
+            DOM.reportPdfDetailedBtn.addEventListener('click', () => this.exportToPDF(true));
+            DOM.reportPdfSummaryBtn.addEventListener('click', () => this.exportToPDF(false));
+            DOM.reportFullscreenBtn.addEventListener('click', () => document.documentElement.requestFullscreen().catch(err => console.error(err)));
+
+            DOM.cancelEditSelectionBtn.addEventListener('click', () => DOM.editSelectionModal.classList.remove('active'));
+        },
+
+        resetToSingleServiceMode() {
+            AppState.serviceName = '';
+            AppState.items = [];
+            AppState.services = [];
+            AppState.isMultiServiceView = false;
+            AppState.editingFromMultiView = false;
+            AppState.currentStageIndex = 0;
+            DOM.serviceNameInput.value = '';
+        },
+
+        startNewItem(type) {
+            AppState.wipItem = { id: 'wip_' + Date.now(), type, stageIndex: AppState.currentStageIndex, name: '', questions: [], scenarios: [], };
+            UIManager.goToStep(3);
+        },
+
+        addScenario() {
+            AppState.wipItem.scenarios.push({ id: 'sc_' + Date.now(), values: {}, outcome: AppState.wipItem.type === 'rule' ? 'Kural Sağlanıyor' : '' });
+            if(AppState.currentStep === 5) UIManager.renderScenarioMatrix();
+        },
+
+        saveItem() {
+            if(AppState.wipItem.scenarios.some(sc => !sc.outcome)){ alert('Lütfen tüm senaryolar için bir DURUM belirtin.'); return; }
+            const existingIndex = AppState.items.findIndex(i => i.id === AppState.wipItem.id);
+            if (existingIndex > -1) AppState.items[existingIndex] = AppState.wipItem;
+            else AppState.items.push(AppState.wipItem);
+            AppState.wipItem = null;
+            UIManager.goToStep(2);
+        },
+
+        openQuestionModal(index = -1) {
+            AppState.wipQuestionIndex = index;
+            if (index > -1) {
+                const q = AppState.wipItem.questions[index];
+                DOM.questionModalTitle.textContent = "Soruyu Düzenle";
+                DOM.questionText.value = q.text; DOM.questionSource.value = q.source;
+                DOM.questionAutomation.value = q.automation; DOM.questionAnswerType.value = q.answerType;
+                DOM.questionScope.value = q.scope;
+            } else {
+                DOM.questionModalTitle.textContent = "Yeni Soru Ekle";
+                DOM.questionText.value = ''; DOM.questionSource.selectedIndex = 0;
+                DOM.questionAutomation.value = ''; DOM.questionAnswerType.selectedIndex = 0;
+                DOM.questionScope.selectedIndex = 0;
             }
-        };
-
-        const Logic = {
-            init() {
-                // Step 0
-                DOM.startDefinitionBtn.addEventListener('click', () => UIManager.goToStep(1));
-                DOM.viewReportBtn.addEventListener('click', () => DOM.excelUploadInput.click());
-                DOM.excelUploadInput.addEventListener('change', this.handleExcelUpload);
-                // Step 1
-                DOM.step1BackBtn.addEventListener('click', () => UIManager.goToStep(0));
-                DOM.step1NextBtn.addEventListener('click', () => {
-                    const name = DOM.serviceNameInput.value.trim();
-                    if (name) { AppState.serviceName = name; AppState.currentStageIndex=0; AppState.items = []; UIManager.goToStep(2); } 
-                    else { alert('Lütfen bir hizmet adı girin.'); }
-                });
-                // Step 2
-                DOM.step2BackBtn.addEventListener('click', () => {
-                    if (AppState.currentStageIndex > 0) { AppState.currentStageIndex--; UIManager.goToStep(2); }
-                    else { UIManager.goToStep(1); }
-                });
-                DOM.addNewRuleBtn.addEventListener('click', () => this.startNewItem('rule'));
-                DOM.addNewCriterionBtn.addEventListener('click', () => this.startNewItem('criterion'));
-                DOM.step2NextStageBtn.addEventListener('click', () => {
-                    if (AppState.currentStageIndex < AppState.stages.length - 1) { AppState.currentStageIndex++; UIManager.goToStep(2); }
-                });
-                DOM.step2FinishBtn.addEventListener('click', () => UIManager.goToStep(6));
-                // Steps 3, 4, 5
-                DOM.step3BackBtn.addEventListener('click', () => UIManager.goToStep(2));
-                DOM.step3NextBtn.addEventListener('click', () => {
-                    const name = DOM.itemNameInput.value.trim();
-                    if (name) { AppState.wipItem.name = name; UIManager.goToStep(4); } 
-                    else { alert('Lütfen bir tanım girin.'); }
-                });
-                DOM.step4BackBtn.addEventListener('click', () => UIManager.goToStep(3));
-                DOM.step4NextBtn.addEventListener('click', () => {
-                    if (AppState.wipItem.questions.length > 0) {
-                        if (AppState.wipItem.scenarios.length === 0) this.addScenario();
-                        UIManager.goToStep(5);
-                    } else { alert('Lütfen en az bir soru ekleyin.'); }
-                });
-                DOM.step5BackBtn.addEventListener('click', () => UIManager.goToStep(4));
-                DOM.addScenarioBtn.addEventListener('click', this.addScenario);
-                DOM.saveItemBtn.addEventListener('click', this.saveItem);
-                // Question Modal
-                DOM.openQuestionModalBtn.addEventListener('click', () => this.openQuestionModal());
-                DOM.cancelQuestionBtn.addEventListener('click', this.closeQuestionModal);
-                DOM.saveQuestionBtn.addEventListener('click', this.saveQuestion.bind(this));
-                // Report Screen
-                DOM.toggleDetailsBtn.addEventListener('click', this.toggleAllReportDetails);
-                DOM.reportEditBtn.addEventListener('click', () => { AppState.currentStageIndex = 0; UIManager.goToStep(2); });
-                DOM.reportDownloadBtn.addEventListener('click', this.exportToExcel);
-                DOM.reportPdfDetailedBtn.addEventListener('click', () => this.exportToPDF(true));
-                DOM.reportPdfSummaryBtn.addEventListener('click', () => this.exportToPDF(false));
-                DOM.reportFullscreenBtn.addEventListener('click', () => document.documentElement.requestFullscreen().catch(err => console.error(err)));
-            },
-            startNewItem(type) {
-                AppState.wipItem = { id: 'wip_' + Date.now(), type, stageIndex: AppState.currentStageIndex, name: '', questions: [], scenarios: [], };
-                UIManager.goToStep(3);
-            },
-            addScenario() {
-                AppState.wipItem.scenarios.push({ id: 'sc_' + Date.now(), values: {}, outcome: AppState.wipItem.type === 'rule' ? 'Kural Sağlanıyor' : '' });
-                if(AppState.currentStep === 5) UIManager.renderScenarioMatrix();
-            },
-            saveItem() {
-                if(AppState.wipItem.scenarios.some(sc => !sc.outcome)){ alert('Lütfen tüm senaryolar için bir DURUM belirtin.'); return; }
-                const existingIndex = AppState.items.findIndex(i => i.id === AppState.wipItem.id);
-                if (existingIndex > -1) AppState.items[existingIndex] = AppState.wipItem;
-                else AppState.items.push(AppState.wipItem);
-                AppState.wipItem = null;
-                UIManager.goToStep(2);
-            },
-            openQuestionModal(index = -1) {
-                AppState.wipQuestionIndex = index;
-                if (index > -1) {
-                    const q = AppState.wipItem.questions[index];
-                    DOM.questionModalTitle.textContent = "Soruyu Düzenle";
-                    DOM.questionText.value = q.text; DOM.questionSource.value = q.source;
-                    DOM.questionAutomation.value = q.automation; DOM.questionAnswerType.value = q.answerType;
-                    DOM.questionScope.value = q.scope;
-                } else {
-                    DOM.questionModalTitle.textContent = "Yeni Soru Ekle";
-                    DOM.questionText.value = ''; DOM.questionSource.selectedIndex = 0;
-                    DOM.questionAutomation.value = ''; DOM.questionAnswerType.selectedIndex = 0;
-                    DOM.questionScope.selectedIndex = 0;
+            DOM.questionStageWrapper.style.display = AppState.currentStageIndex >= 2 ? 'block' : 'none';
+            if (AppState.currentStageIndex >= 2) {
+                DOM.questionStageSelect.innerHTML = '';
+                for(let i = 0; i <= AppState.currentStageIndex; i++) {
+                    DOM.questionStageSelect.add(new Option(AppState.stages[i].name, AppState.stages[i].name));
                 }
-                DOM.questionStageWrapper.style.display = AppState.currentStageIndex >= 2 ? 'block' : 'none';
-                if (AppState.currentStageIndex >= 2) {
-                    DOM.questionStageSelect.innerHTML = '';
-                    for(let i = 0; i <= AppState.currentStageIndex; i++) {
-                        DOM.questionStageSelect.add(new Option(AppState.stages[i].name, AppState.stages[i].name));
-                    }
-                     if(index > -1 && AppState.wipItem.questions[index].stage) { DOM.questionStageSelect.value = AppState.wipItem.questions[index].stage; }
-                }
-                DOM.questionModal.classList.add('active');
-            },
-            closeQuestionModal() { DOM.questionModal.classList.remove('active'); },
-            saveQuestion() {
-                const questionData = {
-                    text: DOM.questionText.value.trim(), source: DOM.questionSource.value, automation: DOM.questionAutomation.value.trim(),
-                    answerType: DOM.questionAnswerType.value, scope: DOM.questionScope.value,
-                    stage: AppState.currentStageIndex >= 2 ? DOM.questionStageSelect.value : null
-                };
-                if (!questionData.text) { alert('Soru metni boş olamaz.'); return; }
-                if (AppState.wipQuestionIndex > -1) AppState.wipItem.questions[AppState.wipQuestionIndex] = questionData;
-                else AppState.wipItem.questions.push(questionData);
-                this.closeQuestionModal();
-                UIManager.renderQuestionsList();
-            },
-            handleExcelUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, {type: 'array'});
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const json = XLSX.utils.sheet_to_json(worksheet);
-                        Logic.parseExcelData(json);
-                        UIManager.goToStep(6);
-                    } catch (error) {
-                        console.error("Excel parse error:", error);
-                        alert("Excel dosyası okunamadı. Lütfen sistem tarafından oluşturulan bir dosya yüklediğinizden emin olun.");
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-                event.target.value = ''; // Reset input for re-upload
-            },
-            parseExcelData(data) {
-                const newItems = [];
-                let currentItem = null;
-                AppState.serviceName = data[0]["Hizmet Adı"] || 'İsimsiz Hizmet';
+                 if(index > -1 && AppState.wipItem.questions[index].stage) { DOM.questionStageSelect.value = AppState.wipItem.questions[index].stage; }
+            }
+            DOM.questionModal.classList.add('active');
+        },
+        
+        closeQuestionModal() { DOM.questionModal.classList.remove('active'); },
+        
+        saveQuestion() {
+            const questionData = {
+                text: DOM.questionText.value.trim(), source: DOM.questionSource.value, automation: DOM.questionAutomation.value.trim(),
+                answerType: DOM.questionAnswerType.value, scope: DOM.questionScope.value,
+                stage: AppState.currentStageIndex >= 2 ? DOM.questionStageSelect.value : null
+            };
+            if (!questionData.text) { alert('Soru metni boş olamaz.'); return; }
+            if (AppState.wipQuestionIndex > -1) AppState.wipItem.questions[AppState.wipQuestionIndex] = questionData;
+            else AppState.wipItem.questions.push(questionData);
+            this.closeQuestionModal();
+            UIManager.renderQuestionsList();
+        },
 
-                data.forEach(row => {
-                    if (row["Kural/Kriter Adı"]) {
-                        const stageIndex = AppState.stages.findIndex(s => s.name === row["Aşama"]);
-                        const isNewItem = !currentItem || currentItem.name !== row["Kural/Kriter Adı"];
+        handleExcelUpload(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            Logic.resetToSingleServiceMode();
+            AppState.isMultiServiceView = true;
+            
+            const fileReadPromises = Array.from(files).map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            const json = XLSX.utils.sheet_to_json(worksheet);
+                            resolve(this.parseExcelData(json));
+                        } catch (error) {
+                            reject(`Dosya okunamadı: ${file.name}. Hata: ${error.message}`);
+                        }
+                    };
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsArrayBuffer(file);
+                });
+            });
+
+            Promise.all(fileReadPromises)
+                .then(services => {
+                    AppState.services = services;
+                    if (services.length === 1) {
+                         // If only one file is uploaded, switch to single service view for consistency
+                        AppState.isMultiServiceView = false;
+                        AppState.serviceName = services[0].name;
+                        AppState.items = services[0].items;
+                    }
+                    UIManager.goToStep(6);
+                })
+                .catch(error => {
+                    console.error("Excel parse error:", error);
+                    alert("Bir veya daha fazla Excel dosyası okunamadı. Lütfen sistem tarafından oluşturulan dosyaları yüklediğinizden emin olun.");
+                })
+                .finally(() => {
+                    event.target.value = ''; // Reset input for re-upload
+                });
+        },
+
+        parseExcelData(data) {
+            const items = [];
+            let currentItem = null;
+            const serviceName = data[0]?.["Hizmet Adı"] || 'İsimsiz Hizmet';
+
+            data.forEach(row => {
+                if (row["Kural/Kriter Adı"]) {
+                    const stageIndex = AppState.stages.findIndex(s => s.name === row["Aşama"]);
+                    const isNewItem = !currentItem || currentItem.name !== row["Kural/Kriter Adı"] || currentItem.stageIndex !== stageIndex;
+                    
+                    if (isNewItem) {
+                        if (currentItem) items.push(currentItem);
+                        currentItem = {
+                            id: 'item_' + Date.now() + Math.random(),
+                            name: row["Kural/Kriter Adı"],
+                            type: row["Tipi"] === 'Kural' ? 'rule' : 'criterion',
+                            stageIndex: stageIndex > -1 ? stageIndex : 0,
+                            questions: [], scenarios: []
+                        };
+                    }
+
+                    const questionText = row["Soru"];
+                    if (questionText && questionText !== "DURUM") {
+                        if (!currentItem.questions.find(q => q.text === questionText)) {
+                             currentItem.questions.push({
+                                text: questionText,
+                                source: row["Bilgi Kaynağı"], automation: row["Otomasyon"],
+                                answerType: row["Yanıt Türü"], scope: row["Soru Kapsamı"],
+                                stage: row["Bilginin Alındığı Aşama"] || null
+                            });
+                        }
                         
-                        if(isNewItem) {
-                            if(currentItem) newItems.push(currentItem);
-                            currentItem = {
-                                id: 'item_' + Date.now() + Math.random(),
-                                name: row["Kural/Kriter Adı"],
-                                type: row["Tipi"] === 'Kural' ? 'rule' : 'criterion',
-                                stageIndex: stageIndex > -1 ? stageIndex : 0,
-                                questions: [], scenarios: []
-                            };
-                        }
-
-                        if(row["Soru"] && row["Soru"] !== "DURUM") {
-                            const question = {
-                                text: row["Soru"], source: row["Bilgi Kaynağı"], automation: row["Otomasyon"],
-                                answerType: row["Yanıt Türü"], scope: row["Soru Kapsamı"], stage: row["Bilginin Alındığı Aşama"] || null
-                            };
-                            if (!currentItem.questions.find(q => q.text === question.text)) {
-                                currentItem.questions.push(question);
+                        Object.keys(row).forEach(key => {
+                            if (key.startsWith("Senaryo ")) {
+                                const scenarioIndex = parseInt(key.split(" ")[1]) - 1;
+                                if (!currentItem.scenarios[scenarioIndex]) {
+                                    currentItem.scenarios[scenarioIndex] = { id: 'sc_' + scenarioIndex, values: {} };
+                                }
+                                currentItem.scenarios[scenarioIndex].values[questionText] = row[key];
                             }
-                            Object.keys(row).forEach(key => {
-                                if (key.startsWith("Senaryo ")) {
-                                    const scenarioIndex = parseInt(key.split(" ")[1]) - 1;
-                                    if(!currentItem.scenarios[scenarioIndex]) currentItem.scenarios[scenarioIndex] = {id: 'sc_'+scenarioIndex, values:{}};
-                                    currentItem.scenarios[scenarioIndex].values[question.text] = row[key];
+                        });
+                    } else if (questionText === "DURUM") {
+                        Object.keys(row).forEach(key => {
+                            if (key.startsWith("Senaryo ")) {
+                                const scenarioIndex = parseInt(key.split(" ")[1]) - 1;
+                                if (currentItem.scenarios[scenarioIndex]) {
+                                    currentItem.scenarios[scenarioIndex].outcome = row[key];
                                 }
-                            });
-                        } else if (row["Soru"] === "DURUM") {
-                             Object.keys(row).forEach(key => {
-                                if (key.startsWith("Senaryo ")) {
-                                    const scenarioIndex = parseInt(key.split(" ")[1]) - 1;
-                                     if(currentItem.scenarios[scenarioIndex]) {
-                                         currentItem.scenarios[scenarioIndex].outcome = row[key];
-                                     }
-                                }
-                            });
-                        }
-                    } else { // Handle end of item block
-                        if(currentItem) {
-                             newItems.push(currentItem);
-                             currentItem = null;
-                        }
+                            }
+                        });
                     }
+                } else {
+                    if (currentItem) {
+                        items.push(currentItem);
+                        currentItem = null;
+                    }
+                }
+            });
+            if (currentItem) items.push(currentItem);
+            
+            return { name: serviceName, items: items };
+        },
+
+        handleEditRequest() {
+            if (AppState.isMultiServiceView && AppState.services.length > 1) {
+                DOM.editSelectionList.innerHTML = '';
+                AppState.services.forEach((service, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn btn-primary';
+                    btn.textContent = service.name;
+                    btn.dataset.serviceIndex = index;
+                    btn.onclick = () => {
+                        const selectedService = AppState.services[index];
+                        AppState.serviceName = selectedService.name;
+                        AppState.items = JSON.parse(JSON.stringify(selectedService.items)); // Deep copy
+                        AppState.currentStageIndex = 0;
+                        AppState.isMultiServiceView = false;
+                        AppState.editingFromMultiView = true;
+                        
+                        DOM.editSelectionModal.classList.remove('active');
+                        UIManager.goToStep(2);
+                    };
+                    DOM.editSelectionList.appendChild(btn);
                 });
-                if(currentItem) newItems.push(currentItem); // push the last one
-                AppState.items = newItems;
-            },
-            exportToExcel() {
-                const dataForExport = [];
-                AppState.items.forEach(item => {
-                    const baseRow = { "Hizmet Adı": AppState.serviceName, "Aşama": AppState.stages[item.stageIndex].name, "Kural/Kriter Adı": item.name, "Tipi": item.type === 'rule' ? 'Kural' : 'Kriter', };
+                DOM.editSelectionModal.classList.add('active');
+            } else {
+                AppState.currentStageIndex = 0;
+                UIManager.goToStep(2);
+            }
+        },
+
+        exportToExcel() {
+            const dataForExport = [];
+            const servicesToExport = AppState.isMultiServiceView ? AppState.services : [{ name: AppState.serviceName, items: AppState.items }];
+            
+            servicesToExport.forEach(service => {
+                service.items.forEach(item => {
+                    const baseRow = { "Hizmet Adı": service.name, "Aşama": AppState.stages[item.stageIndex].name, "Kural/Kriter Adı": item.name, "Tipi": item.type === 'rule' ? 'Kural' : 'Kriter', };
                     item.questions.forEach(q => {
                         const questionRow = { ...baseRow, "Soru": q.text, "Bilgi Kaynağı": q.source, "Otomasyon": q.automation, "Yanıt Türü": q.answerType, "Soru Kapsamı": q.scope, "Bilginin Alındığı Aşama": q.stage || '' };
-                        item.scenarios.forEach((sc, i) => { questionRow[`Senaryo ${i + 1} Değeri`] = sc.values[q.text] || ''; });
+                        item.scenarios.forEach((sc, i) => { questionRow[`Senaryo ${i + 1}`] = sc.values[q.text] || ''; });
                         dataForExport.push(questionRow);
                     });
                     if (item.scenarios.length > 0) {
                        const outcomeRow = { ...baseRow, "Soru": "DURUM" };
-                       item.scenarios.forEach((sc, i) => { outcomeRow[`Senaryo ${i + 1} Değeri`] = sc.outcome; });
+                       item.scenarios.forEach((sc, i) => { outcomeRow[`Senaryo ${i + 1}`] = sc.outcome; });
                        dataForExport.push(outcomeRow);
                     }
                     dataForExport.push({}); // Empty row as separator
                 });
-                if (dataForExport.length === 0) { alert("Dışa aktarılacak veri bulunmuyor."); return; }
-                const worksheet = XLSX.utils.json_to_sheet(dataForExport);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, 'Kurallar ve Kriterler');
-                XLSX.writeFile(workbook, `${AppState.serviceName.replace(/ /g, "_")}_Kurallari.xlsx`);
-            },
-            exportToPDF(detailed = true) {
-                const reportContent = DOM.reportContent;
-                const serviceName = AppState.serviceName || 'Rapor';
-                const originalButton = detailed ? DOM.reportPdfDetailedBtn : DOM.reportPdfSummaryBtn;
-                const originalButtonText = originalButton.innerHTML;
-                originalButton.disabled = true;
-                originalButton.innerHTML = 'Oluşturuluyor...';
+            });
 
-                // Store original state of details
-                const allDetails = reportContent.querySelectorAll('details');
-                const originalOpenStates = Array.from(allDetails).map(d => d.open);
+            if (dataForExport.length === 0) { alert("Dışa aktarılacak veri bulunmuyor."); return; }
 
-                // Set state for PDF generation
-                allDetails.forEach(detail => {
-                    // For summary, close all rule details. Stage details can remain as they are or be opened.
-                    if (!detailed && detail.classList.contains('report-item-details')) {
-                        detail.open = false;
-                    } else {
-                        detail.open = true; // For detailed, open everything
+            const worksheet = XLSX.utils.json_to_sheet(dataForExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Kurallar ve Kriterler');
+            const fileName = (servicesToExport.length > 1 ? 'Birleştirilmiş_Rapor' : servicesToExport[0].name.replace(/ /g, "_")) + '.xlsx';
+            XLSX.writeFile(workbook, fileName);
+        },
+
+        async exportToPDF(detailed = true) {
+            const serviceName = AppState.isMultiServiceView ? 'Birleştirilmiş Rapor' : AppState.serviceName;
+            const originalButton = detailed ? DOM.reportPdfDetailedBtn : DOM.reportPdfSummaryBtn;
+            const originalButtonText = originalButton.innerHTML;
+            originalButton.disabled = true;
+            originalButton.innerHTML = 'Oluşturuluyor...';
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            const margin = 15;
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const contentWidth = pageWidth - margin * 2;
+            let cursorY = margin;
+
+            const addElementToPdf = async (element) => {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const ratio = contentWidth / canvasWidth;
+                const scaledImgHeight = canvasHeight * ratio;
+
+                if (cursorY + scaledImgHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    cursorY = margin;
+                }
+
+                pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', margin, cursorY, contentWidth, scaledImgHeight);
+                cursorY += scaledImgHeight + 5; // 5mm gap
+            };
+
+            const tempRenderContainer = document.createElement('div');
+            tempRenderContainer.style.position = 'absolute';
+            tempRenderContainer.style.left = '-9999px';
+            tempRenderContainer.style.width = '1200px';
+            tempRenderContainer.style.backgroundColor = 'white';
+            tempRenderContainer.style.padding = '1px';
+            
+            const style = document.querySelector('style').cloneNode(true);
+            tempRenderContainer.appendChild(style);
+            document.body.appendChild(tempRenderContainer);
+
+            try {
+                const services = AppState.isMultiServiceView ? AppState.services : [{ name: AppState.serviceName, items: AppState.items }];
+
+                for (const service of services) {
+                    if (AppState.isMultiServiceView) {
+                        const serviceTitleEl = document.createElement('h3');
+                        serviceTitleEl.className = 'service-report-block';
+                        serviceTitleEl.style.marginBottom = '1.5rem';
+                        serviceTitleEl.style.padding = '0';
+                        serviceTitleEl.style.border = 'none';
+                        serviceTitleEl.textContent = service.name;
+                        tempRenderContainer.appendChild(serviceTitleEl);
+                        await addElementToPdf(serviceTitleEl);
+                        tempRenderContainer.removeChild(serviceTitleEl);
                     }
-                });
 
-                html2canvas(reportContent, { scale: 2, useCORS: true }).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const { jsPDF } = window.jspdf;
-                    
-                    const pdfWidth = 210; 
-                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                    
-                    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                    pdf.save(`${serviceName.replace(/ /g, "_")}_Raporu_${detailed ? 'Detayli' : 'Ozet'}.pdf`);
+                    for (const stage of AppState.stages) {
+                        const itemsForStage = service.items.filter(i => i.stageIndex === AppState.stages.indexOf(stage));
+                        if (itemsForStage.length === 0) continue;
 
-                }).catch(err => {
-                    console.error("PDF generation error:", err);
-                    alert("PDF oluşturulurken bir hata oluştu.");
-                }).finally(() => {
-                    // Restore original state
-                    allDetails.forEach((detail, index) => {
-                        detail.open = originalOpenStates[index];
-                    });
-                    originalButton.disabled = false;
-                    originalButton.innerHTML = originalButtonText;
-                });
-            },
-            toggleAllReportDetails() {
-                const details = DOM.reportContent.querySelectorAll('details.report-item-details');
-                if (details.length === 0) return;
+                        const stageSummaryHtml = `
+                            <details open>
+                                <summary>
+                                    ${stage.name}
+                                    <span class="summary-stats">${itemsForStage.filter(i=>i.type === 'rule').length} Kural, ${itemsForStage.filter(i=>i.type === 'criterion').length} Kriter</span>
+                                </summary>
+                            </details>`;
+                        
+                        const stageWrapper = document.createElement('div');
+                        stageWrapper.className = 'report-stage-accordion';
+                        stageWrapper.innerHTML = stageSummaryHtml;
+                        tempRenderContainer.appendChild(stageWrapper);
+                        await addElementToPdf(stageWrapper.querySelector('summary'));
+                        tempRenderContainer.removeChild(stageWrapper);
 
-                // Determine new state based on the first element's current state
-                const shouldOpen = !details[0].open;
-                
-                details.forEach(detail => {
-                    detail.open = shouldOpen;
-                });
+                        for (const item of itemsForStage) {
+                            const itemHtml = UIManager.createItemReportTable(item);
+                            const itemWrapper = document.createElement('div');
+                            itemWrapper.style.padding = "0.5rem";
+                            itemWrapper.innerHTML = itemHtml;
+                            const itemDetailsEl = itemWrapper.firstElementChild;
+                            itemDetailsEl.open = detailed;
+                            tempRenderContainer.appendChild(itemWrapper);
+                            await addElementToPdf(itemDetailsEl);
+                            tempRenderContainer.removeChild(itemWrapper);
+                        }
+                    }
+                }
+                pdf.save(`${serviceName.replace(/ /g, "_")}_Raporu_${detailed ? 'Detayli' : 'Ozet'}.pdf`);
 
-                DOM.toggleDetailsBtn.textContent = shouldOpen ? 'Tüm Detayları Gizle' : 'Tüm Detayları Göster';
+            } catch (err) {
+                console.error("PDF generation error:", err);
+                alert("PDF oluşturulurken bir hata oluştu.");
+            } finally {
+                document.body.removeChild(tempRenderContainer);
+                originalButton.disabled = false;
+                originalButton.innerHTML = originalButtonText;
             }
+        },
 
-        };
-
-        Logic.init();
-    });
-    </script>
+        toggleAllReportDetails() {
+            const details = DOM.reportContent.querySelectorAll('details.report-item-details');
+            if (details.length === 0) return;
+            const shouldOpen = !details[0].open;
+            details.forEach(detail => { detail.open = shouldOpen; });
+            DOM.toggleDetailsBtn.textContent = shouldOpen ? 'Tüm Detayları Gizle' : 'Tüm Detayları Göster';
+        }
+    };
+    
+    // Initialize the application logic
+    Logic.init();
+});
+</script>
 </body>
 </html>
 
