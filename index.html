@@ -393,7 +393,21 @@
                 <div class="form-group"><label class="form-label" for="question-text">Soru Metni</label><input type="text" id="question-text" class="form-input" placeholder="Örn: Öğrenci İkameti"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group"><label class="form-label" for="question-source">Bilginin Kaynağı</label><select id="question-source" class="form-select"><option>Beyan</option><option>Mernis</option><option>Evrak</option><option>Sosyal İnceleme</option><option>E-Belediye</option></select></div>
-                    <div class="form-group"><label class="form-label" for="question-automation">Hangi Otomasyon?</label><input type="text" id="question-automation" class="form-input" placeholder="Örn: SEDEP"></div>
+                    <div class="form-group">
+                        <label class="form-label" for="question-automation">Hangi Otomasyon?</label>
+                        <select id="question-automation" class="form-select">
+                            <option value="">Seçiniz...</option>
+                            <option>SEDEP OTOMASYONU</option>
+                            <option>GENÇ ÜNİVERSİTELİ OTOMASYONU</option>
+                            <option>SEN OKU DİYE</option>
+                            <option>SOSBİS OTOMASYONU</option>
+                            <option>İSADEM OTOMASYONU</option>
+                            <option>İBB KADIN EXCEL</option>
+                            <option>MAHALLE EVLERİ EXCEL</option>
+                            <option>YUVAMIZ İSTANBUL OTOMASYONU</option>
+                            <option>İSEM OTOMASYONU</option>
+                        </select>
+                    </div>
                     <div class="form-group"><label class="form-label" for="question-answer-type">Yanıt Türü</label><select id="question-answer-type" class="form-select"><option>Metin</option><option>Sayı</option><option>Tarih</option><option>Yanıt Doğrulama</option><option>Çoklu Seçim</option></select></div>
                     <div class="form-group"><label class="form-label" for="question-scope">Soru Kapsamı</label><select id="question-scope" class="form-select"><option>Kişi</option><option>Hane</option></select></div>
                 </div>
@@ -574,8 +588,30 @@ document.addEventListener('DOMContentLoaded', () => {
             itemsForStage.forEach(item => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'card';
-                itemEl.innerHTML = `<div class="card-content" style="padding: 1rem;"><div style="display: flex; justify-content: space-between; align-items: center;"><div><strong>${item.type === 'rule' ? 'Kural:' : 'Kriter:'}</strong> ${item.name}<br><small class="text-muted">${item.questions.length} soru, ${item.scenarios.length} senaryo</small></div><button class="btn btn-danger-ghost" data-item-id="${item.id}">Sil</button></div></div>`;
-                itemEl.querySelector('button').addEventListener('click', () => { AppState.items = AppState.items.filter(i => i.id !== item.id); this.renderRulesList(); });
+                itemEl.innerHTML = `
+                    <div class="card-content" style="padding: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${item.type === 'rule' ? 'Kural:' : 'Kriter:'}</strong> ${item.name}
+                                <br>
+                                <small class="text-muted">${item.questions.length} soru, ${item.scenarios.length} senaryo</small>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-secondary" style="padding: 0.5rem 1rem;" data-action="edit" data-item-id="${item.id}">Düzenle</button>
+                                <button class="btn btn-danger-ghost" style="padding: 0.5rem 1rem;" data-action="delete" data-item-id="${item.id}">Sil</button>
+                            </div>
+                        </div>
+                    </div>`;
+                
+                itemEl.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
+                    Logic.startEditingItem(e.currentTarget.dataset.itemId);
+                });
+
+                itemEl.querySelector('[data-action="delete"]').addEventListener('click', (e) => { 
+                    AppState.items = AppState.items.filter(i => i.id !== e.currentTarget.dataset.itemId); 
+                    this.renderRulesList();
+                });
+
                 list.appendChild(itemEl);
             });
             DOM.rulesListContainer.appendChild(list);
@@ -781,6 +817,15 @@ document.addEventListener('DOMContentLoaded', () => {
             UIManager.goToStep(3);
         },
 
+        startEditingItem(itemId) {
+            const itemToEdit = AppState.items.find(i => i.id === itemId);
+            if (itemToEdit) {
+                // Deep copy the item to wipItem to avoid modifying the original until it's saved
+                AppState.wipItem = JSON.parse(JSON.stringify(itemToEdit));
+                UIManager.goToStep(3);
+            }
+        },
+
         addScenario() {
             AppState.wipItem.scenarios.push({ id: 'sc_' + Date.now(), values: {}, outcome: AppState.wipItem.type === 'rule' ? 'Kural Sağlanıyor' : '' });
             if(AppState.currentStep === 5) UIManager.renderScenarioMatrix();
@@ -824,7 +869,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         saveQuestion() {
             const questionData = {
-                text: DOM.questionText.value.trim(), source: DOM.questionSource.value, automation: DOM.questionAutomation.value.trim(),
+                text: DOM.questionText.value.trim(), source: DOM.questionSource.value, automation: DOM.questionAutomation.value,
                 answerType: DOM.questionAnswerType.value, scope: DOM.questionScope.value,
                 stage: AppState.currentStageIndex >= 2 ? DOM.questionStageSelect.value : null
             };
@@ -1125,4 +1170,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
 
