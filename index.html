@@ -3,794 +3,784 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hizmet Kriterleri Tanımlama Aracı</title>
+    <title>Gelişmiş Hizmet Kriterleri Tanımlama Sistemi</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-accent: #3A6EA5;
-            --background-body: #F4F6F9;
-            --background-card: #FFFFFF;
-            --text-primary: #1E214F;
-            --text-secondary: #5a647e;
-            --border-color: #e9ecef;
-            --shadow-color: rgba(30, 33, 79, 0.06);
-            --warning-bg: #fffbe6;
-            --warning-border: #ffe58f;
-            --warning-text: #8a6d3b;
-            --error-color: #e53e3e;
-            --success-color: #28a745;
+            --primary: #2563eb; --primary-dark: #1e40af; --secondary: #64748b;
+            --success: #059669; --warning: #d97706; --danger: #dc2626; --info: #0891b2;
+            --bg-primary: #ffffff; --bg-secondary: #f8fafc; --bg-tertiary: #f1f5f9;
+            --border: #e2e8f0; --border-light: #f1f5f9;
+            --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-primary);
-            background-color: var(--background-body);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: 'Inter', sans-serif; background: var(--bg-secondary);
+            color: var(--text-primary); line-height: 1.6;
         }
-        .container { width: 95%; max-width: 1400px; margin: 0 auto; padding: 2rem 15px; }
-        header {
-            background: linear-gradient(90deg, #3A6EA5 0%, #1E214F 100%);
-            padding: 0.75rem 0;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem 1rem; }
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white; padding: 1rem 0; box-shadow: var(--shadow-lg);
         }
-        .navbar { display: flex; align-items: center; gap: 1rem; width: 95%; max-width: 1400px; margin: 0 auto; }
-        .logo-container img { height: 50px; display: block; }
-        .header-title { font-size: 1.5rem; font-weight: 600; }
+        .header-content { display: flex; align-items: center; gap: 1rem; max-width: 1400px; margin: 0 auto; padding: 0 1rem; }
+        .logo img { height: 48px; }
+        .header-title { font-size: 1.5rem; font-weight: 700; }
+        .wizard-step { display: none; }
+        .wizard-step.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .card {
-            background-color: var(--background-card);
-            padding: 2.5rem;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 25px var(--shadow-color);
-            margin-bottom: 2rem;
+            background: var(--bg-primary); border: 1px solid var(--border);
+            border-radius: 0.75rem; box-shadow: var(--shadow); margin-bottom: 1.5rem;
         }
-        .form-label { display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); font-size: 0.9rem; }
+        .card-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .card-title { font-size: 1.25rem; font-weight: 600; }
+        .card-description { color: var(--text-secondary); font-size: 0.875rem; }
+        .card-content { padding: 1.5rem; }
+        .card-footer { padding: 1rem 1.5rem; background: var(--bg-tertiary); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+        .form-label { display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; }
         .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            font-size: 1rem;
-            background-color: #f8f9fa;
-            color: var(--text-primary);
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border);
+            border-radius: 0.5rem; font-size: 1rem; background: var(--bg-primary);
             transition: all 0.2s ease;
         }
-        .form-input.is-invalid, .form-select.is-invalid, .form-textarea.is-invalid {
-            border-color: var(--error-color);
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem;
+            font-weight: 500; font-size: 0.875rem; border-radius: 0.5rem;
+            border: 1px solid transparent; cursor: pointer; transition: all 0.2s ease;
         }
-        .form-input::placeholder { color: #adb5bd; }
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.2);
-            background-color: #fff;
+        .btn-lg { padding: 1rem 2rem; font-size: 1rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border); }
+        .btn-secondary:hover:not(:disabled) { background: var(--border-light); }
+        .btn-success { background: var(--success); color: white; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-danger-ghost { background: transparent; color: var(--danger); }
+        .btn-danger-ghost:hover { background: rgba(220, 38, 38, 0.1); }
+        .alert { padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 4px solid; }
+        .alert-info { background: rgba(8, 145, 178, 0.1); color: #0e7490; border-left-color: var(--info); }
+        .list-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; }
+        .list-item-content { flex-grow: 1; }
+        .matrix-table-container { overflow-x: auto; padding-bottom: 1rem; }
+        .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .matrix-table th, .matrix-table td {
+            padding: 0.75rem; text-align: left; border: 1px solid var(--border);
+            min-width: 180px;
         }
-        .action-btn {
-            background-color: var(--primary-accent);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.2s ease;
+        .matrix-table th { background: var(--bg-tertiary); font-weight: 600; text-align: center; }
+        .matrix-table td:first-child { background: var(--bg-tertiary); font-weight: 500; text-align: right; white-space: nowrap; }
+        .matrix-table td input, .matrix-table td select { width: 100%; padding: 0.5rem; font-size: 0.875rem; border-radius: 0.25rem; border: 1px solid var(--border); }
+        .matrix-table td input:focus { border-color: var(--primary); }
+        #question-modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;
         }
-        .action-btn.secondary {
-            background-color: #e9ecef;
-            color: var(--text-primary);
+        #question-modal.active { display: flex; }
+        .modal-content { background-color: #fff; padding: 2rem; border-radius: 0.75rem; width: 90%; max-width: 600px; box-shadow: var(--shadow-lg); }
+        
+        .progress-bar-container {
+            background-color: var(--bg-primary); padding: 2rem; border-radius: 0.75rem;
+            margin-bottom: 2rem; box-shadow: var(--shadow); display: none;
         }
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .progress-bar { display: flex; align-items: flex-start; position: relative; }
+        .progress-line {
+            position: absolute; top: 1.25rem; left: 5%; right: 5%; height: 4px;
+            background-color: var(--border); z-index: 1; transform: translateY(-50%);
         }
-        .action-btn:disabled {
-            background-color: #adb5bd;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        .progress-line-fill { height: 100%; background-color: var(--success); width: 0%; transition: width 0.4s ease-in-out; }
+        .progress-step {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            text-align: center; position: relative; z-index: 2;
         }
-        .progress-bar { display: flex; justify-content: space-between; align-items: flex-start; }
-        .progress-step { flex: 1; text-align: center; position: relative; }
-        .progress-step.clickable { cursor: pointer; }
-        .progress-step.clickable:hover .step-circle { transform: scale(1.1); }
-        .progress-step .step-circle {
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            background-color: #fff;
-            border: 2px solid var(--border-color);
-            color: var(--text-secondary);
-            margin: 0 auto 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 600;
-            transition: all 0.3s ease;
+        .step-circle {
+            width: 2.5rem; height: 2.5rem; border-radius: 50%; background-color: var(--bg-primary);
+            border: 2px solid var(--border); display: flex; align-items: center; justify-content: center;
+            font-weight: 600; color: var(--text-secondary); transition: all 0.4s ease; margin-bottom: 0.5rem;
         }
-        .progress-step .step-label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;}
-        .progress-step.active .step-circle { border-color: var(--primary-accent); background-color: var(--primary-accent); color: white; }
-        .progress-step.active .step-label { color: var(--text-primary); font-weight: 600; }
-        .progress-step.completed .step-circle { border-color: var(--success-color); background-color: var(--success-color); color: white; }
-        .progress-connector {
-            flex-grow: 1;
-            height: 2px;
-            background-color: var(--border-color);
-            margin: 0 -1px;
-            position: relative;
-            top: 16px;
-        }
-        .progress-connector.completed { background-color: var(--success-color); }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .data-table th, .data-table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-        .data-table th { font-weight: 600; color: var(--text-secondary); background-color: #f8f9fa; }
-        .data-table tbody tr:hover { background-color: #f1f3f5; }
-        .data-table .rule-start-row td { border-top: 3px solid var(--primary-accent); }
-        .hidden { display: none !important; }
-        #rule-builder-preview {
-            background-color: #f8f9fa;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-        }
-        #rule-builder-preview h4 { margin-bottom: 0.75rem; }
-        .condition-chip {
-            display: inline-block;
-            background-color: #e9ecef;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            margin: 0.25rem;
-            font-size: 0.85rem;
-        }
-        .condition-chip strong { color: var(--primary-accent); }
+        .step-label { font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); transition: color 0.4s ease; }
+        .progress-step.active .step-circle { border-color: var(--primary); background-color: var(--primary); color: white; transform: scale(1.1); }
+        .progress-step.active .step-label { color: var(--primary); font-weight: 600; }
+        .progress-step.completed .step-circle { border-color: var(--success); background-color: var(--success); color: white; }
+        .progress-step.completed .step-label { color: var(--text-primary); }
 
-        /* Custom Modal Styles */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+        /* Report Screen Styles */
+        .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .report-actions button { white-space: nowrap; }
+        .report-stage-accordion > details {
+            background: var(--bg-primary); border: 1px solid var(--border);
+            border-radius: 0.5rem; margin-bottom: 1rem;
         }
-        .modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
+        .report-stage-accordion > summary {
+            padding: 1rem 1.5rem; font-size: 1.1rem; font-weight: 600;
+            cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
         }
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            width: 90%;
-            max-width: 450px;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
+        .report-stage-accordion > summary::-webkit-details-marker { display: none; }
+        .report-stage-accordion .summary-stats { font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); }
+        .report-stage-accordion .accordion-content { padding: 0 1.5rem 1.5rem; border-top: 1px solid var(--border); }
+        
+        .report-item-details {
+            border: 1px solid var(--border-light);
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            background: #fafbff;
         }
-        .modal-overlay.visible .modal-content {
-            transform: scale(1);
+        .report-item-details summary {
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            list-style: none;
+            color: var(--text-primary);
         }
-        .modal-content p {
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
+        .report-item-details summary::-webkit-details-marker { display: none; }
+        .report-item-details .matrix-table-container {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
         }
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-        }
+
     </style>
 </head>
 <body>
-    <!-- Custom Modal Structure -->
-    <div id="custom-modal" class="modal-overlay">
-        <div class="modal-content">
-            <p id="modal-message"></p>
-            <div id="modal-actions" class="modal-actions">
-                <!-- Buttons will be injected here by JS -->
-            </div>
-        </div>
-    </div>
-
-    <header>
-        <div class="navbar">
-            <div class="logo-container">
-                <img src="https://i.imgur.com/UUOeqIx.png" alt="Logo">
-            </div>
-            <h1 class="header-title">Hizmet Kriterleri Tanımlama Aracı</h1>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo"><img src="https://i.imgur.com/UUOeqIx.png" alt="Logo"></div>
+            <h1 class="header-title" id="main-header-title">Hizmet Tanımlama Sistemi</h1>
         </div>
     </header>
 
     <main class="container">
-        <div class="card">
-            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem;">Hizmet Adı</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Lütfen üzerine çalıştığınız hizmetin adını giriniz.</p>
-            <div style="max-width: 48rem;">
-                <input type="text" id="serviceName" class="form-input" placeholder="Örn: İstanbulkart Destek Paketi">
-            </div>
-        </div>
+        <!-- Progress Bar Container -->
+        <div id="progress-bar-container"></div>
 
-        <div class="card">
-            <div id="progress-bar" class="progress-bar mb-10"></div>
-            <div id="wizard">
-                <h2 id="stage-title" style="font-size: 1.75rem; font-weight: 700; text-align: center; color: var(--text-primary); margin-bottom: 0.5rem;"></h2>
-                <p id="stage-description" class="text-center text-sm p-3 rounded-lg mb-6 hidden" style="background-color: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-text); max-width: 80%; margin-left: auto; margin-right: auto;"></p>
-
-                <div id="criterion-check-section" class="text-center py-6">
-                    <p class="mb-4 text-lg">Bu aşamada bir kural var mı?</p>
-                    <div style="display: flex; gap: 1rem; justify-content: center;">
-                         <button id="add-criterion-yes" class="action-btn">Evet, Kural Ekle</button>
-                         <button id="add-criterion-no" class="action-btn secondary">Hayır, Sonraki Aşama</button>
+        <!-- Step 0: Landing Page -->
+        <div id="step-0" class="wizard-step active">
+            <div class="card text-center" style="text-align: center;">
+                <div class="card-content" style="padding: 3rem;">
+                    <h2 class="card-title" style="font-size: 1.75rem;">Hoş Geldiniz</h2>
+                    <p class="card-description" style="margin-top: 0.5rem; margin-bottom: 2rem;">Lütfen yapmak istediğiniz işlemi seçin.</p>
+                    <div style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+                        <button id="start-definition-btn" class="btn btn-primary btn-lg">📝 Yeni Kriter Tanımla</button>
+                        <button id="view-report-btn" class="btn btn-secondary btn-lg">📊 Kriterleri Görüntüle (Excel Yükle)</button>
+                        <input type="file" id="excel-upload-input" accept=".xlsx, .xls" style="display: none;">
                     </div>
                 </div>
-
-                <form id="criterion-form" class="hidden" style="border-top: 1px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
-                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.75rem; background-color: #fdfdff; border: 1px solid #e0e6f1; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-                        <div id="condition-type-wrapper">
-                             <label class="form-label">Kural Tipi</label>
-                            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
-                               <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"><input type="radio" name="condition-type" value="precondition" checked><span>Ön Koşul</span></label>
-                               <label id="ek-kriter-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;"><input type="radio" name="condition-type" value="additional"><span>Ek Kriter</span></label>
-                            </div>
-                        </div>
-                        <div>
-                            <div id="condition-definition-wrapper">
-                                 <label for="condition-definition" class="form-label">Kuralın Tanımı (Ön Koşul)</label>
-                                 <textarea id="condition-definition" rows="3" class="form-textarea" placeholder="Örn: Başvuranın hane geliri 50.000 TL'den az olmalıdır."></textarea>
-                            </div>
-                             <div id="condition-effect-wrapper" class="hidden">
-                                 <label for="condition-effect" class="form-label">Kuralın Etkisi (Ek Kriter)</label>
-                                 <textarea id="condition-effect" rows="3" class="form-textarea" placeholder="Örn: Hane geliri 25.000-35.000 TL arasında ise +2000 TL ek destek sağlanır."></textarea>
-                            </div>
-                        </div>
-                     </div>
-
-                     <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; font-size: 1.25rem;">Kural Koşulları</h3>
-                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.75rem;">
-                        <div>
-                            <label for="source" class="form-label">Bilginin Kaynağı</label>
-                            <select id="source" class="form-select">
-                                <option>Beyan</option> <option>Mernis</option> <option>Evrak</option> <option>Sosyal İnceleme</option> <option>E-Belediye</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="automation" class="form-label">Hangi Otomasyon?</label>
-                            <input type="text" id="automation" class="form-input" placeholder="Örn: SEDEP Otomasyonu">
-                        </div>
-                         <div style="grid-column: 1 / -1;">
-                            <label for="question" class="form-label">Hangi Soru ile Bilgi Alınıyor?</label>
-                            <input type="text" id="question" class="form-input" placeholder="Örn: Toplam Gelir">
-                        </div>
-                        <div id="evrak-kontrol-wrapper" class="hidden">
-                             <label for="bilgi-edinme-asama" class="form-label">Bu bilgi hangi aşamada ediniliyor?</label>
-                             <select id="bilgi-edinme-asama" class="form-select">
-                                 <option>Başvuru</option> <option>Sosyal İnceleme</option> <option>Evrak Kontrol</option>
-                             </select>
-                        </div>
-                        <div>
-                            <label for="answer-type" class="form-label">Yanıt Türü</label>
-                            <select id="answer-type" class="form-select">
-                                <option value="TAM_SAYI">TAM SAYI</option>
-                                <option value="ONDALIK_SAYI">ONDALIK SAYI</option>
-                                <option value="TARIH">TARİH</option>
-                                <option value="METIN">METİN</option>
-                                <option value="YANIT_DOGRULAMA">YANIT DOĞRULAMA</option>
-                                <option value="ONAY_KUTUSU">ONAY KUTUSU</option>
-                                <option value="COKLU_SECIM">ÇOKLU SEÇİM</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="scope" class="form-label">Soru Kapsamı</label>
-                            <select id="scope" class="form-select">
-                                <option>Kişi</option> <option>Hane</option>
-                            </select>
-                        </div>
-
-                        <!-- DYNAMIC CONDITION VALUE INPUTS -->
-                        <div id="condition-value-container" style="grid-column: 1 / -1;">
-                            <div id="numeric-condition-wrapper">
-                                <label class="form-label">Koşul Değeri (Sayısal Aralık)</label>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <input type="number" id="numeric-min" class="form-input" placeholder="En Az (dahil)">
-                                    <input type="number" id="numeric-max" class="form-input" placeholder="En Çok (dahil)">
-                                </div>
-                            </div>
-                            <div id="date-condition-wrapper" class="hidden">
-                                <label class="form-label">Koşul Değeri (Tarih Aralığı)</label>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <input type="date" id="date-start" class="form-input">
-                                    <input type="date" id="date-end" class="form-input">
-                                </div>
-                            </div>
-                            <div id="text-condition-wrapper" class="hidden">
-                                <label class="form-label">Koşul Değeri (Metin)</label>
-                                <input type="text" id="text-value" class="form-input" placeholder="Eşleşecek metni girin (Örn: TC Vatandaşı)">
-                            </div>
-                            <div id="boolean-condition-wrapper" class="hidden">
-                                <label class="form-label">Kabul Edilen Değerler (Doğrulama)</label>
-                                <input type="text" id="boolean-value-input" class="form-input" placeholder="Kabul edilen değerleri virgülle ayırın (Örn: Evet, Onaylandı)">
-                            </div>
-                            <div id="multi-condition-wrapper" class="hidden">
-                                <label class="form-label">Koşul Değerleri (Seçenekler)</label>
-                                <input type="text" id="multi-value" class="form-input" placeholder="Seçenekleri virgülle ayırarak girin (Örn: A, B, C)">
-                            </div>
-                        </div>
-                     </div>
-                     <div id="rule-builder-preview" class="hidden">
-                        <h4>Mevcut Kural Grubu (Tüm koşullar sağlanmalı)</h4>
-                        <div id="current-rule-conditions"></div>
-                     </div>
-
-                     <!-- Main Button Bar -->
-                    <div id="main-action-buttons" style="display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color);">
-                       <button type="button" id="back-stage-btn" class="action-btn secondary">Geri</button>
-                       <div style="display: flex; align-items: center; gap: 1rem;">
-                           <button type="button" id="add-condition-to-group-btn" class="action-btn secondary" style="background-color: #ffc107; color: #1E214F;">Koşul Ekle</button>
-                           <button type="button" id="save-rule-btn" class="action-btn" style="background-color: var(--success-color);" disabled>Kuralı Kaydet</button>
-                           <button type="button" id="finish-stage-btn" class="action-btn">Aşamayı Bitir ve İlerle</button>
-                       </div>
-                   </div>
-                </form>
             </div>
         </div>
 
-        <div class="card">
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 class="text-xl font-semibold">Tanımlanan Kurallar</h3>
-                <button id="export-excel-btn" class="action-btn" style="background-color: #17a2b8;" disabled>Excel'e Aktar</button>
+        <!-- Step 1: Service Name -->
+        <div id="step-1" class="wizard-step">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">1. Adım: Hizmet Tanımlama</h2></div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label class="form-label" for="service-name">Lütfen üzerine çalıştığınız hizmetin adını giriniz.</label>
+                        <input type="text" id="service-name" class="form-input" placeholder="Örn: Genç Üniversiteli Eğitim Desteği">
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="step1-back" class="btn btn-secondary">← Geri</button>
+                    <button id="step1-next" class="btn btn-primary">İlerle →</button>
+                </div>
             </div>
-            <div style="overflow-x: auto;">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Kural No</th>
-                            <th>Bağlantı</th>
-                            <th>Hizmet</th>
-                            <th>Aşama</th>
-                            <th>Kriter Sorusu</th>
-                            <th>Koşul</th>
-                            <th>Kural Tipi</th>
-                            <th>Tanım / Etki</th>
-                            <th>İşlemler</th>
-                        </tr>
-                    </thead>
-                    <tbody id="criteria-table-body">
-                        <tr>
-                           <td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz kural eklenmedi.</td>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+
+        <!-- Step 2: Rule/Criterion List -->
+        <div id="step-2" class="wizard-step">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title" id="step2-title"></h2>
+                    <p class="card-description">Bu aşama için mevcut kuralları ve kriterleri yönetin veya yenisini ekleyin.</p>
+                </div>
+                <div class="card-content">
+                    <div id="rules-list-container"></div>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                        <button id="add-new-rule-btn" class="btn btn-primary">➕ Yeni Kural Ekle</button>
+                        <button id="add-new-criterion-btn" class="btn btn-secondary">🎯 Yeni Değerlendirme Kriteri Ekle</button>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="step2-back" class="btn btn-secondary">← Geri</button>
+                    <button id="step2-next-stage" class="btn btn-primary">Sonraki Aşamaya Geç →</button>
+                    <button id="step2-finish" class="btn btn-success hidden">Bitir ve Rapor Oluştur ✓</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3, 4, 5 (Same as before) -->
+        <div id="step-3" class="wizard-step">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title" id="step3-title"></h2></div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label class="form-label" for="item-name" id="step3-label"></label>
+                        <textarea id="item-name" class="form-textarea" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button id="step3-back" class="btn btn-secondary">← Geri</button>
+                    <button id="step3-next" class="btn btn-primary">İlerle →</button>
+                </div>
+            </div>
+        </div>
+        <div id="step-4" class="wizard-step">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">3. Adım: Kural Soruları</h2><p class="card-description">Bu kuralı değerlendirmek için sistemde hangi soruların yer aldığını belirtin.</p></div>
+                <div class="card-content">
+                    <div class="alert alert-info"><strong>Tanımlanan Kural:</strong> <span id="active-rule-text"></span></div>
+                    <div id="questions-container"></div>
+                    <button id="open-question-modal-btn" class="btn btn-secondary mt-2">➕ Yeni Soru Ekle</button>
+                </div>
+                <div class="card-footer">
+                    <button id="step4-back" class="btn btn-secondary">← Geri</button>
+                    <button id="step4-next" class="btn btn-primary">Senaryo Matrisini Oluştur →</button>
+                </div>
+            </div>
+        </div>
+        <div id="step-5" class="wizard-step">
+            <div class="card">
+                <div class="card-header"><h2 class="card-title">4. Adım: Senaryo Matrisi</h2><p class="card-description">Her sütun ayrı bir "VEYA" senaryosudur.</p></div>
+                <div class="card-content">
+                    <div class="alert alert-info"><strong>Tanımlanan Kural:</strong> <span id="active-rule-text-matrix"></span></div>
+                    <div class="matrix-table-container">
+                        <table class="matrix-table" id="scenario-matrix"></table>
+                    </div>
+                    <button id="add-scenario-btn" class="btn btn-secondary">➕ Yeni Senaryo Ekle</button>
+                </div>
+                <div class="card-footer">
+                    <button id="step5-back" class="btn btn-secondary">← Geri</button>
+                    <button id="save-item-btn" class="btn btn-success">✅ Kuralı/Kriteri Kaydet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Report Screen -->
+        <div id="step-6" class="wizard-step">
+            <div class="report-header">
+                <div>
+                    <h2 id="report-service-name" style="font-size: 1.75rem;"></h2>
+                    <p class="card-description">Oluşturulan veya yüklenen kuralların özeti.</p>
+                </div>
+                <div class="report-actions" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button id="toggle-details-btn" class="btn btn-secondary">Tüm Detayları Gizle</button>
+                    <button id="report-edit-btn" class="btn btn-primary">✏️ Düzenle</button>
+                    <button id="report-download-btn" class="btn btn-success">📥 Excel İndir</button>
+                    <button id="report-pdf-detailed-btn" class="btn btn-secondary">📄 Detaylı PDF</button>
+                    <button id="report-pdf-summary-btn" class="btn btn-secondary">📄 Özet PDF</button>
+                    <button id="report-fullscreen-btn" class="btn btn-secondary">⛶ Tam Ekran</button>
+                </div>
+            </div>
+            <div id="report-content" class="report-stage-accordion">
+                <!-- Report will be generated here -->
+            </div>
+        </div>
+
+
+        <!-- Question Add/Edit Modal (Same as before) -->
+        <div id="question-modal">
+            <div class="modal-content">
+                <h3 id="question-modal-title" style="margin-bottom: 1.5rem;">Yeni Soru Ekle</h3>
+                <div class="form-group"><label class="form-label" for="question-text">Soru Metni</label><input type="text" id="question-text" class="form-input" placeholder="Örn: Öğrenci İkameti"></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group"><label class="form-label" for="question-source">Bilginin Kaynağı</label><select id="question-source" class="form-select"><option>Beyan</option><option>Mernis</option><option>Evrak</option><option>Sosyal İnceleme</option><option>E-Belediye</option></select></div>
+                    <div class="form-group"><label class="form-label" for="question-automation">Hangi Otomasyon?</label><input type="text" id="question-automation" class="form-input" placeholder="Örn: SEDEP"></div>
+                    <div class="form-group"><label class="form-label" for="question-answer-type">Yanıt Türü</label><select id="question-answer-type" class="form-select"><option>Metin</option><option>Sayı</option><option>Tarih</option><option>Yanıt Doğrulama</option><option>Çoklu Seçim</option></select></div>
+                    <div class="form-group"><label class="form-label" for="question-scope">Soru Kapsamı</label><select id="question-scope" class="form-select"><option>Kişi</option><option>Hane</option></select></div>
+                </div>
+                <div class="form-group" id="question-stage-wrapper" style="display: none;"><label class="form-label" for="question-stage">Bu bilgi hangi aşamada alınıyor?</label><select id="question-stage" class="form-select"></select></div>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                    <button id="cancel-question-btn" class="btn btn-secondary">İptal</button>
+                    <button id="save-question-btn" class="btn btn-primary">Kaydet</button>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            let nextRuleId = 1;
-            const state = {
-                stages: ["BAŞVURU", "SOSYAL İNCELEME", "EVRAK KONTROL", "HİZMETTEN FAYDALANMA", "HİZMETİN TAMAMLANMASI"],
-                currentStageIndex: 0,
-                serviceName: '',
-                criteriaData: [], // Array of rule objects
-                currentRuleGroup: [] // Array of condition objects for the rule being built
-            };
+    document.addEventListener('DOMContentLoaded', () => {
+        const AppState = {
+            serviceName: '',
+            stages: [ { name: 'BAŞVURU' }, { name: 'SOSYAL İNCELEME' }, { name: 'EVRAK KONTROL' }, { name: 'HİZMETTEN FAYDALANMA' }, { name: 'HİZMETİN TAMAMLANMASI' } ],
+            currentStageIndex: 0, items: [], wipItem: null, wipQuestionIndex: -1, currentStep: 0,
+        };
 
-            const DOMElements = {
-                serviceNameInput: document.getElementById('serviceName'),
-                progressBar: document.getElementById('progress-bar'),
-                stageTitle: document.getElementById('stage-title'),
-                stageDescription: document.getElementById('stage-description'),
-                criterionCheckSection: document.getElementById('criterion-check-section'),
-                criterionForm: document.getElementById('criterion-form'),
-                addCriterionYesBtn: document.getElementById('add-criterion-yes'),
-                addCriterionNoBtn: document.getElementById('add-criterion-no'),
-                finishStageBtn: document.getElementById('finish-stage-btn'),
-                backStageBtn: document.getElementById('back-stage-btn'),
-                tableBody: document.getElementById('criteria-table-body'),
-                conditionTypeRadios: document.querySelectorAll('input[name="condition-type"]'),
-                conditionDefinitionWrapper: document.getElementById('condition-definition-wrapper'),
-                conditionEffectWrapper: document.getElementById('condition-effect-wrapper'),
-                exportExcelBtn: document.getElementById('export-excel-btn'),
-                ekKriterLabel: document.getElementById('ek-kriter-label'),
-                evrakKontrolWrapper: document.getElementById('evrak-kontrol-wrapper'),
-                ruleBuilderPreview: document.getElementById('rule-builder-preview'),
-                currentRuleConditions: document.getElementById('current-rule-conditions'),
-                answerTypeSelect: document.getElementById('answer-type'),
-                modal: document.getElementById('custom-modal'),
-                modalMessage: document.getElementById('modal-message'),
-                modalActions: document.getElementById('modal-actions'),
-                questionInput: document.getElementById('question'),
-                // New simplified button IDs
-                addConditionToGroupBtn: document.getElementById('add-condition-to-group-btn'),
-                saveRuleBtn: document.getElementById('save-rule-btn'),
-            };
+        const DOM = {
+            mainHeader: document.getElementById('main-header-title'), progressBarContainer: document.getElementById('progress-bar-container'),
+            steps: document.querySelectorAll('.wizard-step'),
+            startDefinitionBtn: document.getElementById('start-definition-btn'), viewReportBtn: document.getElementById('view-report-btn'),
+            excelUploadInput: document.getElementById('excel-upload-input'),
+            serviceNameInput: document.getElementById('service-name'),
+            step1BackBtn: document.getElementById('step1-back'), step1NextBtn: document.getElementById('step1-next'),
+            step2Title: document.getElementById('step2-title'), rulesListContainer: document.getElementById('rules-list-container'),
+            addNewRuleBtn: document.getElementById('add-new-rule-btn'), addNewCriterionBtn: document.getElementById('add-new-criterion-btn'),
+            step2NextStageBtn: document.getElementById('step2-next-stage'), step2FinishBtn: document.getElementById('step2-finish'),
+            step2BackBtn: document.getElementById('step2-back'),
+            step3Title: document.getElementById('step3-title'), step3Label: document.getElementById('step3-label'),
+            itemNameInput: document.getElementById('item-name'), step3BackBtn: document.getElementById('step3-back'),
+            step3NextBtn: document.getElementById('step3-next'), activeRuleText: document.getElementById('active-rule-text'),
+            questionsContainer: document.getElementById('questions-container'), openQuestionModalBtn: document.getElementById('open-question-modal-btn'),
+            step4BackBtn: document.getElementById('step4-back'), step4NextBtn: document.getElementById('step4-next'),
+            activeRuleTextMatrix: document.getElementById('active-rule-text-matrix'), scenarioMatrixContainer: document.getElementById('scenario-matrix'),
+            addScenarioBtn: document.getElementById('add-scenario-btn'), step5BackBtn: document.getElementById('step5-back'),
+            saveItemBtn: document.getElementById('save-item-btn'),
+            questionModal: document.getElementById('question-modal'), questionModalTitle: document.getElementById('question-modal-title'),
+            questionText: document.getElementById('question-text'), questionSource: document.getElementById('question-source'),
+            questionAutomation: document.getElementById('question-automation'), questionAnswerType: document.getElementById('question-answer-type'),
+            questionScope: document.getElementById('question-scope'), questionStageWrapper: document.getElementById('question-stage-wrapper'),
+            questionStageSelect: document.getElementById('question-stage'), cancelQuestionBtn: document.getElementById('cancel-question-btn'),
+            saveQuestionBtn: document.getElementById('save-question-btn'),
+            reportServiceName: document.getElementById('report-service-name'), reportContent: document.getElementById('report-content'),
+            reportEditBtn: document.getElementById('report-edit-btn'), reportDownloadBtn: document.getElementById('report-download-btn'),
+            reportPdfDetailedBtn: document.getElementById('report-pdf-detailed-btn'),
+            reportPdfSummaryBtn: document.getElementById('report-pdf-summary-btn'),
+            toggleDetailsBtn: document.getElementById('toggle-details-btn'),
+            reportFullscreenBtn: document.getElementById('report-fullscreen-btn'),
+        };
 
-            // --- Custom Modal Functions ---
-            const showModal = (message, buttons) => {
-                DOMElements.modalMessage.textContent = message;
-                DOMElements.modalActions.innerHTML = '';
-                buttons.forEach(btn => {
-                    const buttonEl = document.createElement('button');
-                    buttonEl.textContent = btn.text;
-                    buttonEl.className = `action-btn ${btn.class || ''}`;
-                    buttonEl.onclick = () => {
-                        closeModal();
-                        if (btn.handler) btn.handler();
-                    };
-                    DOMElements.modalActions.appendChild(buttonEl);
-                });
-                DOMElements.modal.classList.add('visible');
-            };
+        const UIManager = {
+            goToStep(step) {
+                AppState.currentStep = step;
+                DOM.steps.forEach(s => s.classList.remove('active'));
+                const targetStep = document.getElementById(`step-${step}`);
+                if(targetStep) targetStep.classList.add('active');
+                
+                const showProgressBar = step > 0 && step < 6;
+                DOM.progressBarContainer.style.display = showProgressBar ? 'block' : 'none';
+                if(showProgressBar) this.renderProgressBar();
 
-            const closeModal = () => {
-                DOMElements.modal.classList.remove('visible');
-            };
-
-            const showAlert = (message) => {
-                showModal(message, [{ text: 'Tamam', class: '' }]);
-            };
-
-            const showConfirmation = (message, onConfirm) => {
-                showModal(message, [
-                    { text: 'İptal', class: 'secondary', handler: null },
-                    { text: 'Onayla', class: '', handler: onConfirm }
-                ]);
-            };
-
-            const updateButtonStates = () => {
-                // Enable "Save Rule" button only if there are conditions in the current group
-                DOMElements.saveRuleBtn.disabled = state.currentRuleGroup.length === 0;
-            };
-
-            const updateProgressBar = () => {
-                DOMElements.progressBar.innerHTML = '';
-                state.stages.forEach((stage, index) => {
-                    const isCompleted = index < state.currentStageIndex;
-                    const isCurrent = index === state.currentStageIndex;
-                    const step = document.createElement('div');
-                    step.className = 'progress-step';
-                    step.dataset.index = index;
-                    if (isCurrent) step.classList.add('active');
-                    if (isCompleted) step.classList.add('completed');
-                    if (isCompleted || isCurrent) step.classList.add('clickable');
-                    step.innerHTML = `<div class="step-circle">${isCompleted ? '&#10003;' : index + 1}</div><div class="step-label">${stage}</div>`;
-                    DOMElements.progressBar.appendChild(step);
-                    if (index < state.stages.length - 1) {
-                        const connector = document.createElement('div');
-                        connector.className = 'progress-connector';
-                        if (isCompleted) connector.classList.add('completed');
-                        DOMElements.progressBar.appendChild(connector);
-                    }
-                });
-            };
-
-            const updateFormForStage = () => {
-                const currentStageName = state.stages[state.currentStageIndex];
-                DOMElements.ekKriterLabel.classList.remove('hidden');
-                DOMElements.evrakKontrolWrapper.classList.add('hidden');
-                DOMElements.stageDescription.classList.add('hidden');
-                if (currentStageName === "BAŞVURU" || currentStageName === "SOSYAL İNCELEME") {
-                    DOMElements.stageDescription.textContent = "Bu aşamada sadece bir sonraki adıma geçmek için zorunlu olan ön koşullar tanımlanabilir.";
-                    DOMElements.stageDescription.classList.remove('hidden');
-                    DOMElements.ekKriterLabel.classList.add('hidden');
-                    const preconditionRadio = document.querySelector('input[value="precondition"]');
-                    preconditionRadio.checked = true;
-                    preconditionRadio.dispatchEvent(new Event('change'));
-                } else if (currentStageName === "EVRAK KONTROL") {
-                    DOMElements.evrakKontrolWrapper.classList.remove('hidden');
+                this.updateUIForStep(step);
+            },
+            updateUIForStep(step) {
+                const stageName = AppState.stages[AppState.currentStageIndex]?.name || '';
+                switch (step) {
+                    case 0:
+                        DOM.mainHeader.textContent = 'Hizmet Tanımlama Sistemi';
+                        break;
+                    case 1:
+                        DOM.mainHeader.textContent = '1. Adım: Hizmet Adı';
+                        break;
+                    case 2:
+                        DOM.mainHeader.textContent = `${AppState.serviceName} - Kural Yönetimi`;
+                        DOM.step2Title.textContent = `${stageName} Aşaması Kuralları`;
+                        DOM.addNewCriterionBtn.style.display = AppState.currentStageIndex >= 2 ? 'inline-flex' : 'none';
+                        DOM.step2NextStageBtn.classList.toggle('hidden', AppState.currentStageIndex === AppState.stages.length - 1);
+                        DOM.step2FinishBtn.classList.toggle('hidden', AppState.currentStageIndex !== AppState.stages.length - 1);
+                        this.renderRulesList();
+                        break;
+                    case 3:
+                        const itemType = AppState.wipItem.type === 'rule' ? 'Kural' : 'Kriter';
+                        DOM.mainHeader.textContent = `${stageName} - Yeni ${itemType}`;
+                        DOM.step3Title.textContent = `2. Adım: ${itemType} Tanımı`;
+                        DOM.step3Label.textContent = `Lütfen ${itemType.toLowerCase()}ın tanımını yazınız.`;
+                        DOM.itemNameInput.value = AppState.wipItem.name || '';
+                        DOM.itemNameInput.placeholder = `Örn: ${itemType === 'Kural' ? 'İkametgah kontrolü' : 'Gelir Puanı'}`;
+                        break;
+                    case 4: DOM.activeRuleText.textContent = AppState.wipItem.name; this.renderQuestionsList(); break;
+                    case 5: DOM.activeRuleTextMatrix.textContent = AppState.wipItem.name; this.renderScenarioMatrix(); break;
+                    case 6:
+                        DOM.mainHeader.textContent = `${AppState.serviceName} - Rapor`;
+                        this.renderReport();
+                        break;
                 }
-            };
-
-            const updateStageView = () => {
-                DOMElements.backStageBtn.disabled = state.currentStageIndex === 0;
-                if (state.currentStageIndex >= state.stages.length) {
-                    DOMElements.stageTitle.textContent = "Tüm Aşamalar Tamamlandı!";
-                    DOMElements.criterionCheckSection.innerHTML = `<p class="text-lg" style="color:var(--success-color);">Veri toplama işlemi başarıyla tamamlandı. Aşağıdaki tablodan tüm kuralları kontrol edebilir ve Excel'e aktarabilirsiniz.</p>`;
-                    DOMElements.criterionForm.classList.add('hidden');
-                    DOMElements.stageDescription.classList.add('hidden');
-                    updateProgressBar();
+            },
+            renderProgressBar() {
+                 const container = DOM.progressBarContainer;
+                const { stages, currentStageIndex } = AppState;
+                const progressPercentage = currentStageIndex > 0 ? (currentStageIndex / (stages.length - 1)) * 100 : 0;
+                let stepsHtml = stages.map((stage, index) => {
+                    const statusClass = index < currentStageIndex ? 'completed' : (index === currentStageIndex ? 'active' : '');
+                    return `<div class="progress-step ${statusClass}"><div class="step-circle">${index < currentStageIndex ? '✓' : index + 1}</div><div class="step-label">${stage.name}</div></div>`;
+                }).join('');
+                container.innerHTML = `<div class="progress-bar"><div class="progress-line"><div class="progress-line-fill" style="width: ${progressPercentage}%;"></div></div>${stepsHtml}</div>`;
+            },
+            renderRulesList() {
+                DOM.rulesListContainer.innerHTML = '';
+                const itemsForStage = AppState.items.filter(item => item.stageIndex === AppState.currentStageIndex);
+                if (itemsForStage.length === 0) {
+                    DOM.rulesListContainer.innerHTML = '<p class="text-muted">Bu aşama için bir kural veya kriter tanımlanmadı.</p>';
                     return;
                 }
-                DOMElements.stageTitle.textContent = `Aşama: ${state.stages[state.currentStageIndex]}`;
-                DOMElements.criterionCheckSection.classList.remove('hidden');
-                DOMElements.criterionForm.classList.add('hidden');
-                updateProgressBar();
-                updateFormForStage();
-                updateButtonStates();
-            };
-
-            const renderTable = () => {
-                DOMElements.tableBody.innerHTML = '';
-                DOMElements.exportExcelBtn.disabled = state.criteriaData.length === 0;
-                if (state.criteriaData.length === 0) {
-                    DOMElements.tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz kural eklenmedi.</td></tr>`;
-                    return;
-                }
-                state.criteriaData.forEach(rule => {
-                    rule.conditions.forEach((condition, index) => {
-                        const row = DOMElements.tableBody.insertRow();
-                        let baglacText = index > 0 ? '↳' : '';
-                        if (index === 0) row.classList.add('rule-start-row');
-                        row.innerHTML = `
-                            <td style="font-weight: ${index === 0 ? '600' : 'normal'};">${index === 0 ? rule.ruleId : ''}</td>
-                            <td>${baglacText}</td>
-                            <td>${index === 0 ? rule.serviceName : ''}</td>
-                            <td>${index === 0 ? rule.stage : ''}</td>
-                            <td>${condition.question}</td>
-                            <td>${condition.conditionText}</td>
-                            <td>${index === 0 ? (rule.conditionType === 'precondition' ? 'Ön Koşul' : 'Ek Kriter') : ''}</td>
-                            <td>${index === 0 ? rule.conditionDetail : ''}</td>
-                            <td>${index === 0 ? `<button data-rule-id="${rule.ruleId}" class="delete-btn" style="color: var(--error-color); font-weight: 600; background: none; border: none; cursor: pointer;">Sil</button>` : ''}</td>
-                        `;
-                    });
+                const list = document.createElement('div');
+                itemsForStage.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'card';
+                    itemEl.innerHTML = `<div class="card-content" style="padding: 1rem;"><div style="display: flex; justify-content: space-between; align-items: center;"><div><strong>${item.type === 'rule' ? 'Kural:' : 'Kriter:'}</strong> ${item.name}<br><small class="text-muted">${item.questions.length} soru, ${item.scenarios.length} senaryo</small></div><button class="btn btn-danger-ghost" data-item-id="${item.id}">Sil</button></div></div>`;
+                    itemEl.querySelector('button').addEventListener('click', () => { AppState.items = AppState.items.filter(i => i.id !== item.id); this.renderRulesList(); });
+                    list.appendChild(itemEl);
                 });
-            };
+                DOM.rulesListContainer.appendChild(list);
+            },
+             renderQuestionsList() {
+                DOM.questionsContainer.innerHTML = '';
+                AppState.wipItem.questions.forEach((q, index) => {
+                    const el = document.createElement('div');
+                    el.className = 'list-item';
+                    el.innerHTML = `<div class="list-item-content"><strong>${q.text}</strong><div class="text-muted" style="font-size: 0.8rem;">Kaynak: ${q.source} | Kapsam: ${q.scope} | Yanıt: ${q.answerType}</div></div><button class="btn btn-secondary" data-index="${index}">Düzenle</button><button class="btn btn-danger-ghost" data-index="${index}">×</button>`;
+                    el.querySelector('.btn-secondary').addEventListener('click', (e) => Logic.openQuestionModal(parseInt(e.currentTarget.dataset.index)));
+                    el.querySelector('.btn-danger-ghost').addEventListener('click', (e) => { AppState.wipItem.questions.splice(parseInt(e.currentTarget.dataset.index), 1); this.renderQuestionsList(); });
+                    DOM.questionsContainer.appendChild(el);
+                });
+            },
+            renderScenarioMatrix() {
+                const { questions, scenarios, type } = AppState.wipItem;
+                const container = DOM.scenarioMatrixContainer;
+                container.innerHTML = '';
+                const thead = document.createElement('thead');
+                let headerRowHtml = '<tr><th>Sorular</th>';
+                scenarios.forEach((_, i) => { headerRowHtml += `<th>Senaryo ${i + 1} <button class="btn-danger-ghost" data-scenario-index="${i}" style="padding: 2px 5px; border-radius: 50%;">×</button></th>`; });
+                thead.innerHTML = headerRowHtml + '</tr>';
+                container.appendChild(thead);
+                const tbody = document.createElement('tbody');
+                questions.forEach((q, qIndex) => {
+                    let rowHtml = `<tr><td>${q.text}</td>`;
+                    scenarios.forEach((sc, scIndex) => { rowHtml += `<td><input type="text" value="${sc.values[q.text] || ''}" data-q-index="${qIndex}" data-sc-index="${scIndex}"></td>`; });
+                    tbody.innerHTML += rowHtml + '</tr>';
+                });
+                let outcomeRowHtml = '<tr><td><strong>DURUM</strong></td>';
+                scenarios.forEach((sc, scIndex) => {
+                    outcomeRowHtml += type === 'rule' ? `<td><select class="form-select outcome-select" data-sc-index="${scIndex}"><option value="Kural Sağlanıyor" ${sc.outcome === 'Kural Sağlanıyor' ? 'selected' : ''}>Kural Sağlanıyor</option><option value="Kural Sağlanmıyor" ${sc.outcome === 'Kural Sağlanmıyor' ? 'selected' : ''}>Kural Sağlanmıyor</option></select></td>` : `<td><input type="text" class="form-input outcome-input" value="${sc.outcome || ''}" placeholder="+50 Puan..." data-sc-index="${scIndex}"></td>`;
+                });
+                tbody.innerHTML += outcomeRowHtml + '</tr>';
+                container.appendChild(tbody);
+                this.addMatrixEventListeners();
+            },
+            addMatrixEventListeners() {
+                DOM.scenarioMatrixContainer.querySelectorAll('th button').forEach(btn => btn.addEventListener('click', (e) => { AppState.wipItem.scenarios.splice(parseInt(e.currentTarget.dataset.scenarioIndex), 1); this.renderScenarioMatrix(); }));
+                DOM.scenarioMatrixContainer.querySelectorAll('tbody input, tbody select').forEach(el => el.addEventListener('change', e => {
+                    const scIndex = parseInt(e.target.dataset.scIndex);
+                    if (e.target.matches('.outcome-input, .outcome-select')) { AppState.wipItem.scenarios[scIndex].outcome = e.target.value; }
+                    else { const qIndex = parseInt(e.target.dataset.qIndex); AppState.wipItem.scenarios[scIndex].values[AppState.wipItem.questions[qIndex].text] = e.target.value; }
+                }));
+            },
+            renderReport() {
+                DOM.reportServiceName.textContent = AppState.serviceName;
+                DOM.reportContent.innerHTML = '';
 
-            const renderRuleBuilderPreview = () => {
-                if (state.currentRuleGroup.length > 0) {
-                    DOMElements.ruleBuilderPreview.classList.remove('hidden');
-                    DOMElements.currentRuleConditions.innerHTML = state.currentRuleGroup.map(cond =>
-                        `<span class="condition-chip"><strong>${cond.question}</strong>: ${cond.conditionText}</span>`
-                    ).join(' <span style="font-weight: bold; color: var(--primary-accent);">&</span> ');
+                AppState.stages.forEach((stage, stageIndex) => {
+                    const itemsForStage = AppState.items.filter(item => item.stageIndex === stageIndex);
+                    if (itemsForStage.length === 0) return;
+
+                    const details = document.createElement('details');
+                    details.open = true;
+                    details.innerHTML = `
+                        <summary>
+                            ${stage.name}
+                            <span class="summary-stats">${itemsForStage.filter(i=>i.type === 'rule').length} Kural, ${itemsForStage.filter(i=>i.type === 'criterion').length} Kriter</span>
+                        </summary>
+                        <div class="accordion-content">
+                            ${itemsForStage.map(item => this.createItemReportTable(item)).join('')}
+                        </div>
+                    `;
+                    DOM.reportContent.appendChild(details);
+                });
+            },
+            createItemReportTable(item) {
+                return `
+                    <details class="report-item-details" open>
+                        <summary>${item.type === 'rule' ? 'Kural' : 'Kriter'}: ${item.name}</summary>
+                        <div class="matrix-table-container">
+                             <table class="matrix-table report-item-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sorular</th>
+                                        ${item.scenarios.map((_, i) => `<th>Senaryo ${i+1}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${item.questions.map(q => `
+                                        <tr>
+                                            <td>${q.text}</td>
+                                            ${item.scenarios.map(sc => `<td>${sc.values[q.text] || '-'}</td>`).join('')}
+                                        </tr>
+                                    `).join('')}
+                                    <tr>
+                                        <td><strong>DURUM</strong></td>
+                                        ${item.scenarios.map(sc => `<td><strong>${sc.outcome || '-'}</strong></td>`).join('')}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                `;
+            }
+        };
+
+        const Logic = {
+            init() {
+                // Step 0
+                DOM.startDefinitionBtn.addEventListener('click', () => UIManager.goToStep(1));
+                DOM.viewReportBtn.addEventListener('click', () => DOM.excelUploadInput.click());
+                DOM.excelUploadInput.addEventListener('change', this.handleExcelUpload);
+                // Step 1
+                DOM.step1BackBtn.addEventListener('click', () => UIManager.goToStep(0));
+                DOM.step1NextBtn.addEventListener('click', () => {
+                    const name = DOM.serviceNameInput.value.trim();
+                    if (name) { AppState.serviceName = name; AppState.currentStageIndex=0; AppState.items = []; UIManager.goToStep(2); } 
+                    else { alert('Lütfen bir hizmet adı girin.'); }
+                });
+                // Step 2
+                DOM.step2BackBtn.addEventListener('click', () => {
+                    if (AppState.currentStageIndex > 0) { AppState.currentStageIndex--; UIManager.goToStep(2); }
+                    else { UIManager.goToStep(1); }
+                });
+                DOM.addNewRuleBtn.addEventListener('click', () => this.startNewItem('rule'));
+                DOM.addNewCriterionBtn.addEventListener('click', () => this.startNewItem('criterion'));
+                DOM.step2NextStageBtn.addEventListener('click', () => {
+                    if (AppState.currentStageIndex < AppState.stages.length - 1) { AppState.currentStageIndex++; UIManager.goToStep(2); }
+                });
+                DOM.step2FinishBtn.addEventListener('click', () => UIManager.goToStep(6));
+                // Steps 3, 4, 5
+                DOM.step3BackBtn.addEventListener('click', () => UIManager.goToStep(2));
+                DOM.step3NextBtn.addEventListener('click', () => {
+                    const name = DOM.itemNameInput.value.trim();
+                    if (name) { AppState.wipItem.name = name; UIManager.goToStep(4); } 
+                    else { alert('Lütfen bir tanım girin.'); }
+                });
+                DOM.step4BackBtn.addEventListener('click', () => UIManager.goToStep(3));
+                DOM.step4NextBtn.addEventListener('click', () => {
+                    if (AppState.wipItem.questions.length > 0) {
+                        if (AppState.wipItem.scenarios.length === 0) this.addScenario();
+                        UIManager.goToStep(5);
+                    } else { alert('Lütfen en az bir soru ekleyin.'); }
+                });
+                DOM.step5BackBtn.addEventListener('click', () => UIManager.goToStep(4));
+                DOM.addScenarioBtn.addEventListener('click', this.addScenario);
+                DOM.saveItemBtn.addEventListener('click', this.saveItem);
+                // Question Modal
+                DOM.openQuestionModalBtn.addEventListener('click', () => this.openQuestionModal());
+                DOM.cancelQuestionBtn.addEventListener('click', this.closeQuestionModal);
+                DOM.saveQuestionBtn.addEventListener('click', this.saveQuestion.bind(this));
+                // Report Screen
+                DOM.toggleDetailsBtn.addEventListener('click', this.toggleAllReportDetails);
+                DOM.reportEditBtn.addEventListener('click', () => { AppState.currentStageIndex = 0; UIManager.goToStep(2); });
+                DOM.reportDownloadBtn.addEventListener('click', this.exportToExcel);
+                DOM.reportPdfDetailedBtn.addEventListener('click', () => this.exportToPDF(true));
+                DOM.reportPdfSummaryBtn.addEventListener('click', () => this.exportToPDF(false));
+                DOM.reportFullscreenBtn.addEventListener('click', () => document.documentElement.requestFullscreen().catch(err => console.error(err)));
+            },
+            startNewItem(type) {
+                AppState.wipItem = { id: 'wip_' + Date.now(), type, stageIndex: AppState.currentStageIndex, name: '', questions: [], scenarios: [], };
+                UIManager.goToStep(3);
+            },
+            addScenario() {
+                AppState.wipItem.scenarios.push({ id: 'sc_' + Date.now(), values: {}, outcome: AppState.wipItem.type === 'rule' ? 'Kural Sağlanıyor' : '' });
+                if(AppState.currentStep === 5) UIManager.renderScenarioMatrix();
+            },
+            saveItem() {
+                if(AppState.wipItem.scenarios.some(sc => !sc.outcome)){ alert('Lütfen tüm senaryolar için bir DURUM belirtin.'); return; }
+                const existingIndex = AppState.items.findIndex(i => i.id === AppState.wipItem.id);
+                if (existingIndex > -1) AppState.items[existingIndex] = AppState.wipItem;
+                else AppState.items.push(AppState.wipItem);
+                AppState.wipItem = null;
+                UIManager.goToStep(2);
+            },
+            openQuestionModal(index = -1) {
+                AppState.wipQuestionIndex = index;
+                if (index > -1) {
+                    const q = AppState.wipItem.questions[index];
+                    DOM.questionModalTitle.textContent = "Soruyu Düzenle";
+                    DOM.questionText.value = q.text; DOM.questionSource.value = q.source;
+                    DOM.questionAutomation.value = q.automation; DOM.questionAnswerType.value = q.answerType;
+                    DOM.questionScope.value = q.scope;
                 } else {
-                    DOMElements.ruleBuilderPreview.classList.add('hidden');
-                    DOMElements.currentRuleConditions.innerHTML = '';
+                    DOM.questionModalTitle.textContent = "Yeni Soru Ekle";
+                    DOM.questionText.value = ''; DOM.questionSource.selectedIndex = 0;
+                    DOM.questionAutomation.value = ''; DOM.questionAnswerType.selectedIndex = 0;
+                    DOM.questionScope.selectedIndex = 0;
                 }
-            };
-
-            const clearConditionFields = () => {
-                const fields = ['source', 'automation', 'question', 'scope', 'numeric-min', 'numeric-max', 'date-start', 'date-end', 'text-value', 'multi-value', 'boolean-value-input'];
-                fields.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el && el.tagName === 'INPUT') el.value = '';
-                });
-                document.getElementById('answer-type').selectedIndex = 0;
-                document.getElementById('answer-type').dispatchEvent(new Event('change'));
-                DOMElements.questionInput.focus();
-            };
-
-            const clearRuleDefinitionFields = () => {
-                document.getElementById('condition-definition').value = '';
-                document.getElementById('condition-effect').value = '';
-                const preconditionRadio = document.querySelector('input[value="precondition"]');
-                preconditionRadio.checked = true;
-                preconditionRadio.dispatchEvent(new Event('change'));
-            }
-
-            const addConditionToGroup = () => {
-                if (!DOMElements.questionInput.value.trim()) {
-                    showAlert('Lütfen "Hangi Soru ile Bilgi Alınıyor?" alanını doldurun.');
-                    DOMElements.questionInput.focus(); return false;
-                }
-                let conditionValue = {};
-                let conditionText = '';
-                const answerType = DOMElements.answerTypeSelect.value;
-                switch (answerType) {
-                    case 'TAM_SAYI': case 'ONDALIK_SAYI':
-                        const min = document.getElementById('numeric-min').value;
-                        const max = document.getElementById('numeric-max').value;
-                        if (!min && !max) { showAlert('Lütfen "En Az" veya "En Çok" alanlarından en az birini doldurun.'); return false; }
-                        conditionValue = { min: min || null, max: max || null };
-                        if (min && max) conditionText = `${min} - ${max} arasında`;
-                        else if (min) conditionText = `>= ${min}`;
-                        else if (max) conditionText = `<= ${max}`;
-                        break;
-                    case 'TARIH':
-                        const start = document.getElementById('date-start').value;
-                        const end = document.getElementById('date-end').value;
-                        if (!start && !end) { showAlert('Lütfen "İlk Tarih" veya "Son Tarih" alanlarından en az birini doldurun.'); return false; }
-                        conditionValue = { start: start || null, end: end || null };
-                        if (start && end) conditionText = `${start} - ${end} arasında`;
-                        else if (start) conditionText = `${start} tarihinden sonra`;
-                        else if (end) conditionText = `${end} tarihinden önce`;
-                        break;
-                    case 'METIN':
-                        const text = document.getElementById('text-value').value;
-                        if (!text.trim()) { showAlert('Lütfen metin koşulu için bir değer girin.'); return false; }
-                        conditionValue = { value: text };
-                        conditionText = `"${text}" metnine eşit`;
-                        break;
-                    case 'YANIT_DOGRULAMA': case 'ONAY_KUTUSU':
-                        const boolInput = document.getElementById('boolean-value-input').value;
-                        if (!boolInput.trim()) { showAlert('Lütfen doğrulama için en az bir kabul edilen değer girin.'); return false; }
-                        conditionValue = { values: boolInput.split(',').map(s => s.trim()) };
-                        conditionText = `[${boolInput}] seçeneklerinden biri`;
-                        break;
-                    case 'COKLU_SECIM':
-                        const multi = document.getElementById('multi-value').value;
-                        if (!multi.trim()) { showAlert('Lütfen çoklu seçim için en az bir değer girin.'); return false; }
-                        conditionValue = { values: multi.split(',').map(s => s.trim()) };
-                        conditionText = `[${multi}] seçeneklerinden biri`;
-                        break;
-                }
-                if (state.currentRuleGroup.length === 0) {
-                    DOMElements.conditionTypeRadios.forEach(radio => radio.disabled = true);
-                    document.getElementById('condition-definition').disabled = true;
-                    document.getElementById('condition-effect').disabled = true;
-                }
-                const condition = {
-                    source: document.getElementById('source').value,
-                    automation: document.getElementById('automation').value,
-                    question: DOMElements.questionInput.value,
-                    answerType: answerType,
-                    scope: document.getElementById('scope').value,
-                    conditionValue: conditionValue,
-                    conditionText: conditionText,
-                    bilgiEdinmeAsamasi: state.stages[state.currentStageIndex] === 'EVRAK KONTROL' ? document.getElementById('bilgi-edinme-asama').value : null
-                };
-                state.currentRuleGroup.push(condition);
-                renderRuleBuilderPreview();
-                clearConditionFields();
-                updateButtonStates();
-                return true;
-            };
-
-            const saveCurrentRule = () => {
-                if (state.currentRuleGroup.length === 0) {
-                    showAlert("Kaydedilecek bir kural bulunmuyor. Lütfen önce en az bir koşul ekleyin.");
-                    return;
-                }
-                state.serviceName = DOMElements.serviceNameInput.value.trim();
-                if (!state.serviceName) {
-                    showAlert('Lütfen önce bir hizmet adı girin.');
-                    DOMElements.serviceNameInput.focus();
-                    return;
-                }
-                const conditionType = document.querySelector('input[name="condition-type"]:checked').value;
-                const rule = {
-                    ruleId: nextRuleId++,
-                    serviceName: state.serviceName,
-                    stage: state.stages[state.currentStageIndex],
-                    conditionType: conditionType,
-                    conditionDetail: conditionType === 'precondition' ? document.getElementById('condition-definition').value : document.getElementById('condition-effect').value,
-                    conditions: [...state.currentRuleGroup]
-                };
-                state.criteriaData.push(rule);
-                state.currentRuleGroup = [];
-                renderTable();
-                renderRuleBuilderPreview();
-                clearRuleDefinitionFields();
-                DOMElements.conditionTypeRadios.forEach(radio => radio.disabled = false);
-                document.getElementById('condition-definition').disabled = false;
-                document.getElementById('condition-effect').disabled = false;
-                updateButtonStates();
-            };
-
-            const deleteRule = (ruleId) => {
-                state.criteriaData = state.criteriaData.filter(rule => rule.ruleId !== ruleId);
-                renderTable();
-            };
-            
-            const handleNavigation = (navigationLogic) => {
-                const performNavigation = () => {
-                    state.currentRuleGroup = [];
-                    renderRuleBuilderPreview();
-                    navigationLogic();
-                    updateButtonStates();
-                };
-
-                if (state.currentRuleGroup.length > 0) {
-                     showConfirmation("Kaydedilmemiş bir kural üzerinde çalışıyorsunuz. Değişiklikleriniz kaybolacak. Devam etmek istediğinizden emin misiniz?", performNavigation);
-                } else {
-                     performNavigation();
-                }
-            };
-
-            const goToStage = (index) => {
-                 handleNavigation(() => {
-                    if (index <= state.currentStageIndex) {
-                        state.currentStageIndex = index;
-                        updateStageView();
+                DOM.questionStageWrapper.style.display = AppState.currentStageIndex >= 2 ? 'block' : 'none';
+                if (AppState.currentStageIndex >= 2) {
+                    DOM.questionStageSelect.innerHTML = '';
+                    for(let i = 0; i <= AppState.currentStageIndex; i++) {
+                        DOM.questionStageSelect.add(new Option(AppState.stages[i].name, AppState.stages[i].name));
                     }
-                 });
-            };
+                     if(index > -1 && AppState.wipItem.questions[index].stage) { DOM.questionStageSelect.value = AppState.wipItem.questions[index].stage; }
+                }
+                DOM.questionModal.classList.add('active');
+            },
+            closeQuestionModal() { DOM.questionModal.classList.remove('active'); },
+            saveQuestion() {
+                const questionData = {
+                    text: DOM.questionText.value.trim(), source: DOM.questionSource.value, automation: DOM.questionAutomation.value.trim(),
+                    answerType: DOM.questionAnswerType.value, scope: DOM.questionScope.value,
+                    stage: AppState.currentStageIndex >= 2 ? DOM.questionStageSelect.value : null
+                };
+                if (!questionData.text) { alert('Soru metni boş olamaz.'); return; }
+                if (AppState.wipQuestionIndex > -1) AppState.wipItem.questions[AppState.wipQuestionIndex] = questionData;
+                else AppState.wipItem.questions.push(questionData);
+                this.closeQuestionModal();
+                UIManager.renderQuestionsList();
+            },
+            handleExcelUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        Logic.parseExcelData(json);
+                        UIManager.goToStep(6);
+                    } catch (error) {
+                        console.error("Excel parse error:", error);
+                        alert("Excel dosyası okunamadı. Lütfen sistem tarafından oluşturulan bir dosya yüklediğinizden emin olun.");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+                event.target.value = ''; // Reset input for re-upload
+            },
+            parseExcelData(data) {
+                const newItems = [];
+                let currentItem = null;
+                AppState.serviceName = data[0]["Hizmet Adı"] || 'İsimsiz Hizmet';
 
-            const goToNextStage = () => {
-                handleNavigation(() => {
-                    state.currentStageIndex++;
-                    updateStageView();
-                });
-            }
-            
-            const goToPreviousStage = () => {
-                handleNavigation(() => {
-                    if (state.currentStageIndex > 0) {
-                        state.currentStageIndex--;
-                        updateStageView();
+                data.forEach(row => {
+                    if (row["Kural/Kriter Adı"]) {
+                        const stageIndex = AppState.stages.findIndex(s => s.name === row["Aşama"]);
+                        const isNewItem = !currentItem || currentItem.name !== row["Kural/Kriter Adı"];
+                        
+                        if(isNewItem) {
+                            if(currentItem) newItems.push(currentItem);
+                            currentItem = {
+                                id: 'item_' + Date.now() + Math.random(),
+                                name: row["Kural/Kriter Adı"],
+                                type: row["Tipi"] === 'Kural' ? 'rule' : 'criterion',
+                                stageIndex: stageIndex > -1 ? stageIndex : 0,
+                                questions: [], scenarios: []
+                            };
+                        }
+
+                        if(row["Soru"] && row["Soru"] !== "DURUM") {
+                            const question = {
+                                text: row["Soru"], source: row["Bilgi Kaynağı"], automation: row["Otomasyon"],
+                                answerType: row["Yanıt Türü"], scope: row["Soru Kapsamı"], stage: row["Bilginin Alındığı Aşama"] || null
+                            };
+                            if (!currentItem.questions.find(q => q.text === question.text)) {
+                                currentItem.questions.push(question);
+                            }
+                            Object.keys(row).forEach(key => {
+                                if (key.startsWith("Senaryo ")) {
+                                    const scenarioIndex = parseInt(key.split(" ")[1]) - 1;
+                                    if(!currentItem.scenarios[scenarioIndex]) currentItem.scenarios[scenarioIndex] = {id: 'sc_'+scenarioIndex, values:{}};
+                                    currentItem.scenarios[scenarioIndex].values[question.text] = row[key];
+                                }
+                            });
+                        } else if (row["Soru"] === "DURUM") {
+                             Object.keys(row).forEach(key => {
+                                if (key.startsWith("Senaryo ")) {
+                                    const scenarioIndex = parseInt(key.split(" ")[1]) - 1;
+                                     if(currentItem.scenarios[scenarioIndex]) {
+                                         currentItem.scenarios[scenarioIndex].outcome = row[key];
+                                     }
+                                }
+                            });
+                        }
+                    } else { // Handle end of item block
+                        if(currentItem) {
+                             newItems.push(currentItem);
+                             currentItem = null;
+                        }
                     }
                 });
-            }
-
-            const exportToExcel = () => {
-                if (state.criteriaData.length === 0) { showAlert("Dışa aktarılacak veri bulunmuyor."); return; }
+                if(currentItem) newItems.push(currentItem); // push the last one
+                AppState.items = newItems;
+            },
+            exportToExcel() {
                 const dataForExport = [];
-                state.criteriaData.forEach(rule => {
-                    rule.conditions.forEach((condition, index) => {
-                        let baglacText = index > 0 ? 'VE' : '-';
-                        const flatRow = {
-                            'Kural No': rule.ruleId,
-                            'Bağlantı': baglacText,
-                            'Hizmet Adı': rule.serviceName,
-                            'Aşama': rule.stage,
-                            'Kriter Sorusu': condition.question,
-                            'Koşul': condition.conditionText,
-                            'Kural Tipi': rule.conditionType === 'precondition' ? 'Ön Koşul' : 'Ek Kriter',
-                            'Tanım / Etki': rule.conditionDetail,
-                            'Bilginin Edinildiği Aşama': condition.bilgiEdinmeAsamasi || '',
-                            'Otomasyon': condition.automation,
-                            'Bilginin Kaynağı': condition.source,
-                            'Yanıt Türü': condition.answerType,
-                            'Soru Kapsamı': condition.scope
-                        };
-                        dataForExport.push(flatRow);
+                AppState.items.forEach(item => {
+                    const baseRow = { "Hizmet Adı": AppState.serviceName, "Aşama": AppState.stages[item.stageIndex].name, "Kural/Kriter Adı": item.name, "Tipi": item.type === 'rule' ? 'Kural' : 'Kriter', };
+                    item.questions.forEach(q => {
+                        const questionRow = { ...baseRow, "Soru": q.text, "Bilgi Kaynağı": q.source, "Otomasyon": q.automation, "Yanıt Türü": q.answerType, "Soru Kapsamı": q.scope, "Bilginin Alındığı Aşama": q.stage || '' };
+                        item.scenarios.forEach((sc, i) => { questionRow[`Senaryo ${i + 1} Değeri`] = sc.values[q.text] || ''; });
+                        dataForExport.push(questionRow);
                     });
+                    if (item.scenarios.length > 0) {
+                       const outcomeRow = { ...baseRow, "Soru": "DURUM" };
+                       item.scenarios.forEach((sc, i) => { outcomeRow[`Senaryo ${i + 1} Değeri`] = sc.outcome; });
+                       dataForExport.push(outcomeRow);
+                    }
+                    dataForExport.push({}); // Empty row as separator
                 });
+                if (dataForExport.length === 0) { alert("Dışa aktarılacak veri bulunmuyor."); return; }
                 const worksheet = XLSX.utils.json_to_sheet(dataForExport);
                 const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, 'Kriterler');
-                XLSX.writeFile(workbook, `Hizmet_Kriterleri_${state.serviceName.replace(/ /g, "_") || 'Rapor'}.xlsx`);
-            };
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Kurallar ve Kriterler');
+                XLSX.writeFile(workbook, `${AppState.serviceName.replace(/ /g, "_")}_Kurallari.xlsx`);
+            },
+            exportToPDF(detailed = true) {
+                const reportContent = DOM.reportContent;
+                const serviceName = AppState.serviceName || 'Rapor';
+                const originalButton = detailed ? DOM.reportPdfDetailedBtn : DOM.reportPdfSummaryBtn;
+                const originalButtonText = originalButton.innerHTML;
+                originalButton.disabled = true;
+                originalButton.innerHTML = 'Oluşturuluyor...';
 
-            // --- Event Listeners ---
-            DOMElements.answerTypeSelect.addEventListener('change', (e) => {
-                const wrappers = ['numeric-condition-wrapper', 'date-condition-wrapper', 'text-condition-wrapper', 'boolean-condition-wrapper', 'multi-condition-wrapper'];
-                wrappers.forEach(id => document.getElementById(id).classList.add('hidden'));
-                switch (e.target.value) {
-                    case 'TAM_SAYI': case 'ONDALIK_SAYI': document.getElementById('numeric-condition-wrapper').classList.remove('hidden'); break;
-                    case 'TARIH': document.getElementById('date-condition-wrapper').classList.remove('hidden'); break;
-                    case 'METIN': document.getElementById('text-condition-wrapper').classList.remove('hidden'); break;
-                    case 'YANIT_DOGRULAMA': case 'ONAY_KUTUSU': document.getElementById('boolean-condition-wrapper').classList.remove('hidden'); break;
-                    case 'COKLU_SECIM': document.getElementById('multi-condition-wrapper').classList.remove('hidden'); break;
-                }
-            });
-            DOMElements.addCriterionYesBtn.addEventListener('click', () => {
-                DOMElements.criterionCheckSection.classList.add('hidden');
-                DOMElements.criterionForm.classList.remove('hidden');
-            });
-            DOMElements.addCriterionNoBtn.addEventListener('click', goToNextStage);
-            DOMElements.finishStageBtn.addEventListener('click', goToNextStage);
-            DOMElements.backStageBtn.addEventListener('click', goToPreviousStage);
-            DOMElements.addConditionToGroupBtn.addEventListener('click', addConditionToGroup);
-            DOMElements.saveRuleBtn.addEventListener('click', saveCurrentRule);
-            DOMElements.exportExcelBtn.addEventListener('click', exportToExcel);
-            DOMElements.progressBar.addEventListener('click', (e) => {
-                const stepElement = e.target.closest('.progress-step.clickable');
-                if (stepElement) {
-                    const index = parseInt(stepElement.dataset.index, 10);
-                    if (!isNaN(index)) goToStage(index);
-                }
-            });
-            DOMElements.tableBody.addEventListener('click', (e) => {
-                if (e.target && e.target.classList.contains('delete-btn')) {
-                    const ruleId = parseInt(e.target.dataset.ruleId, 10);
-                    showConfirmation(`Kural No ${ruleId} ve içerdiği tüm koşulları silmek istediğinizden emin misiniz?`, () => deleteRule(ruleId));
-                }
-            });
-            DOMElements.conditionTypeRadios.forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    const isPrecondition = e.target.value === 'precondition';
-                    DOMElements.conditionDefinitionWrapper.classList.toggle('hidden', !isPrecondition);
-                    DOMElements.conditionEffectWrapper.classList.toggle('hidden', isPrecondition);
+                // Store original state of details
+                const allDetails = reportContent.querySelectorAll('details');
+                const originalOpenStates = Array.from(allDetails).map(d => d.open);
+
+                // Set state for PDF generation
+                allDetails.forEach(detail => {
+                    // For summary, close all rule details. Stage details can remain as they are or be opened.
+                    if (!detailed && detail.classList.contains('report-item-details')) {
+                        detail.open = false;
+                    } else {
+                        detail.open = true; // For detailed, open everything
+                    }
                 });
-            });
-            
-            // --- Initial Load ---
-            updateStageView();
-            renderTable();
-            DOMElements.answerTypeSelect.dispatchEvent(new Event('change'));
-        });
+
+                html2canvas(reportContent, { scale: 2, useCORS: true }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const { jsPDF } = window.jspdf;
+                    
+                    const pdfWidth = 210; 
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    
+                    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`${serviceName.replace(/ /g, "_")}_Raporu_${detailed ? 'Detayli' : 'Ozet'}.pdf`);
+
+                }).catch(err => {
+                    console.error("PDF generation error:", err);
+                    alert("PDF oluşturulurken bir hata oluştu.");
+                }).finally(() => {
+                    // Restore original state
+                    allDetails.forEach((detail, index) => {
+                        detail.open = originalOpenStates[index];
+                    });
+                    originalButton.disabled = false;
+                    originalButton.innerHTML = originalButtonText;
+                });
+            },
+            toggleAllReportDetails() {
+                const details = DOM.reportContent.querySelectorAll('details.report-item-details');
+                if (details.length === 0) return;
+
+                // Determine new state based on the first element's current state
+                const shouldOpen = !details[0].open;
+                
+                details.forEach(detail => {
+                    detail.open = shouldOpen;
+                });
+
+                DOM.toggleDetailsBtn.textContent = shouldOpen ? 'Tüm Detayları Gizle' : 'Tüm Detayları Göster';
+            }
+
+        };
+
+        Logic.init();
+    });
     </script>
 </body>
 </html>
