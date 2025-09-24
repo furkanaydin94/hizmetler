@@ -1062,6 +1062,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const pageHeight = pdf.internal.pageSize.getHeight();
             const contentWidth = pageWidth - margin * 2;
             let cursorY = margin;
+            
+            const today = new Date();
+            const formattedDate = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+            
+            // Add a header to each page with the date
+            const addPageHeader = () => {
+                pdf.setFontSize(9);
+                pdf.setTextColor(128); // Gray color
+                pdf.text(formattedDate, pageWidth - margin, margin - 5, { align: 'right' });
+            };
+            
+            // Add header to the first page
+            addPageHeader();
 
             const addElementToPdf = async (element) => {
                 const canvas = await html2canvas(element, {
@@ -1078,6 +1091,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cursorY + scaledImgHeight > pageHeight - margin) {
                     pdf.addPage();
                     cursorY = margin;
+                    addPageHeader(); // Add header to the new page
                 }
 
                 pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', margin, cursorY, contentWidth, scaledImgHeight);
@@ -1143,6 +1157,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
+                
+                // Add signature section at the end
+                const signatureBlockHeight = 40; // The total height needed for signatures
+                if (cursorY > pageHeight - margin - signatureBlockHeight) {
+                    pdf.addPage();
+                    addPageHeader();
+                }
+
+                // Position signatures at the bottom of the current (and final) page
+                let signatureTextY = pageHeight - margin - 20;
+
+                pdf.setFontSize(10);
+                pdf.setTextColor(0); // Black text
+                
+                const signatureWidth = 70; // width of signature area
+                const signatureXLeft = margin; 
+                const signatureXRight = pageWidth - margin - signatureWidth;
+
+                // Birim Sorumlusu (Left)
+                pdf.setFont('helvetica', 'normal');
+                pdf.text("Birim Sorumlusu", signatureXLeft + (signatureWidth / 2), signatureTextY, { align: 'center' });
+                pdf.setFont('helvetica', 'bold');
+                pdf.text("imza", signatureXLeft + (signatureWidth / 2), signatureTextY + 5, { align: 'center' });
+
+                // Müdür (Right)
+                pdf.setFont('helvetica', 'normal');
+                pdf.text("Müdür", signatureXRight + (signatureWidth / 2), signatureTextY, { align: 'center' });
+                pdf.setFont('helvetica', 'bold');
+                pdf.text("imza", signatureXRight + (signatureWidth / 2), signatureTextY + 5, { align: 'center' });
+
+                pdf.setFont('helvetica', 'normal');
+
                 pdf.save(`${serviceName.replace(/ /g, "_")}_Raporu_${detailed ? 'Detayli' : 'Ozet'}.pdf`);
 
             } catch (err) {
