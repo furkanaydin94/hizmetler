@@ -40,13 +40,7 @@ function mainApp() {
     let pageFlip = null;
     let currentZoom = 0;
 
-    // Mobile Detection
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-    const isLowMemory = isMobile && (locationFilter === 'İstanbul Geneli' || !locationFilter);
-
-    console.log('Mobile:', isMobile, 'Low Memory Mode:', isLowMemory);
-
-    // URL Parametreleri ve Filtreleme
+    // URL Parametreleri ve Filtreleme - ÖNCE TANIMLANMALI
     const urlParams = new URLSearchParams(window.location.search);
     const locationFilter = urlParams.get('location');
     const autoPrint = urlParams.get('autoprint');
@@ -57,6 +51,12 @@ function mainApp() {
     const selectedServices = servicesParam ? servicesParam.split(',') : null;
     const selectedTurler = turlerParam ? turlerParam.split(',') : null;
     const reportMonthParam = urlParams.get('reportMonth'); // Format: 2025-10
+
+    // Mobile Detection - locationFilter kullanıldığı için SONRA
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const isLowMemory = isMobile && (locationFilter === 'İstanbul Geneli' || !locationFilter);
+
+    console.log('Mobile:', isMobile, 'Low Memory Mode:', isLowMemory, 'Location:', locationFilter);
 
     // Rapor tarihi parse et
     let reportYear = null, reportMonth = null;
