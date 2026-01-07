@@ -1,0 +1,2261 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veri Kontrol ve Raporlama Aracı</title>
+
+    <!-- Gerekli Kütüphaneler -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-accent: #3A6EA5;
+            --background-body: #F4F6F9;
+            --background-card: #FFFFFF;
+            --text-primary: #1E214F;
+            --text-secondary: #5a647e;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(30, 33, 79, 0.06);
+            --slide-transition-duration: 0.5s;
+            --error-bg: #fff5f5;
+            --error-border: #f5c6cb;
+            --error-text: #721c24;
+            --warning-bg: #fffbe6;
+            --warning-border: #ffe58f;
+            --warning-text: #8a6d3b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            height: 100%;
+            overflow: auto;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background-color: var(--background-body);
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .container { width: 95%; max-width: 1600px; margin: 0 auto; padding: 0 15px; }
+        header {
+            position: sticky; top: 0; z-index: 1000;
+            background: linear-gradient(90deg, #3A6EA5 0%, #1E214F 100%);
+            padding: 0.5rem 0;
+            color: #ffffff;
+            flex-shrink: 0;
+        }
+        .navbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+        .logo-container img { height: 60px; display: block; }
+        .horizontal-nav { flex-grow: 1; overflow: hidden; }
+        .horizontal-nav ul {
+            display: flex; flex-wrap: nowrap; overflow-x: auto;
+            list-style: none; margin: 0; padding: 5px 0; gap: 0.1rem;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .horizontal-nav ul::-webkit-scrollbar { display: none; }
+        .horizontal-nav a {
+            color: rgba(255, 255, 255, 0.85); padding: 2px 5px;
+            text-decoration: none; display: block; border-radius: 6px; transition: all 0.25s ease;
+            font-size: 0.7rem; font-weight: 500; white-space: nowrap; cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .horizontal-nav a:hover { background-color: rgba(255, 255, 255, 0.1); color: #FFFFFF; }
+        .horizontal-nav a.active-nav-link { background-color: rgba(255, 255, 255, 0.2); font-weight: 600; }
+        main { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; }
+        #login-section {
+            background-color: var(--background-card); padding: 2rem 3rem 3rem 3rem; border-radius: 16px;
+            text-align: center; max-width: 450px; margin: 2rem auto;
+            border: 1px solid var(--border-color); box-shadow: 0 8px 25px var(--shadow-color);
+        }
+        #login-section h2 { font-size: 1.8rem; margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 1rem; }
+        #login-error { color: #e53e3e; margin-top: 1rem; font-weight: 500; }
+        .entry-point-section {
+            background-color: var(--background-card); padding: 2rem 3rem 3rem 3rem; border-radius: 16px;
+            text-align: center; max-width: 650px; margin: 2rem auto;
+            border: 1px solid var(--border-color); box-shadow: 0 8px 25px var(--shadow-color);
+        }
+        .entry-point-section h2 { font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-primary); }
+        .entry-point-section p { color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6; }
+        .button-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .action-btn { background-color: var(--primary-accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: all 0.2s ease; }
+        .action-btn.secondary { background-color: var(--background-body); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #report-content { width: 100%; height: 100%; position: relative; }
+        .presentation-slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 1.5rem 0; opacity: 0; display: flex;
+            justify-content: center; align-items: flex-start;
+            overflow-y: auto; pointer-events: none;
+            transition: opacity var(--slide-transition-duration) ease-in-out;
+        }
+        .presentation-slide.active-slide { opacity: 1; z-index: 10; pointer-events: auto; }
+        .slide-content-wrapper {
+            width: 95%; max-width: 1400px; background-color: var(--background-card);
+            padding: 2rem; border-radius: 12px;
+            box-shadow: 0 6px 20px var(--shadow-color); border: 1px solid var(--border-color);
+        }
+        .slide-header { 
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); 
+        }
+        .slide-header-text { flex-grow: 1; }
+        .mudurluk-title { font-size: 1rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.25rem; }
+        .hizmet-title { font-size: 2rem; font-weight: 700; color: var(--text-primary); }
+        .hizmet-description {
+            font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;
+            padding: 1rem; background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-accent); border-radius: 0 4px 4px 0;
+            line-height: 1.6;
+        }
+        .hizmet-main-content { display: grid; gap: 1.5rem; }
+        .hizmet-main-content.grid-with-map { grid-template-columns: 1.2fr 1fr; }
+        .hizmet-main-content.no-map { display: flex; justify-content: center; }
+        .hizmet-main-content.no-map .details-column { width: 100%; max-width: 800px; }
+        .map-wrapper { 
+            position: relative; border-radius: 12px; overflow: hidden; 
+            border: 1px solid var(--border-color); transition: all 0.3s ease-in-out;
+        }
+        .map-container { width: 100%; height: 100%; min-height: 450px; background: #e9ecef; }
+        .map-wrapper.fullscreen-map { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 5000; border-radius: 0; border: none; }
+        .details-column { display: flex; flex-direction: column; gap: 1.5rem; }
+        .section-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+        .breakdown-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .breakdown-card { background-color: var(--background-body); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; transition: all 0.2s ease-in-out; }
+        .breakdown-card:hover { border-color: var(--primary-accent); transform: translateY(-3px); }
+        .breakdown-card h3 { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 500; }
+        .breakdown-card .card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+        .annual-data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .annual-data-table th, .annual-data-table td { padding: 0.6rem; text-align: center; border-bottom: 1px solid var(--border-color); }
+        .annual-data-table th { font-weight: 600; color: var(--text-secondary); background-color: #f8f9fa; }
+        .annual-data-table th:first-child, .annual-data-table td:first-child { text-align: left; }
+        .hidden { display: none !important; }
+        .presentation-controls { display: flex; align-items: center; gap: 0.75rem; }
+        #fullscreen-btn { background: none; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.85); width: 34px; height: 34px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+        #fullscreen-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: #fff; color: #fff; }
+        .loading-spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-accent);
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 20px auto;
+        }
+        .error-message {
+            padding: 1.5rem;
+            background-color: #fff5f5;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .error-message h3 { margin-bottom: 0.5rem; }
+        .error-message code {
+            background-color: #f8d7da;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        #custom-context-menu {
+            position: fixed;
+            z-index: 10000;
+            background-color: var(--background-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 0.5rem 0;
+            min-width: 150px;
+        }
+        .context-menu-item {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        .context-menu-item:hover {
+            background-color: var(--background-body);
+        }
+        
+        /* Wizard Stilleri */
+        .wizard-step {
+            display: none;
+        }
+        .wizard-step.active {
+            display: block;
+        }
+        .wizard-list-container {
+            text-align: left;
+            margin-top: 1rem;
+            max-height: 30vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: #fdfdfd;
+        }
+        .wizard-list-container label {
+            display: block;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+         .wizard-list-container .hizmet-item h4 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .wizard-list-container .kirilim-list {
+            padding-left: 2rem;
+            border-left: 2px solid var(--border-color);
+            margin-left: 0.5rem;
+        }
+        .quick-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .quick-filters button {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .quick-filters button:hover {
+            background-color: var(--primary-accent);
+            color: white;
+            border-color: var(--primary-accent);
+        }
+
+        /* Veri Kontrol Aracı Stilleri */
+        #data-checker-container {
+            width: 100%;
+            padding: 2rem;
+            overflow: auto;
+        }
+        #data-checker-controls {
+            background-color: var(--background-card);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #data-checker-controls select, #data-checker-controls input {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+        #data-table-container {
+            max-height: 70vh;
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        #data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--background-card);
+        }
+        #data-table th, #data-table td {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        #data-table th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+        }
+        /* Compact görünüm: tüm sütunlar sığsın diye yazı ve dolgu küçültme */
+        #data-checker-container.compact #data-table { table-layout: fixed; }
+        #data-checker-container.compact #data-table th, 
+        #data-checker-container.compact #data-table td { 
+            padding: 6px 8px; 
+            font-size: 0.78rem; 
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        /* Başlıkları tek satırda tut, veri hücrelerini sığması için sar */
+        #data-checker-container.compact #data-table th { white-space: nowrap; }
+        #data-checker-container.compact #data-table td { 
+            white-space: normal; 
+            overflow-wrap: anywhere; 
+            word-break: break-word; 
+        }
+        /* Sayısal sütunları sağa hizala */
+        #data-checker-container.compact #data-table td.col-yearly,
+        #data-checker-container.compact #data-table td.col-monthly { text-align: right; }
+        #data-checker-container.compact #data-table th:first-child, 
+        #data-checker-container.compact #data-table td:first-child { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+        #data-checker-container.compact #data-table th:nth-child(2), 
+        #data-checker-container.compact #data-table td:nth-child(2) { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+        .risk-inconsistent { background-color: var(--error-bg); }
+        .risk-decreasing { background-color: var(--warning-bg); }
+        /* Alt grup satırı (Veri Aralığı) */
+        #data-table .subgroup-row td { background-color: #f7f9fc; font-weight: 600; color: var(--text-secondary); }
+        /* Grup satırı stili */
+        #data-table .group-row td {
+            background-color: #f2f6fb;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-top: 2px solid #dee2e6;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 1200px) { .hizmet-main-content.grid-with-map { grid-template-columns: 1fr; } }
+        @media (max-width: 992px) { .navbar { flex-wrap: wrap; justify-content: center; gap: 1rem; } }
+    </style>
+</head>
+<body>
+    <header class="hidden">
+        <div class="container navbar">
+            <div class="logo-container">
+                <img src="https://i.imgur.com/UUOeqIx.png" alt="Logo">
+            </div>
+            <nav class="horizontal-nav">
+                <ul id="mudurluk-links"></ul>
+            </nav>
+            <div class="presentation-controls hidden">
+                <button id="fullscreen-btn" title="Tam Ekran">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/></svg>
+                </button>
+            </div>
+             <div id="user-info" class="hidden" style="display: flex; align-items: center; gap: 1rem; color: white;">
+                <span id="username-display" style="font-weight: 500;"></span>
+                <button id="logout-btn" class="action-btn secondary" style="padding: 6px 12px; font-size: 0.9rem; color: white; border-color: rgba(255,255,255,0.5); background: none;">Çıkış Yap</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="login-section">
+            <h2>Giriş Yap</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Kullanıcı Adı</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Şifre</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="action-btn">Giriş Yap</button>
+                <p id="login-error" class="hidden"></p>
+            </form>
+        </div>
+
+        <div id="app-container" class="hidden">
+            <div id="entry-point" class="entry-point-section">
+                <!-- Bu alan JS tarafından doldurulacak -->
+            </div>
+        </div>
+
+        <div id="report-content" class="hidden"></div>
+        <div id="data-checker-container" class="hidden"></div>
+    </main>
+    
+    <!-- Custom Context Menu -->
+    <div id="custom-context-menu" class="hidden">
+        <div class="context-menu-item" id="context-download-pdf">Raporu İndir (PDF)</div>
+    </div>
+
+    <script>
+        // --- KULLANICI VERİLERİ ---
+        const reportUsers = [
+            { username: 'furkanaydin', password: '041295sD.', role: 'Admin' },
+            { username: 'yönetici', password: 'shdb2025', role: 'Yönetici' },
+            { username: 'kullanıcı', password: 'shdb2022', role: 'Kullanıcı' },
+            { username: 'verisorumlusu', password: 'shdb2025', role: 'Veri Sorumlusu' }
+        ];
+        
+        const mudurlukMap = {
+            'KAHM': 'Kadın ve Aile Hizmetleri Şube Müdürlüğü',
+            'SHM': 'Sosyal Hizmetler Şube Müdürlüğü',
+            'ÇHM': 'Çocuk Hizmetleri Şube Müdürlüğü',
+            'EHM': 'Engelli Hizmetleri Şube Müdürlüğü',
+            'EŞM': 'Engelli Hizmetleri Şube Müdürlüğü',
+            'ŞYVGİM': 'Şehit Yakınları ve Gazilerle İlişkiler Şube Müdürlüğü'
+        };
+
+        const standardHeaders = [
+            'Müdürlük', 'Hizmet Başlığı', 'Tür', 'Lokasyon', 'Veri Aralığı', 
+            'İlk Tarih', 'Son Tarih', 'Veri Sorumlusu', 'Güncel Olması Gereken Tarih', 
+            'Eksik Giriş', 'Değer', 'Veri Giriş Tarihi'
+        ];
+
+        // --- Global Değişkenler ---
+        let bggVeriler = [], kumulatifVeriler = [];
+        let serviceDescriptions = new Map();
+        let istanbulGeoJSON;
+        let mapInstances = {};
+        let presentationSlides = [], currentSlideIndex = 0, isTransitioning = false;
+        let rawDataForChecker = [];
+        let cleanedDataGlobal = []; // Rapor sihirbazı için
+
+        // --- DOM Elementleri ---
+        const reportContent = document.getElementById('report-content');
+        const entryPoint = document.getElementById('entry-point');
+        const header = document.querySelector('header');
+        const loginSection = document.getElementById('login-section');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const navLinksContainer = document.getElementById('mudurluk-links');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const contextMenu = document.getElementById('custom-context-menu');
+        const dataCheckerContainer = document.getElementById('data-checker-container');
+
+        // --- Yardımcı Fonksiyonlar ---
+        const getDistrictName = (props) => {
+            let name = props.name || props.AD || props.display_name || props['ilce_adi'] || (props.address && props.address.city_district) || null;
+            if (name && typeof name === 'string') name = name.split(',')[0].trim();
+            return name;
+        };
+        const formatNumber = (num) => (typeof num === 'number') ? num.toLocaleString('tr-TR') : 'N/A';
+        const formatCurrency = (num) => (typeof num === 'number') ? num.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }) : 'N/A';
+        
+        const excelDateToYear = (dateInput) => {
+            if(typeof dateInput === 'number' && dateInput > 25569) {
+                 return new Date(Math.round((dateInput - 25569) * 86400 * 1000)).getFullYear();
+            }
+            const date = new Date(dateInput);
+            if (date instanceof Date && !isNaN(date)) { return date.getFullYear(); }
+            return null;
+        };
+
+        const toJsDate = (dateInput) => {
+            if (!dateInput) return null;
+            // For Excel serial numbers
+            if (typeof dateInput === 'number' && dateInput > 25569) {
+                const date = new Date(Math.round((dateInput - 25569) * 86400 * 1000));
+                return (date instanceof Date && !isNaN(date)) ? date : null;
+            }
+            // For date strings
+            const date = new Date(dateInput);
+            return (date instanceof Date && !isNaN(date)) ? date : null;
+        };
+
+        const handleError = (message, details = '') => {
+            console.error(message, details);
+            const targetContainer = reportContent.classList.contains('hidden') ? dataCheckerContainer : reportContent;
+            targetContainer.innerHTML = `<div class="error-message"><h3>Bir Sorun Oluştu</h3><p>${message}</p>${details ? `<p><strong>Teknik Detay:</strong> <code>${details}</code></p>` : ''}<p style="margin-top: 1rem;">Lütfen seçtiğiniz Excel dosyasının doğru formatta olduğundan ve gerekli sayfaları içerdiğinden emin olun.</p></div>`;
+            targetContainer.classList.remove('hidden');
+            appContainer.classList.add('hidden');
+            header.classList.add('hidden');
+        };
+        
+        // --- SUNUM FONKSİYONLARI ---
+        function showSlide(index) {
+            if (index < 0 || index >= presentationSlides.length || index === currentSlideIndex || isTransitioning) return;
+            isTransitioning = true;
+            const outgoingSlide = presentationSlides[currentSlideIndex].element;
+            const incomingSlide = presentationSlides[index].element;
+            const activeNav = navLinksContainer.querySelector('.active-nav-link');
+            if (activeNav) activeNav.classList.remove('active-nav-link');
+            const newNavLink = navLinksContainer.querySelector(`[data-mudurluk-id="${presentationSlides[index].mudurlukId}"]`);
+            if (newNavLink) newNavLink.classList.add('active-nav-link');
+            outgoingSlide.classList.remove('active-slide');
+            incomingSlide.classList.add('active-slide');
+            currentSlideIndex = index;
+            setTimeout(() => { isTransitioning = false; }, 500);
+            const slideData = presentationSlides[index];
+            if (slideData.mapId && !mapInstances[slideData.mapId]) {
+                initializeMapForService(slideData.mapId, slideData.hizmet, slideData.haritaTur, slideData.mudurluk);
+            } else if (slideData.mapId && mapInstances[slideData.mapId]) {
+                setTimeout(() => mapInstances[slideData.mapId].invalidateSize(), 550);
+            }
+        }
+        function changeSlide(direction) { showSlide(currentSlideIndex + direction); }
+        function toggleFullscreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } }
+        function toggleMapFullscreen(mapId) {
+            const wrapper = document.getElementById(`wrapper-${mapId}`);
+            const map = mapInstances[mapId];
+            if (!wrapper || !map) return;
+            wrapper.classList.toggle('fullscreen-map');
+            setTimeout(() => { map.invalidateSize(); }, 150);
+        }
+
+        // --- Veri Yükleme ve İşleme ---
+        async function handleFileProcessing(action) {
+            const excelFiles = document.getElementById('excel-file-input').files;
+            if (!excelFiles || excelFiles.length === 0) {
+                alert("Lütfen bir veya daha fazla Excel dosyası seçin.");
+                return;
+            }
+
+            if (action === 'check') {
+                appContainer.classList.add('hidden');
+                dataCheckerContainer.classList.remove('hidden');
+                dataCheckerContainer.innerHTML = '<div class="loading-spinner"></div>';
+                try {
+                    let combinedData = [];
+                    for (const file of excelFiles) {
+                        const data = await file.arrayBuffer();
+                        const workbook = XLSX.read(new Uint8Array(data), { type: 'array', cellDates: true });
+                        for (const sheetName of workbook.SheetNames) {
+                            const sheet = workbook.Sheets[sheetName];
+                             // Convert to array of arrays to enforce column order
+                            const sheetAoA = XLSX.utils.sheet_to_json(sheet, { defval: null, header: 1 });
+                            
+                            if (sheetAoA.length < 2) continue; // Skip empty or header-only sheets
+
+                            const headerRow = sheetAoA[0];
+                            const dataRows = sheetAoA.slice(1);
+
+                            const sheetJson = dataRows.map(rowArray => {
+                                const row = {};
+                                // Map data based on standard 12-column order
+                                standardHeaders.forEach((header, index) => {
+                                    row[header] = rowArray[index] !== null ? rowArray[index] : undefined;
+                                });
+                                
+                                row['__sourceFile'] = file.name;
+                                row['__sourceSheet'] = sheetName;
+                                
+                                // Müdürlük kısaltmalarını genişlet
+                                if (row['Müdürlük']) {
+                                    const rawMudurluk = row['Müdürlük'].toString().trim();
+                                    row['Müdürlük'] = mudurlukMap[rawMudurluk] || rawMudurluk;
+                                }
+                                return row;
+                            });
+                            combinedData.push(...sheetJson);
+                        }
+                    }
+                    
+                    const today = new Date(); 
+                    const firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const requiredDate = new Date(firstDayOfCurrentMonth - 1); // Önceki ayın son günü
+
+                    // Gelecek tarihli verileri ve boş satırları filtrele
+                    let processedData = combinedData.filter(row => {
+                         const hasMeaningfulData = row['Müdürlük'] || row['Hizmet Başlığı'];
+                         if (!hasMeaningfulData) {
+                             return false;
+                         }
+                         const sonTarih = toJsDate(row['Son Tarih']);
+                         return !sonTarih || sonTarih <= requiredDate;
+                    });
+
+
+                    processedData.forEach(row => {
+                        row['Güncel Olması Gereken Tarih'] = requiredDate;
+                        const deger = row['Değer'];
+                        let eksikGiris = "";
+                        // Değer null veya undefined ise eksik giriş kabul et (0 geçerli)
+                        if (deger === null || deger === undefined) {
+                            eksikGiris = "Veri Girişi Sağlanmalı";
+                        }
+                        row['Eksik Giriş'] = eksikGiris;
+                    });
+
+                    rawDataForChecker = processedData;
+                    renderDataChecker();
+                } catch (err) {
+                    handleError("Dosyalar işlenirken bir hata oluştu.", err.message);
+                }
+            } else { // 'view' action
+                if (excelFiles.length > 1) {
+                    alert("Rapor Görüntüleyici modu için lütfen tek bir dosya seçin.");
+                    renderFileUploader('view'); // Arayüzü sıfırla
+                    return;
+                }
+                const excelFile = excelFiles[0];
+                appContainer.classList.remove('hidden');
+                entryPoint.innerHTML = '<div class="loading-spinner"></div>';
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const mainSheetName = "Hizmetler";
+                        const descSheetName = "Açıklamalar";
+                        const mainSheet = workbook.Sheets[mainSheetName];
+                        const descSheet = workbook.Sheets[descSheetName];
+
+                        if (!mainSheet) throw new Error(`Excel dosyasında "${mainSheetName}" isimli sayfa bulunamadı.`);
+                        if (!descSheet) throw new Error(`Excel dosyasında "${descSheetName}" isimli sayfa bulunamadı.`);
+
+                        const mainJsonData = XLSX.utils.sheet_to_json(mainSheet);
+                        const descriptionsJsonData = XLSX.utils.sheet_to_json(descSheet);
+                        
+                        serviceDescriptions.clear();
+                        descriptionsJsonData.forEach(row => {
+                              const hizmet = row['Hizmet Başlığı']?.trim();
+                              const aciklama = row['Açıklama']?.trim();
+                              if (hizmet && aciklama) {
+                                  serviceDescriptions.set(hizmet, aciklama);
+                              }
+                        });
+
+                        cleanedDataGlobal = mainJsonData.map(row => ({
+                            mudurluk: row['Müdürlük']?.trim() || null, hizmet: row['Hizmet Başlığı']?.trim() || null,
+                            tur: row['Tür']?.trim() || null, lokasyon: row['Lokasyon']?.trim() || null,
+                            veriAraligi: row['Veri Aralığı']?.toString().trim() || null, 
+                            deger: parseFloat(row['Değer']) || 0,
+                            sonTarih: row['Son Tarih'],
+                        })).filter(row => row.mudurluk && row.hizmet && row.veriAraligi);
+
+                        renderReportWizard(cleanedDataGlobal);
+                    } catch (err) {
+                        handleError("Excel dosyası okunurken veya işlenirken bir hata oluştu.", err.message);
+                    }
+                };
+                reader.onerror = function(error) {
+                    handleError("Dosya okunurken bir hata oluştu.", error);
+                };
+                reader.readAsArrayBuffer(excelFile);
+            }
+        }
+        
+        function processAndRenderReport(selections) {
+            try {
+                let filteredData = cleanedDataGlobal.filter(row => selections.mudurlukler.includes(row.mudurluk));
+                
+                // Lokasyon filtresini uygula
+                if (!selections.locations.includes('TÜMÜ')) {
+                    filteredData = filteredData.filter(row => selections.locations.includes(row.lokasyon));
+                }
+
+                bggVeriler = filteredData.filter(row => {
+                    const isBGG = row.veriAraligi?.toLocaleUpperCase('tr-TR') === 'BGG';
+                    const hizmetSeciliMi = selections.hizmetler[row.hizmet];
+                    const turSeciliMi = hizmetSeciliMi && selections.hizmetler[row.hizmet].includes(row.tur);
+                    return isBGG && turSeciliMi;
+                });
+
+                kumulatifVeriler = filteredData.filter(row => {
+                    const isKumulatif = row.veriAraligi?.toLocaleUpperCase('tr-TR') === 'KÜMÜLATİF';
+                    const hizmetSeciliMi = selections.hizmetler[row.hizmet];
+                     const turSeciliMi = hizmetSeciliMi && selections.hizmetler[row.hizmet].includes(row.tur);
+                    return isKumulatif && turSeciliMi;
+                });
+                
+                if (bggVeriler.length === 0 && kumulatifVeriler.length === 0) { throw new Error('Seçimlerinize uygun "BGG" veya "Kümülatif" verisi bulunamadı.'); }
+                
+                fetch('https://raw.githubusercontent.com/sahircansurmeli/istanbul-geojson/master/ilce_geojson.json')
+                    .then(response => { if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); return response.json(); })
+                    .then(geojsonData => { 
+                        istanbulGeoJSON = geojsonData; 
+                        renderCustomReport(selections); 
+                    })
+                    .catch(err => { handleError("Harita verisi (GeoJSON) yüklenirken bir hata oluştu.", err.message); });
+            } catch (err) {
+                handleError("Veriler işlenirken bir hata oluştu.", err.message);
+            }
+        }
+
+        // --- Başlangıç ve Kullanıcı Yönetimi ---
+        function renderEntryPoint(user) {
+            const isDataSorumlusu = user && user.role === 'Veri Sorumlusu';
+
+            const howToUseHTML = isDataSorumlusu ? '' : `
+                <div style="background: rgba(58,110,165,0.1); border-left: 4px solid var(--primary-accent); padding: 1rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0;">
+                    <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-accent); cursor: pointer; font-size: 1rem;" onclick="toggleInstructions('entry-howto')">Nasıl Kullanılır? <span id="entry-howto-toggle" style="font-size: 0.8rem;">▶</span></h3>
+                    <div id="entry-howto" style="display: none;">
+                        <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+                            <li><strong>Veri Kontrol Aracı:</strong> Ham veri dosyanızı yükleyerek veri tutarlılığını kontrol edin</li>
+                            <li><strong>Rapor Görüntüleyici:</strong> Hazır rapor dosyasını yükleyerek sunumu görüntüleyin</li>
+                            <li><strong>Rapor Dosyası Hazırlama:</strong> Ham veri ve taslak dosyalarını birleştirerek rapor oluşturun</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+             const buttonsHTML = `
+                <div class="button-group">
+                    <button id="check-data-btn" class="action-btn ${isDataSorumlusu ? 'primary' : 'secondary'}">Veri Kontrol Aracı</button>
+                    ${!isDataSorumlusu ? `
+                    <button id="view-report-btn" class="action-btn">Rapor Görüntüleyici</button>
+                    <button id="prepare-report-btn" class="action-btn">Rapor Dosyası Hazırlama</button>
+                    ` : ''}
+                </div>
+            `;
+
+            entryPoint.innerHTML = `
+                <h2>İşlem Seçin</h2>
+                <p>Ham veriyi kontrol etmek veya hazır rapor dosyasını yükleyerek sunumu görüntülemek için bir işlem seçin.</p>
+                ${howToUseHTML}
+                ${buttonsHTML}
+            `;
+
+            document.getElementById('check-data-btn').addEventListener('click', () => renderFileUploader('check'));
+            if (!isDataSorumlusu) {
+                document.getElementById('view-report-btn').addEventListener('click', () => renderFileUploader('view'));
+                document.getElementById('prepare-report-btn').addEventListener('click', () => renderPrepareUploader());
+            }
+        }
+        
+        function renderFileUploader(mode) {
+            const title = mode === 'check' ? 'Ham Veri Dosyasını Yükle' : 'Hazır Rapor Dosyasını Yükle';
+            const actionText = mode === 'check' ? 'Veriyi Kontrol Et' : 'Rapora İlerle';
+             const description = mode === 'check' 
+                ? 'Lütfen kontrol etmek istediğiniz ham veriyi içeren Excel dosyasını veya dosyalarını seçin. Birden çok dosya seçildiğinde tüm sayfalardaki veriler birleştirilecektir.'
+                : 'Lütfen raporu oluşturmak için gerekli "Hizmetler" ve "Açıklamalar" sayfalarını içeren Excel dosyasını seçin.';
+            
+            const instructions = mode === 'check' 
+                ? `
+                    <div style="background: rgba(58, 110, 165, 0.1); border-left: 4px solid var(--primary-accent); padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-accent); cursor: pointer; font-size: 1rem;" onclick="toggleInstructions('check-instructions')">
+                            Yönergeler <span id="check-instructions-toggle" style="font-size: 0.8rem;">▶</span>
+                        </h4>
+                        <div id="check-instructions" style="display: none;">
+                            <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.5; font-size: 0.9rem;">
+                                <li>Excel seçin ve Dosyayı İşle butonuna basın.</li>
+                                <li>Hatalar tablo üzerinde vurgulanır; filtreleri kullanın.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+                : '';
+            
+            entryPoint.innerHTML = `
+                <h2>${title}</h2>
+                <p>${description}</p>
+                
+                ${instructions}
+                
+                <div class="form-group" style="margin-top: 2rem;">
+                    <label for="excel-file-input">Excel Dosyası / Dosyaları (.xlsx)</label>
+                    <input type="file" id="excel-file-input" accept=".xlsx, .xls" required ${mode === 'check' ? 'multiple' : ''} style="padding: 10px; border: 1px solid var(--border-color); width: 100%; border-radius: 8px;">
+                </div>
+                
+                <div class="button-group">
+                    <button id="process-file-btn" class="action-btn">${actionText}</button>
+                    <button id="back-to-main-btn" class="action-btn secondary">Geri</button>
+                </div>
+                
+                ${mode === 'check' ? `
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(58, 110, 165, 0.1); border: 1px solid var(--primary-accent); border-radius: 8px;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-accent);">İpucu</h4>
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+                        Örnek ham veri dosyasını indirip formatı görebilirsiniz.
+                    </p>
+                    <button id="download-sample-${mode}" class="action-btn" style="background: var(--primary-accent); font-size: 0.9rem; padding: 6px 12px; margin-top: 0.5rem;">
+                        Örnek Ham Veri Dosyası İndir
+                    </button>
+                </div>` : ''}
+            `;
+            document.getElementById('process-file-btn').addEventListener('click', () => handleFileProcessing(mode));
+            document.getElementById('back-to-main-btn').addEventListener('click', () => {
+                 const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+                 renderEntryPoint(user);
+            });
+            if (mode === 'check') {
+                document.getElementById(`download-sample-${mode}`).addEventListener('click', () => downloadSampleFile('raw'));
+            }
+        }
+
+        // --- RAPOR DOSYASI HAZIRLAMA ---
+        let shdbTemplateFilters = { hizmetler: [] };
+        let firstExcelRaw = [];
+        let secondWorkbook = null;
+        function renderPrepareUploader() {
+            entryPoint.innerHTML = `
+                <h2>Rapor Dosyası Hazırlama</h2>
+                <p>İki Excel dosyasını birleştirerek hazır rapor dosyası oluşturun.</p>
+                
+                <div style="background: rgba(58, 110, 165, 0.1); border-left: 4px solid var(--primary-accent); padding: 1rem; margin: 1.5rem 0; border-radius: 0 8px 8px 0;">
+                    <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-accent); cursor: pointer; font-size: 1rem;" onclick="toggleInstructions('prepare-steps')">
+                        Yönergeler <span id="prepare-steps-toggle" style="font-size: 0.8rem;">▶</span>
+                    </h3>
+                    <div id="prepare-steps" style="display: none;">
+                        <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem;">
+                            <li>Ham Veri Dosyası'nı seçin.</li>
+                            <li>Taslak Dosyası'nı seçin (SHDB Taslak, Açıklamalar, Özet, Merkezler sayfaları).</li>
+                            <li>Dosyaları Yükle’ye basın, tablodan verilerinizin doğruluğunu kontrol edin; tüm hatalar giderildiğinde paketlemeyi tamamlayın.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Ham Veri Dosyası</label>
+                    <input type="file" id="prep-file-raw" accept=",.xlsx,.xls" />
+                </div>
+                <div class="form-group">
+                    <label>Taslak Dosyası</label>
+                    <input type="file" id="prep-file-template" accept=",.xlsx,.xls" />
+                </div>
+                <div class="button-group">
+                    <button id="prep-process" class="action-btn">Dosyaları Yükle</button>
+                    <button id="back-to-main-btn" class="action-btn secondary">Geri</button>
+                </div>
+                
+                <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(58, 110, 165, 0.1); border: 1px solid var(--primary-accent); border-radius: 8px;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-accent);">💡 Örnek Dosyalar</h4>
+                    <p style="margin: 0 0 1rem 0; color: var(--text-secondary); font-size: 0.9rem;">
+                        Aşağıdaki örnek dosyaları indirerek sistemin nasıl çalıştığını test edebilirsiniz:
+                    </p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button id="download-sample-raw-prep" class="action-btn" style="background: var(--primary-accent); font-size: 0.9rem; padding: 6px 12px;">
+                            📊 Örnek Ham Veri
+                        </button>
+                        <button id="download-sample-template-prep" class="action-btn" style="background: var(--primary-accent); font-size: 0.9rem; padding: 6px 12px;">
+                            📝 Örnek Taslak
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="prep-pivot-container" style="margin-top:1rem;"></div>
+            `;
+            document.getElementById('back-to-main-btn').addEventListener('click', () => {
+                const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+                renderEntryPoint(user);
+            });
+            document.getElementById('prep-process').addEventListener('click', handlePrepareLoad);
+            document.getElementById('download-sample-raw-prep').addEventListener('click', () => downloadSampleFile('raw'));
+            document.getElementById('download-sample-template-prep').addEventListener('click', () => downloadSampleFile('template'));
+        }
+
+        function handlePrepareLoad() {
+            const fileRaw = document.getElementById('prep-file-raw').files[0];
+            const fileTpl = document.getElementById('prep-file-template').files[0];
+            if (!fileRaw || !fileTpl) { alert('Her iki dosyayı da seçin.'); return; }
+
+            const r1 = new FileReader();
+            r1.onload = (e) => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const mainSheetName = wb.SheetNames[0];
+                    const mainSheet = wb.Sheets[mainSheetName];
+                    const sheetJson = XLSX.utils.sheet_to_json(mainSheet, { defval: null });
+                    sheetJson.forEach(row => {
+                        if (row['Müdürlük']) {
+                            const rawMudurluk = row['Müdürlük'].toString().trim();
+                            row['Müdürlük'] = mudurlukMap[rawMudurluk] || rawMudurluk;
+                        }
+                    });
+                    firstExcelRaw = sheetJson;
+                    loadSecond();
+                } catch(err) {
+                    handleError('Ham dosya okunamadı.', err.message);
+                }
+            };
+            r1.readAsArrayBuffer(fileRaw);
+
+            function loadSecond() {
+                const r2 = new FileReader();
+                r2.onload = (e2) => {
+                    try {
+                        secondWorkbook = XLSX.read(new Uint8Array(e2.target.result), { type: 'array' });
+                        renderShdbPivot();
+                    } catch(err) {
+                        handleError('Şablon dosyası okunamadı.', err.message);
+                    }
+                };
+                r2.readAsArrayBuffer(fileTpl);
+            }
+        }
+
+        function trNormalize(str) {
+            return (str||'')
+                .toString()
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g,' ')
+                .replace(/[ç]/g,'c').replace(/[ğ]/g,'g').replace(/[ıiİ]/g,'i').replace(/[ö]/g,'o').replace(/[ş]/g,'s').replace(/[ü]/g,'u');
+        }
+        function getSheetByNamesInsensitive(wb, candidates) {
+            const map = new Map();
+            wb.SheetNames.forEach(n => map.set(trNormalize(n), n));
+            for (const c of candidates) {
+                const key = trNormalize(c);
+                if (map.has(key)) return wb.Sheets[map.get(key)];
+            }
+            // Fallback: contains check (e.g., extra spaces)
+            for (const n of wb.SheetNames) {
+                const k = trNormalize(n);
+                if (k.includes(trNormalize('shdb taslak'))) return wb.Sheets[n];
+            }
+            return null;
+        }
+        function renderShdbPivot() {
+            const sheet = getSheetByNamesInsensitive(secondWorkbook, ['SHDB Taslak','Shdb Taslak','shdb taslak']);
+            if (!sheet) {
+                handleError('Şablonda SHDB Taslak sayfası bulunamadı.');
+                return;
+            }
+            // Yükleme panelini gizle; sadece pivot ve Paketle butonu görünsün
+            try { entryPoint.classList.add('hidden'); } catch(e) {}
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            // SHDB Taslak'tan filtre alanlarını topla (Müdürlük, Hizmet Başlığı, Tür, Veri Aralığı)
+            const wanted = rows.map(r => ({
+                mudurluk: (r['Müdürlük']||'').toString().trim(),
+                hizmet: (r['Hizmet Başlığı']||'').toString().trim(),
+                tur: (r['Tür']||'').toString().trim(),
+                veriAraligi: (r['Veri Aralığı']||'').toString().trim().toLocaleUpperCase('tr-TR')
+            })).filter(x => x.mudurluk && x.hizmet && x.tur && x.veriAraligi);
+
+            // Ham veriyi normalize et ve SHDB Taslak'ta geçenlerle filtrele
+            const normalized = firstExcelRaw.map(row => ({
+                mudurluk: (row['Müdürlük']||'').toString().trim(),
+                hizmet: (row['Hizmet Başlığı']||'').toString().trim(),
+                tur: (row['Tür']||'').toString().trim(),
+                lokasyon: (row['Lokasyon']||'').toString().trim(),
+                veriAraligi: (row['Veri Aralığı']||'').toString().trim().toLocaleUpperCase('tr-TR'),
+                deger: parseFloat(row['Değer']) || 0,
+                sonTarih: row['Son Tarih']
+            })).filter(r => wanted.some(w => w.mudurluk===r.mudurluk && w.hizmet===r.hizmet && w.tur===r.tur && w.veriAraligi===r.veriAraligi));
+
+            // Veri Kontrol Aracı görünümünü yeniden kullan: geçici olarak rawDataForChecker ve renderDataChecker ile
+            rawDataForChecker = normalized.map(n => ({
+                'Müdürlük': n.mudurluk,
+                'Hizmet Başlığı': n.hizmet,
+                'Tür': n.tur,
+                'Lokasyon': n.lokasyon,
+                'Veri Aralığı': n.veriAraligi,
+                'Değer': n.deger,
+                'Son Tarih': n.sonTarih
+            }));
+
+            // Pivotu göster (mevcut tablo) ve üstte Paketle düğmesini ekle
+            dataCheckerContainer.classList.remove('hidden');
+            document.getElementById('prep-pivot-container').innerHTML = '';
+            renderDataChecker();
+
+            // Üste tek bir buton koy: tıklandığında ay seçimi alanı ve Paketle çağrısı açılsın
+            const ctrlBar = document.createElement('div');
+            ctrlBar.style.display = 'flex';
+            ctrlBar.style.justifyContent = 'flex-end';
+            ctrlBar.style.gap = '10px';
+            ctrlBar.style.margin = '10px 0';
+            ctrlBar.innerHTML = `
+                <button id="prep-open-package" class="action-btn">Paketle</button>
+                <div id="prep-package-panel" class="hidden" style="display:flex;align-items:center;gap:10px;">
+                    <label>Paketlenecek Ay</label>
+                    <input type="month" id="package-month" />
+                    <button id="do-package" class="action-btn">Oluştur</button>
+                </div>
+            `;
+            dataCheckerContainer.insertAdjacentElement('afterbegin', ctrlBar);
+            document.getElementById('prep-open-package').addEventListener('click', () => {
+                document.getElementById('prep-package-panel').classList.toggle('hidden');
+                const pnl = document.getElementById('prep-package-panel');
+                pnl.style.display = pnl.classList.contains('hidden') ? 'none' : 'flex';
+            });
+            document.getElementById('do-package').addEventListener('click', () => doPackageFull(firstExcelRaw, rows));
+        }
+
+        function isDateHeader(h) { return /tarih/i.test(h); }
+
+        // Paketle: tüm sütunlar korunsun; sadece SHDB Taslak seçimlerine uyan satırlar kalsın
+        function doPackageFull(allRawRows, templateRows) {
+            const monthVal = document.getElementById('package-month').value; // yyyy-mm
+            if (!monthVal) { alert('Ay seçin'); return; }
+            const [yy, mm] = monthVal.split('-');
+            const targetYear = parseInt(yy, 10);
+            const targetMonthIndex = parseInt(mm, 10) - 1; // 0..11
+
+            // SHDB Taslak seçim seti
+            const wanted = templateRows.map(r => ({
+                mudurluk: (r['Müdürlük']||'').toString().trim(),
+                hizmet: (r['Hizmet Başlığı']||'').toString().trim(),
+                tur: (r['Tür']||'').toString().trim(),
+                veriAraligi: (r['Veri Aralığı']||'').toString().trim().toLocaleUpperCase('tr-TR')
+            })).filter(x => x.mudurluk && x.hizmet && x.tur && x.veriAraligi);
+
+            const isWanted = (row) => wanted.some(w =>
+                w.mudurluk === (row['Müdürlük']||'').toString().trim() &&
+                w.hizmet === (row['Hizmet Başlığı']||'').toString().trim() &&
+                w.tur === (row['Tür']||'').toString().trim() &&
+                w.veriAraligi === ((row['Veri Aralığı']||'').toString().trim().toLocaleUpperCase('tr-TR'))
+            );
+
+            const monthFilter = (row) => {
+                const d = row['Son Tarih'] || row['İlk Tarih'] || row['SonTarih'] || row['Son tarih'];
+                const jsd = toJsDate(d);
+                if (!jsd) return false;
+                const y = jsd.getFullYear();
+                const m = jsd.getMonth();
+                // Değişiklik: Önceki yılların tüm verilerini ve seçilen yılın sadece seçilen ayına ait veriyi al.
+                return (y < targetYear) || (y === targetYear && m === targetMonthIndex);
+            };
+
+            // Seçim + ay filtresi
+            let filtered = allRawRows.filter(r => isWanted(r) && monthFilter(r));
+            // Değeri 0 olan satırları çıkar
+            filtered = filtered.filter(r => {
+                const val = r['Değer'];
+                const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]/g,'')) : (val || 0);
+                return !isNaN(num) && num !== 0;
+            });
+
+            // Tarih sütunlarını JS Date'e çevir (Excel'de date türüne yazacağız)
+            const headers = Object.keys(allRawRows[0] || {});
+            const outRows = filtered.map(r => {
+                const o = {};
+                headers.forEach(h => {
+                    o[h] = isDateHeader(h) ? toJsDate(r[h]) : r[h];
+                });
+                return o;
+            });
+
+            const wbOut = XLSX.utils.book_new();
+            const wsHizmetler = XLSX.utils.json_to_sheet(outRows, { cellDates: true });
+            XLSX.utils.book_append_sheet(wbOut, wsHizmetler, 'Hizmetler');
+
+            // Diğer sayfaları aynen ekle (adları esnek eşleştirme)
+            const copyByName = (cands, outName) => {
+                const s = getSheetByNamesInsensitive(secondWorkbook, cands);
+                if (s) {
+                    const aoa = XLSX.utils.sheet_to_json(s, { header: 1, raw: true });
+                    const ws = XLSX.utils.aoa_to_sheet(aoa);
+                    XLSX.utils.book_append_sheet(wbOut, ws, outName);
+                }
+            };
+            copyByName(['Açıklamalar','Aciklamalar'], 'Açıklamalar');
+            copyByName(['Özet','Ozet'], 'Özet');
+            copyByName(['Merkezler'], 'Merkezler');
+
+            XLSX.writeFile(wbOut, `paket-${monthVal}.xlsx`, { cellDates: true });
+        }
+
+        function renderCustomReport(selections) {
+            appContainer.classList.add('hidden');
+            entryPoint.classList.add('hidden');
+            reportContent.classList.remove('hidden');
+            header.classList.remove('hidden');
+            document.querySelector('.presentation-controls').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+
+
+            const mudurlukler = [];
+            cleanedDataGlobal.forEach(item => {
+                if(item.mudurluk && selections.mudurlukler.includes(item.mudurluk) && !mudurlukler.includes(item.mudurluk)) {
+                    mudurlukler.push(item.mudurluk);
+                }
+            });
+
+            navLinksContainer.innerHTML = '';
+            let mapIndex = 0;
+            presentationSlides = []; // Reset slides
+
+            mudurlukler.forEach(mudurlukAdi => {
+                const mudurlukId = 'mudurluk-' + mudurlukAdi.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
+                
+                const hizmetlerBuMudurlukte = [];
+                 cleanedDataGlobal
+                    .filter(v => v.mudurluk === mudurlukAdi)
+                    .forEach(item => {
+                        if (item.hizmet && !hizmetlerBuMudurlukte.includes(item.hizmet) && selections.hizmetler[item.hizmet]) {
+                           hizmetlerBuMudurlukte.push(item.hizmet)
+                        }
+                    });
+
+                if (hizmetlerBuMudurlukte.length > 0) {
+                     const navListItem = document.createElement('li');
+                    const navLink = document.createElement('a');
+                    navLink.textContent = mudurlukAdi;
+                    navLink.dataset.mudurlukId = mudurlukId;
+                    navLink.addEventListener('click', () => { 
+                        const firstSlideIndex = presentationSlides.findIndex(s => s.mudurlukId === mudurlukId); 
+                        if (firstSlideIndex !== -1) showSlide(firstSlideIndex); 
+                    });
+                    navListItem.appendChild(navLink);
+                    navLinksContainer.appendChild(navListItem);
+                }
+
+                hizmetlerBuMudurlukte.forEach(hizmetAdi => {
+                    const slideElement = document.createElement('div');
+                    slideElement.className = 'presentation-slide';
+                    
+                    const bggHizmetData = bggVeriler.filter(v => v.mudurluk === mudurlukAdi && v.hizmet === hizmetAdi);
+                    const kumulatifHizmetData = kumulatifVeriler.filter(d => d.hizmet === hizmetAdi && d.mudurluk === mudurlukAdi);
+                    const secilenKirilimlar = selections.hizmetler[hizmetAdi];
+
+                    if (!secilenKirilimlar || secilenKirilimlar.length === 0) return;
+                    
+                    let breakdownGridHTML = '';
+                    if(selections.options.showGeneral) {
+                        let cardsHTML = '';
+                        secilenKirilimlar.forEach(kirilimAdi => {
+                            const toplamDeger = bggHizmetData.filter(item => item.tur === kirilimAdi).reduce((sum, item) => sum + (item.deger || 0), 0);
+                            
+                            if (toplamDeger > 0) { 
+                                const cardValue = kirilimAdi.toLowerCase().includes('bütçe') ? formatCurrency(toplamDeger) : formatNumber(toplamDeger);
+                                cardsHTML += `<div class="breakdown-card"><h3>${kirilimAdi}</h3><div class="card-value">${cardValue}</div></div>`;
+                            }
+                        });
+
+                        if (cardsHTML) {
+                           breakdownGridHTML = `<div><h3 class="section-title">Genel Veriler</h3><div class="breakdown-grid">${cardsHTML}</div></div>`
+                        }
+                    }
+                    
+                    const annualTableHTML = selections.options.showAnnual ? createAnnualDataTable(hizmetAdi, mudurlukAdi, secilenKirilimlar, kumulatifHizmetData) : '';
+                    
+                    if (!breakdownGridHTML && !annualTableHTML) {
+                        return;
+                    }
+
+                    const ilceVerisiVarMi = selections.locations.includes('TÜMÜ') && bggHizmetData.some(d => d.lokasyon && d.lokasyon.trim() !== "İstanbul Geneli" && d.lokasyon.trim() !== "Diğer");
+                    const haritaGosterilsinMi = selections.options.showMap && ilceVerisiVarMi;
+                    let haritaIcinTur = haritaGosterilsinMi ? secilenKirilimlar[0] : null;
+                    const mapId = `map-${mapIndex++}`;
+
+                    const mapHTML = haritaGosterilsinMi ? `<div class="map-wrapper" id="wrapper-${mapId}"><div class="map-container" id="${mapId}"></div></div>` : '';
+                    const descriptionHTML = serviceDescriptions.has(hizmetAdi) ? `<div class="hizmet-description">${serviceDescriptions.get(hizmetAdi)}</div>` : '';
+
+                    slideElement.innerHTML = `<div class="slide-content-wrapper"><div class="slide-header"><div class="slide-header-text"><h2 class="mudurluk-title">${mudurlukAdi}</h2><h1 class="hizmet-title">${hizmetAdi}</h1></div></div>${descriptionHTML}<div class="hizmet-main-content ${haritaGosterilsinMi ? 'grid-with-map' : 'no-map'}">${mapHTML}<div class="details-column">${breakdownGridHTML}${annualTableHTML}</div></div></div>`;
+                    reportContent.appendChild(slideElement);
+                    presentationSlides.push({ element: slideElement, mudurlukId, mapId: haritaGosterilsinMi ? mapId : null, haritaTur: haritaIcinTur, mudurluk: mudurlukAdi, hizmet: hizmetAdi });
+                });
+            });
+
+            if(presentationSlides.length > 0) {
+                 presentationSlides[0].element.classList.add('active-slide');
+                 const firstNavLink = navLinksContainer.querySelector(`[data-mudurluk-id="${presentationSlides[0].mudurlukId}"]`);
+                 if(firstNavLink) firstNavLink.classList.add('active-nav-link');
+                 const firstSlide = presentationSlides[0];
+                 if(firstSlide.mapId) { initializeMapForService(firstSlide.mapId, firstSlide.hizmet, firstSlide.haritaTur, firstSlide.mudurluk); }
+            } else {
+                reportContent.innerHTML = `<div class="error-message"><h3>Rapor Oluşturulamadı</h3><p>Yaptığınız seçimlere uygun görüntülenecek veri bulunamadı. Lütfen geri dönüp seçimlerinizi değiştirin.</p><button onclick="renderFileUploader('view')" class="action-btn" style="margin-top:1rem;">Geri Dön</button></div>`;
+            }
+        }
+        
+        function createAnnualDataTable(hizmetAdi, mudurlukAdi, genelVeriSiralama, hizmetKumulatifData) {
+            if (hizmetKumulatifData.length === 0) return '';
+            
+            const mevcutYillikTurler = [...new Set(hizmetKumulatifData.map(d => d.tur))];
+            const yillikTurler = genelVeriSiralama.filter(tur => mevcutYillikTurler.includes(tur));
+            if(yillikTurler.length === 0) return '';
+
+            const yillikVeri = {};
+            hizmetKumulatifData.forEach(row => {
+                const year = excelDateToYear(row.sonTarih);
+                if (!year) return;
+                if (!yillikVeri[year]) yillikVeri[year] = { year: year };
+                yillikVeri[year][row.tur] = (yillikVeri[year][row.tur] || 0) + row.deger;
+            });
+            const tableData = Object.values(yillikVeri).sort((a, b) => a.year - b.year);
+            if (tableData.length === 0) return '';
+            
+            const nonEmptyTurler = yillikTurler.filter(tur => {
+                return tableData.some(rowData => (rowData[tur] || 0) > 0);
+            });
+
+            if (nonEmptyTurler.length === 0) return ''; 
+
+            let tableHTML = `<div><h3 class="section-title">Yıllık Veriler</h3><table class="annual-data-table"><thead><tr><th>Yıl</th>${nonEmptyTurler.map(tur => `<th>${tur}</th>`).join('')}</tr></thead><tbody>${tableData.map(rowData => `<tr><td>${rowData.year}</td>${nonEmptyTurler.map(tur => `<td>${(tur.toLowerCase().includes('bütçe') ? formatCurrency(rowData[tur]) : formatNumber(rowData[tur])) || '0'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+            return tableHTML;
+        }
+
+        function initializeMapForService(mapId, hizmetAdi, tur, mudurlukAdi) {
+            const mapContainer = document.getElementById(mapId);
+            if (!mapContainer || mapContainer._leaflet_id || !tur) return;
+            const map = L.map(mapId, { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([41.08, 29.00], 9);
+            mapInstances[mapId] = map;
+            map.on('dblclick', () => toggleMapFullscreen(mapId));
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png').addTo(map);
+            const filteredData = bggVeriler.filter(item => item.mudurluk === mudurlukAdi && item.hizmet === hizmetAdi && item.tur === tur);
+            const ilceData = filteredData.filter(item => item.lokasyon && item.lokasyon.trim() !== "İstanbul Geneli" && item.lokasyon.trim() !== "Diğer");
+            const localMapData = {};
+            ilceData.forEach(item => { if (item.lokasyon) localMapData[item.lokasyon] = (localMapData[item.lokasyon] || 0) + item.deger; });
+            const values = Object.values(localMapData);
+            const localValueRange = { min: values.length ? Math.min(...values) : 0, max: values.length ? Math.max(...values) : 0 };
+            const dynamicStyle = (feature) => ({ fillColor: getColor(localMapData[getDistrictName(feature.properties)], localValueRange), weight: 1.5, opacity: 1, color: '#ffffff', fillOpacity: 0.85 });
+            const geojsonLayer = L.geoJson(istanbulGeoJSON, {
+                style: dynamicStyle,
+                onEachFeature: (feature, layer) => {
+                    layer.on({
+                        mouseover: (e) => { const districtName = getDistrictName(feature.properties); const value = localMapData[districtName]; const content = `<strong>${districtName}</strong><br>${tur}: ${formatNumber(value)}`; layer.bindTooltip(content, { sticky: true }).openTooltip(); e.target.setStyle({ weight: 2.5, color: '#343a40', fillOpacity: 1 }).bringToFront(); },
+                        mouseout: (e) => { geojsonLayer.resetStyle(e.target); layer.closeTooltip(); },
+                        click: (e) => map.fitBounds(e.target.getBounds())
+                    });
+                }
+            }).addTo(map);
+        }
+        const getColor = (value, range) => {
+            if (typeof value !== 'number') return '#dee2e6';
+            const { min, max } = range;
+            if (max <= min) return '#8ab5e1';
+            const ratio = (value - min) / (max - min);
+            if (ratio > 0.8) return '#3A6EA5'; if (ratio > 0.6) return '#5c86b8'; if (ratio > 0.4) return '#8ab5e1'; if (ratio > 0.2) return '#acc8e8'; return '#d0e0f3';
+        };
+
+        // --- VERİ KONTROL ARACI (PIVOT VE HATA TESPİT) ---
+        function renderDataChecker() {
+            try {
+                if (!rawDataForChecker || rawDataForChecker.length === 0) {
+                    handleError('Ham veri bulunamadı veya sayfa boş.');
+                    return;
+                }
+
+                // Ham veriyi normalize et
+                const normalized = rawDataForChecker.map(row => ({
+                    mudurluk: (row['Müdürlük'] || '').toString().trim(),
+                    hizmet: (row['Hizmet Başlığı'] || '').toString().trim(),
+                    tur: (row['Tür'] || '').toString().trim(),
+                    lokasyon: (row['Lokasyon'] || '').toString().trim(),
+                    veriAraligi: (row['Veri Aralığı'] || '').toString().trim().toLocaleUpperCase('tr-TR'),
+                    deger: parseFloat(row['Değer']),
+                    sonTarih: row['Son Tarih'],
+                    veriSorumlusu: row['Veri Sorumlusu'],
+                    eksikGiris: row['Eksik Giriş']
+                })).filter(r => r.hizmet && r.tur && r.veriAraligi);
+
+                // Yardımcılar
+                const monthNames = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+                const getYear = (v) => excelDateToYear(v);
+                const getMonthIndex = (v) => { const d = toJsDate(v); return d ? d.getMonth() : null; };
+
+                // Yılları çıkar ve son yılı belirle
+                const allYearsSet = new Set();
+                normalized.forEach(r => { const y = getYear(r.sonTarih); if (y) allYearsSet.add(y); });
+                const yearsSorted = Array.from(allYearsSet).sort((a,b) => a-b);
+                if (yearsSorted.length === 0) { handleError('Tarihlerden yıl bilgisi üretilemedi.'); return; }
+                const lastYear = Math.max(...yearsSorted);
+                const yearlyYears = yearsSorted.filter(y => y < lastYear);
+
+                // Son yılda veri olan son ayı bul (yalnızca Değer hücresi DOLU olanlar dikkate alınır)
+                let lastMonthWithData = null; // 0..11
+                rawDataForChecker.forEach(row => {
+                    const y = getYear(row['Son Tarih']);
+                    if (y !== lastYear) return;
+                    const m = getMonthIndex(row['Son Tarih']);
+                    if (m === null) return;
+                    const rawDeger = row['Değer'];
+                    const hasValue = !(rawDeger === undefined || rawDeger === null || (typeof rawDeger === 'string' && rawDeger.trim() === ''));
+                    if (hasValue) {
+                        if (lastMonthWithData === null || m > lastMonthWithData) lastMonthWithData = m;
+                    }
+                });
+
+                // Filtre seçenekleri
+                const hizmetOptions = Array.from(new Set(normalized.map(r => r.hizmet))).sort();
+                const mudurlukOptions = Array.from(new Set(normalized.map(r => r.mudurluk).filter(Boolean))).sort();
+                const lokasyonOptions = Array.from(new Set(normalized.map(r => r.lokasyon).filter(Boolean))).sort();
+
+                // Arayüz
+                dataCheckerContainer.classList.remove('hidden');
+                reportContent.classList.add('hidden');
+                const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+                if(user) {
+                    header.classList.remove('hidden');
+                    document.getElementById('user-info').classList.remove('hidden');
+                    document.querySelector('.presentation-controls').classList.add('hidden');
+                }
+
+                dataCheckerContainer.classList.add('compact');
+                dataCheckerContainer.innerHTML = `
+                    <div style="background: rgba(58, 110, 165, 0.1); border-left: 4px solid var(--primary-accent); padding: 1rem; margin-bottom: 1.5rem; border-radius: 0 8px 8px 0;">
+                        <h3 style="margin: 0 0 0.5rem 0; color: var(--primary-accent); cursor: pointer; font-size: 1rem;" onclick="toggleInstructions('checker-instructions')">
+                            Veri Kontrol Aracı <span id="checker-instructions-toggle" style="font-size: 0.8rem;">▶</span>
+                        </h3>
+                        <div id="checker-instructions" style="display: none;">
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                                Bu araç ham verinizdeki tutarsızlıkları ve hataları tespit eder. 
+                                <strong>Kırmızı hücreler:</strong> Tutarsızlık (aynı hizmet/veri aralığında bazı türler 0 iken diğerleri >0), 
+                                <strong>Sarı hücreler:</strong> Azalan değerler (kümülatif/BGG verilerinde önceki aydan düşük değer).
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div id="data-checker-controls">
+                         <label>Hizmet: 
+                            <select id="filter-hizmet">
+                                <option value="">Tümü</option>
+                                ${hizmetOptions.map(h => `<option value="${h.replace(/"/g,'&quot;')}">${h}</option>`).join('')}
+                            </select>
+                        </label>
+                        <label>Müdürlük: 
+                            <select id="filter-mudurluk">
+                                <option value="">Tümü</option>
+                                ${mudurlukOptions.map(m => `<option value="${m.replace(/"/g,'&quot;')}">${m}</option>`).join('')}
+                            </select>
+                        </label>
+                        <label>Lokasyon: 
+                            <select id="filter-lokasyon">
+                                <option value="">Tümü</option>
+                                <option value="ISTANBUL_GENELI_TOPLAM">İstanbul Geneli (Toplam)</option>
+                                ${lokasyonOptions.map(l => `<option value="${l.replace(/"/g,'&quot;')}">${l}</option>`).join('')}
+                            </select>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;">
+                            <input type="checkbox" id="filter-only-errors" /> Sadece Hatalı Olanları Göster
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;">
+                            <input type="checkbox" id="toggle-yearly" checked /> Yıllık Sütunları Göster
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;">
+                            <input type="checkbox" id="toggle-monthly" checked /> Aylık Sütunları Göster
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;">
+                            <input type="checkbox" id="toggle-error-col" checked /> Hata Açıklaması
+                        </label>
+                         <div style="margin-left: auto; display: flex; gap: 1rem;">
+                              <button id="missing-entry-report-btn" class="action-btn" style="background-color: #dc3545; font-size: 0.9rem; padding: 8px 16px;">Eksik Giriş Raporu</button>
+                             <button id="download-merged-btn" class="action-btn" style="background-color: #28a745; font-size: 0.9rem; padding: 8px 16px;">Birleştirilmiş Ham Veriyi İndir</button>
+                             <button id="download-pivot-btn" class="action-btn" style="background-color: #17a2b8; font-size: 0.9rem; padding: 8px 16px;">Görüntülenen Pivot'u İndir</button>
+                        </div>
+                    </div>
+                    <div id="data-table-container">
+                        <table id="data-table">
+                            <thead id="data-table-head"></thead>
+                            <tbody id="data-table-body"></tbody>
+                        </table>
+                    </div>
+                `;
+
+                // Başlık
+                const thead = dataCheckerContainer.querySelector('#data-table-head');
+                thead.innerHTML = `<tr>
+                    <th>Hizmet Başlığı</th>
+                    <th>Tür</th>
+                    <th>Lokasyon</th>
+                    ${yearlyYears.map(y => `<th class="col-yearly">${y}</th>`).join('')}
+                    ${lastMonthWithData !== null ? monthNames.slice(0, lastMonthWithData + 1).map((m)=>`<th class="col-monthly">${lastYear} ${m}</th>`).join('') : ''}
+                    <th class="col-error">Hata Açıklaması</th>
+                </tr>`;
+
+                const hizmetSelect = dataCheckerContainer.querySelector('#filter-hizmet');
+                const lokasyonSelect = dataCheckerContainer.querySelector('#filter-lokasyon');
+                const mudurlukSelect = dataCheckerContainer.querySelector('#filter-mudurluk');
+                const onlyErrorsCheckbox = dataCheckerContainer.querySelector('#filter-only-errors');
+                const toggleYearly = dataCheckerContainer.querySelector('#toggle-yearly');
+                const toggleMonthly = dataCheckerContainer.querySelector('#toggle-monthly');
+                const toggleErrorCol = dataCheckerContainer.querySelector('#toggle-error-col');
+
+                function aggregateDataForIstanbul(data) {
+                    const aggregationMap = new Map();
+                     data.forEach(row => {
+                        const sonTarihObj = toJsDate(row.sonTarih);
+                        const dateKey = sonTarihObj ? `${sonTarihObj.getFullYear()}-${sonTarihObj.getMonth()}-${sonTarihObj.getDate()}` : 'no-date';
+
+                        const key = `${row.mudurluk}|${row.hizmet}|${row.tur}|${row.veriAraligi}|${dateKey}`;
+
+                        if (!aggregationMap.has(key)) {
+                            aggregationMap.set(key, { 
+                                ...row, 
+                                deger: 0, 
+                                lokasyon: 'İstanbul Geneli (Toplam)' 
+                            });
+                        }
+                        const aggregatedRow = aggregationMap.get(key);
+                        aggregatedRow.deger += (row.deger || 0);
+                    });
+                    return Array.from(aggregationMap.values());
+                }
+
+
+                function applyFilters(data) {
+                    const h = hizmetSelect.value;
+                    const l = lokasyonSelect.value;
+                    const m = mudurlukSelect.value;
+                    return data.filter(r => (h ? r.hizmet === h : true) && (l ? r.lokasyon === l : true) && (m ? r.mudurluk === m : true));
+                }
+
+                function groupData(filtered) {
+                    // Ana gruplama: Hizmet Başlığı + Tür + Veri Aralığı
+                    const groups = new Map();
+                    filtered.forEach(r => {
+                        const key = `${r.hizmet}||${r.tur}||${r.veriAraligi}||${r.lokasyon}`;
+                        if (!groups.has(key)) groups.set(key, { hizmet: r.hizmet, tur: r.tur, veriAraligi: r.veriAraligi, lokasyon: r.lokasyon, byYear: {}, byMonthLastYear: {} });
+                        const g = groups.get(key);
+                        const y = getYear(r.sonTarih);
+                        if (!y) return;
+                        g.byYear[y] = (g.byYear[y] || 0) + (r.deger || 0);
+                        if (y === lastYear) {
+                            const m = getMonthIndex(r.sonTarih); 
+                            if (m !== null) {
+                                g.byMonthLastYear[m] = (g.byMonthLastYear[m] || 0) + (r.deger || 0);
+                            }
+                        }
+                    });
+                    return Array.from(groups.values());
+                }
+                
+                function buildCrossTypeLookups(filtered) {
+                    const yearlyLookup = new Map(); 
+                    const monthlyLookup = new Map();
+                    filtered.forEach(r => {
+                        const y = getYear(r.sonTarih);
+                        if (!y) return;
+                        const keyYear = `${r.hizmet}||${r.veriAraligi}||${y}||${r.lokasyon}`;
+                        const bucketYear = yearlyLookup.get(keyYear) || {};
+                        bucketYear[r.tur] = (bucketYear[r.tur] || 0) + (r.deger || 0);
+                        yearlyLookup.set(keyYear, bucketYear);
+                        if (y === lastYear) {
+                            const m = getMonthIndex(r.sonTarih);
+                            if (m !== null) {
+                                const keyMonth = `${r.hizmet}||${r.veriAraligi}||${m}||${r.lokasyon}`;
+                                const bucketMonth = monthlyLookup.get(keyMonth) || {};
+                                bucketMonth[r.tur] = (bucketMonth[r.tur] || 0) + (r.deger || 0);
+                                monthlyLookup.set(keyMonth, bucketMonth);
+                            }
+                        }
+                    });
+
+                    return { yearlyLookup, monthlyLookup };
+                }
+
+                function renderBody() {
+                    const tbody = dataCheckerContainer.querySelector('#data-table-body');
+                    tbody.innerHTML = '';
+
+                    const h = hizmetSelect.value;
+                    const m = mudurlukSelect.value;
+                    const l = lokasyonSelect.value;
+                    let processedData = normalized.filter(r => (h ? r.hizmet === h : true) && (m ? r.mudurluk === m : true));
+                    if (l === 'ISTANBUL_GENELI_TOPLAM') {
+                        processedData = aggregateDataForIstanbul(processedData);
+                    } else if (l) { 
+                        processedData = processedData.filter(r => r.lokasyon === l);
+                    }
+                    
+                    const groups = groupData(processedData);
+                    const { yearlyLookup, monthlyLookup } = buildCrossTypeLookups(processedData);
+                    
+                    const monthsCount = (lastMonthWithData !== null ? lastMonthWithData + 1 : 0);
+                    const totalCols = 3 + yearlyYears.length + monthsCount + 1;
+
+                    const hizmetOrder = [...new Set(groups.map(g => g.hizmet))];
+                    hizmetOrder.forEach(hizmetAdi => {
+                        const trGroup = document.createElement('tr');
+                        trGroup.className = 'group-row';
+                        trGroup.innerHTML = `<td colspan="${totalCols}">${hizmetAdi}</td>`;
+                        tbody.appendChild(trGroup);
+                        let groupRowCount = 0;
+
+                        const veriAralikSirasi = ['AYLIK','BGG','KÜMÜLATİF'];
+                        const altGruplar = [...new Set(groups.filter(g => g.hizmet === hizmetAdi).map(g => g.veriAraligi))]
+                            .sort((a,b) => (veriAralikSirasi.indexOf(a) === -1 ? 999 : veriAralikSirasi.indexOf(a)) - (veriAralikSirasi.indexOf(b) === -1 ? 999 : veriAralikSirasi.indexOf(b)));
+
+                        altGruplar.forEach(va => {
+                            const trSub = document.createElement('tr');
+                            trSub.className = 'subgroup-row';
+                            trSub.innerHTML = `<td colspan="${totalCols}">${va}</td>`;
+                            tbody.appendChild(trSub);
+                            let subRowCount = 0;
+
+                            groups.filter(g => g.hizmet === hizmetAdi && g.veriAraligi === va).forEach(g => {
+                                const tr = document.createElement('tr');
+                                const errorMessages = [];
+                                const cells = [];
+                                let hasErrorInRow = false;
+
+                                cells.push(`<td>${g.hizmet}</td>`);
+                                cells.push(`<td>${g.tur}</td>`);
+                                cells.push(`<td>${g.lokasyon}</td>`);
+
+                                yearlyYears.forEach(y => {
+                                    const val = g.byYear[y] || 0;
+                                    let cls = '';
+                                    let tip = '';
+
+                                    const crossKey = `${g.hizmet}||${g.veriAraligi}||${y}||${g.lokasyon}`;
+                                    const bucket = yearlyLookup.get(crossKey) || {};
+                                    const hasAnyPositive = Object.values(bucket).some(v => (v || 0) > 0);
+                                    if (hasAnyPositive && val === 0) {
+                                        cls = 'risk-inconsistent'; 
+                                        hasErrorInRow = true;
+                                        const positiveList = Object.entries(bucket).filter(([t,v]) => t !== g.tur && (v || 0) > 0).map(([t,v]) => `${t}=${formatNumber(v)}`).join(', ');
+                                        const fullErrorMessage = `Tutarsızlık (Yıl ${y}): ${g.tur}=0 iken diğer türlerde değer var: ${positiveList}`;
+                                        tip = fullErrorMessage;
+                                        errorMessages.push(fullErrorMessage);
+                                    }
+                                    cells.push(`<td class="col-yearly ${cls}" ${tip ? `title="${tip}"` : ''}>${formatNumber(val)}</td>`);
+                                });
+
+                                let prevCumMonthValue = null;
+                                for (let m = 0; m <= (lastMonthWithData ?? -1); m++) {
+                                    const val = g.byMonthLastYear[m] || 0;
+                                    let cls = '';
+                                    let monthlyTips = [];
+
+                                    const crossMonthKey = `${g.hizmet}||${g.veriAraligi}||${m}||${g.lokasyon}`;
+                                    const bucketMonth = monthlyLookup.get(crossMonthKey) || {};
+                                    const hasAnyPositiveMonth = Object.values(bucketMonth).some(v => (v || 0) > 0);
+                                    if (hasAnyPositiveMonth && val === 0) {
+                                        cls = 'risk-inconsistent'; 
+                                        hasErrorInRow = true;
+                                        const positiveListMonth = Object.entries(bucketMonth).filter(([t,v]) => t !== g.tur && (v || 0) > 0).map(([t,v]) => `${t}=${formatNumber(v)}`).join(', ');
+                                        const fullErrorMessage = `Tutarsızlık (${lastYear} ${monthNames[m]}): ${g.tur}=0; Diğer >0: ${positiveListMonth}`;
+                                        monthlyTips.push(fullErrorMessage);
+                                        errorMessages.push(fullErrorMessage);
+                                    }
+                                    
+                                    if ((g.veriAraligi === 'KÜMÜLATİF' || g.veriAraligi === 'BGG') && prevCumMonthValue !== null && val < prevCumMonthValue) {
+                                        cls = cls.includes('risk-decreasing') ? cls : (cls ? cls + ' risk-decreasing' : 'risk-decreasing');
+                                        const fullErrorMessage = `Azalan Değer (${monthNames[m]}): Önceki ay (${monthNames[m-1]}) ${formatNumber(prevCumMonthValue)} > Bu ay ${formatNumber(val)}`;
+                                        monthlyTips.push(fullErrorMessage);
+                                        errorMessages.push(fullErrorMessage);
+                                        hasErrorInRow = true;
+                                    }
+                                    prevCumMonthValue = val;
+                                    
+                                    const tip = monthlyTips.join(' | ');
+                                    cells.push(`<td class="col-monthly ${cls}" ${tip ? `title="${tip}"` : ''}>${formatNumber(val)}</td>`);
+                                }
+
+                                cells.push(`<td class="col-error">${[...new Set(errorMessages)].join('; ')}</td>`);
+                                tr.innerHTML = cells.join('');
+                                if (onlyErrorsCheckbox.checked && !hasErrorInRow) { return; }
+                                tbody.appendChild(tr);
+                                subRowCount++;
+                                groupRowCount++;
+                            });
+                            if (subRowCount === 0) tbody.removeChild(trSub);
+                        });
+                        if (groupRowCount === 0) tbody.removeChild(trGroup);
+                    });
+                    applyColumnToggles();
+                }
+
+                function downloadPivotAsExcel() {
+                    const excelData = [];
+                    const h = hizmetSelect.value;
+                    const m = mudurlukSelect.value;
+                    const l = lokasyonSelect.value;
+                    let processedData = normalized.filter(r => (h ? r.hizmet === h : true) && (m ? r.mudurluk === m : true));
+                    if (l === 'ISTANBUL_GENELI_TOPLAM') {
+                        processedData = aggregateDataForIstanbul(processedData);
+                    } else if (l) { 
+                        processedData = processedData.filter(r => r.lokasyon === l);
+                    }
+
+                    const groups = groupData(processedData);
+                    const { yearlyLookup, monthlyLookup } = buildCrossTypeLookups(processedData);
+                    
+                    const headers = ['Hizmet Başlığı', 'Tür', 'Lokasyon', 'Veri Aralığı'];
+                    yearlyYears.forEach(y => headers.push(y.toString()));
+                    for (let m = 0; m <= (lastMonthWithData ?? -1); m++) {
+                        headers.push(`${lastYear} ${monthNames[m]}`);
+                    }
+                    headers.push('Hata Açıklaması');
+
+                    groups.forEach(g => {
+                        const rowData = {};
+                        rowData['Hizmet Başlığı'] = g.hizmet;
+                        rowData['Tür'] = g.tur;
+                        rowData['Lokasyon'] = g.lokasyon;
+                        rowData['Veri Aralığı'] = g.veriAraligi;
+
+                        const errorMessages = new Set();
+
+                        yearlyYears.forEach(y => {
+                            const val = g.byYear[y] || 0;
+                            rowData[y.toString()] = val;
+                            const crossKey = `${g.hizmet}||${g.veriAraligi}||${y}||${g.lokasyon}`;
+                            const bucket = yearlyLookup.get(crossKey) || {};
+                            if (Object.values(bucket).some(v => v > 0) && val === 0) {
+                                const positiveList = Object.entries(bucket).filter(([t,v]) => t !== g.tur && (v || 0) > 0).map(([t,v]) => `${t}=${formatNumber(v)}`).join(', ');
+                                const fullErrorMessage = `Tutarsızlık (Yıl ${y}): ${g.tur}=0 iken diğer türlerde değer var: ${positiveList}`;
+                                errorMessages.add(fullErrorMessage);
+                            }
+                        });
+
+                        let prevCumMonthValue = null;
+                        for (let m = 0; m <= (lastMonthWithData ?? -1); m++) {
+                            const val = g.byMonthLastYear[m] || 0;
+                            rowData[`${lastYear} ${monthNames[m]}`] = val;
+                            const crossMonthKey = `${g.hizmet}||${g.veriAraligi}||${m}||${g.lokasyon}`;
+                            const bucketMonth = monthlyLookup.get(crossMonthKey) || {};
+                            if (Object.values(bucketMonth).some(v => v > 0) && val === 0) {
+                                 const positiveListMonth = Object.entries(bucketMonth).filter(([t,v]) => t !== g.tur && (v || 0) > 0).map(([t,v]) => `${t}=${formatNumber(v)}`).join(', ');
+                                const fullErrorMessage = `Tutarsızlık (${lastYear} ${monthNames[m]}): ${g.tur}=0; Diğer >0: ${positiveListMonth}`;
+                                errorMessages.add(fullErrorMessage);
+                            }
+                            if ((g.veriAraligi === 'KÜMÜLATİF' || g.veriAraligi === 'BGG') && prevCumMonthValue !== null && val < prevCumMonthValue) {
+                                 const fullErrorMessage = `Azalan Değer (${monthNames[m]}): Önceki ay (${monthNames[m-1]}) ${formatNumber(prevCumMonthValue)} > Bu ay ${formatNumber(val)}`;
+                                errorMessages.add(fullErrorMessage);
+                            }
+                            prevCumMonthValue = val;
+                        }
+                        rowData['Hata Açıklaması'] = [...errorMessages].join('; ');
+                        excelData.push(rowData);
+                    });
+
+                    if (excelData.length === 0) {
+                        alert("Dışa aktarılacak veri bulunamadı.");
+                        return;
+                    }
+                    const worksheet = XLSX.utils.json_to_sheet(excelData, { header: headers });
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pivot Hata Raporu');
+                    XLSX.writeFile(workbook, 'pivot_hata_raporu.xlsx');
+                }
+
+                // Olaylar
+                hizmetSelect.addEventListener('change', renderBody);
+                lokasyonSelect.addEventListener('change', renderBody);
+                mudurlukSelect.addEventListener('change', renderBody);
+                onlyErrorsCheckbox.addEventListener('change', renderBody);
+                document.getElementById('download-merged-btn').addEventListener('click', () => {
+                    if (rawDataForChecker.length > 0) {
+                         const dataToExport = rawDataForChecker.map(row => {
+                            const newRow = {};
+                            standardHeaders.forEach(header => {
+                                newRow[header] = row[header];
+                            });
+
+                            const dateColumns = ['İlk Tarih', 'Son Tarih', 'Güncel Olması Gereken Tarih', 'Veri Giriş Tarihi'];
+                            dateColumns.forEach(colName => {
+                                if (newRow[colName]) {
+                                    const jsDate = toJsDate(newRow[colName]);
+                                    if (jsDate) {
+                                        newRow[colName] = jsDate;
+                                    }
+                                }
+                            });
+                            return newRow;
+                        });
+
+                        const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: standardHeaders, cellDates: true });
+                        const workbook = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(workbook, worksheet, 'Birleştirilmiş Veri');
+                        XLSX.writeFile(workbook, 'birlesik_ham_veri.xlsx');
+                    } else {
+                        alert("İndirilecek birleştirilmiş veri bulunamadı.");
+                    }
+                });
+                document.getElementById('download-pivot-btn').addEventListener('click', downloadPivotAsExcel);
+                document.getElementById('missing-entry-report-btn').addEventListener('click', renderMissingEntryReport);
+
+
+                function applyColumnToggles() {
+                    const table = dataCheckerContainer.querySelector('#data-table');
+                    table.querySelectorAll('.col-yearly').forEach(el => { el.style.display = toggleYearly.checked ? '' : 'none'; });
+                    table.querySelectorAll('.col-monthly').forEach(el => { el.style.display = toggleMonthly.checked ? '' : 'none'; });
+                    table.querySelectorAll('.col-error').forEach(el => { el.style.display = toggleErrorCol.checked ? '' : 'none'; });
+                }
+                toggleYearly.addEventListener('change', applyColumnToggles);
+                toggleMonthly.addEventListener('change', applyColumnToggles);
+                toggleErrorCol.addEventListener('change', applyColumnToggles);
+
+                renderBody();
+                applyColumnToggles();
+            } catch (err) {
+                handleError('Veri kontrol aracı hazırlanırken bir hata oluştu.', err.message);
+            }
+        }
+
+        function renderMissingEntryReport() {
+            const missingEntries = rawDataForChecker.filter(row => row['Eksik Giriş'] === "Veri Girişi Sağlanmalı");
+
+            if (missingEntries.length === 0) {
+                alert("Veri girişi eksiği olan personel bulunamadı.");
+                return;
+            }
+
+            const reportData = missingEntries.map(row => ({
+                'Veri Sorumlusu': row['Veri Sorumlusu'] || 'Bilinmiyor',
+                'Hizmet Başlığı': row['Hizmet Başlığı'],
+                'Tür': row['Tür'],
+                'Lokasyon': row['Lokasyon'],
+                'İlk Tarih': toJsDate(row['İlk Tarih']),
+                'Son Tarih': toJsDate(row['Son Tarih']),
+                'Dosya Adı': row['__sourceFile'],
+                'Sayfa Adı': row['__sourceSheet'],
+            }));
+
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            modal.style.zIndex = '10002';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+
+            let tableHTML = `<table style="width: 100%; border-collapse: collapse; background: white; font-size: 0.8rem;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2;">Veri Sorumlusu</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2;">Hizmet Başlığı</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2;">Tür</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2;">Lokasyon</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2;">Son Tarih</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2;">Dosya Adı</th>
+                                        <th style="padding: 8px; border: 1px solid #ddd; background-color: #f2f2f2;">Sayfa Adı</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+             reportData.forEach(item => {
+                const sonTarihFormatted = item['Son Tarih'] ? item['Son Tarih'].toLocaleDateString('tr-TR') : '';
+                tableHTML += `<tr>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${item['Veri Sorumlusu']}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${item['Hizmet Başlığı']}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${item['Tür']}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${item['Lokasyon']}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${sonTarihFormatted}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${item['Dosya Adı']}</td>
+                                <td style="padding: 8px; border: 1px solid #ddd;">${item['Sayfa Adı']}</td>
+                              </tr>`;
+            });
+            tableHTML += `</tbody></table>`;
+
+            modal.innerHTML = `
+                <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 90vw; width: 90%; max-height: 80vh; overflow-y: auto;">
+                    <h2 style="margin-bottom: 1rem;">Eksik Veri Girişi Raporu</h2>
+                    ${tableHTML}
+                    <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                        <button id="download-missing-report-btn" class="action-btn">Raporu İndir (Excel)</button>
+                        <button id="close-modal-btn" class="action-btn secondary">Kapat</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                     document.body.removeChild(modal);
+                }
+            });
+
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            document.getElementById('download-missing-report-btn').addEventListener('click', () => {
+                const worksheet = XLSX.utils.json_to_sheet(reportData, {cellDates: true});
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Eksik Giriş Raporu');
+                XLSX.writeFile(workbook, 'eksik_veri_girisi_raporu.xlsx');
+            });
+        }
+
+
+        // --- TOGGLE FONKSİYONU ---
+        function toggleInstructions(elementId) {
+            const element = document.getElementById(elementId);
+            const toggle = document.getElementById(elementId + '-toggle');
+            
+            if (element && toggle) {
+                if (element.style.display === 'none' || !element.style.display) {
+                    element.style.display = 'block';
+                    toggle.textContent = '▼';
+                } else {
+                    element.style.display = 'none';
+                    toggle.textContent = '▶';
+                }
+            }
+        }
+
+        // --- ÖRNEK DOSYA İNDİRME FONKSİYONU ---
+        function downloadSampleFile(type) {
+            let fileName;
+            
+            if (type === 'raw') {
+                const sampleData = [
+                    {'Müdürlük':'Sosyal Hizmetler Şube Müdürlüğü','Hizmet Başlığı':'İstanbulkart','Tür':'Başvuru','Lokasyon':'Adalar','Veri Aralığı':'Aylık','İlk Tarih':'31.01.2025','Son Tarih':'02.03.2025','Veri Sorumlusu':'Ahmet Yılmaz','Güncel Olması Gereken Tarih':'30.07.2025','Eksik Giriş':'','Değer':15,'Veri Giriş Tarihi':'14.04.2025'},
+                    {'Müdürlük':'SHM','Hizmet Başlığı':'İstanbulkart','Tür':'Başvuru','Lokasyon':'Arnavutköy','Veri Aralığı':'Aylık','İlk Tarih':'31.01.2025','Son Tarih':'02.03.2025','Veri Sorumlusu':'Ahmet Yılmaz','Güncel Olması Gereken Tarih':'30.07.2025','Eksik Giriş':'','Değer':1319,'Veri Giriş Tarihi':'14.04.2025'},
+                    {'Müdürlük':'KAHM','Hizmet Başlığı':'İstanbulkart','Tür':'Başvuru','Lokasyon':'Ataşehir','Veri Aralığı':'Aylık','İlk Tarih':'31.01.2025','Son Tarih':'02.03.2025','Veri Sorumlusu':'Ahmet Yılmaz','Güncel Olması Gereken Tarih':'30.07.2025','Eksik Giriş':'','Değer':584,'Veri Giriş Tarihi':'14.04.2025'},
+                ];
+                fileName = 'ornek-ham-veri.xlsx';
+                const workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.json_to_sheet(sampleData);
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Ham Veri');
+                XLSX.writeFile(workbook, fileName);
+
+            } else if (type === 'template') {
+                const templateWorkbook = XLSX.utils.book_new();
+                fileName = 'ornek-taslak-dosyasi.xlsx';
+                
+                const shdbTaslakData = [
+                    { 'Müdürlük': 'Sosyal Hizmetler Şube Müdürlüğü', 'Hizmet Başlığı': 'Askıda Aile Destek Paketi', 'Tür': 'Adet', 'Veri Aralığı': 'Aylık' },
+                    { 'Müdürlük': 'Sosyal Hizmetler Şube Müdürlüğü', 'Hizmet Başlığı': 'Askıda Aile Destek Paketi', 'Tür': 'Adet', 'Veri Aralığı': 'BGG' },
+                    { 'Müdürlük': 'Sosyal Hizmetler Şube Müdürlüğü', 'Hizmet Başlığı': 'Askıda Aile Destek Paketi', 'Tür': 'Adet', 'Veri Aralığı': 'Kümülatif' },
+                ];
+                const templateAciklamalarData = [
+                    { 'Hizmet Başlığı':'İstanbulkart','Açıklama':'Sosyal Destek İstanbulkart ile Düzenli Nakdi Destek kapsamında...' },
+                    { 'Hizmet Başlığı':'Tek Seferlik Nakdi Destek','Açıklama':'Tek Seferlik Nakdi Destekler ile farklı dezavantajlı grupların...' }
+                ];
+                const ozetData = [
+                    { 'Hizmet Başlığı':'İstanbulkart','Tür':'Bütçe','Veri Aralığı':'BGG' },
+                    { 'Hizmet Başlığı':'İstanbulkart','Tür':'Hane','Veri Aralığı':'BGG' }
+                ];
+                const merkezlerData = [
+                    { 'Müdürlük':'Sosyal Hizmetler Şube Müdürlüğü','Birim Adı':'ARNAVUTKÖY SOSYAL HİZMET NOKTASI','Birim Türü':'SOSYAL HİZMET NOKTASI','ILCE':'Arnavutköy','KOORDİNATLAR':'41.18738,28.76431','ADRES':'BOĞAZKÖY İSTİKLAL MAH., ERDENER SK., NO:2 ARNAVUTKÖY /İSTANBUL' },
+                ];
+                
+                const wsShdb = XLSX.utils.json_to_sheet(shdbTaslakData);
+                const wsAciklama = XLSX.utils.json_to_sheet(templateAciklamalarData);
+                const wsOzet = XLSX.utils.json_to_sheet(ozetData);
+                const wsMerkezler = XLSX.utils.json_to_sheet(merkezlerData);
+
+                const appendNote = (ws, note) => {
+                    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+                    const nextRow = range.e.r + 3; 
+                    XLSX.utils.sheet_add_aoa(ws, [[note]], {origin: `A${nextRow}`});
+                };
+
+                appendNote(wsShdb, 'NOT: Bu sayfaya, raporda görüntülemek istediğiniz hizmetleri, türleri ve veri aralıklarını ekleyin. (Örn: BGG, Kümülatif, Aylık)');
+                appendNote(wsAciklama, 'NOT: Bu sayfa, her bir hizmet başlığı için sunumda gösterilecek metin açıklamalarını içerir.');
+                appendNote(wsOzet, 'NOT: Özet sayfasına eklediğiniz hizmetler, sunumun başlangıcındaki özet bölümünde özel olarak vurgulanır.');
+                appendNote(wsMerkezler, 'NOT: Merkezler sayfası, haritada gösterilecek hizmet noktalarının konum ve adres bilgilerini içerir. KOORDİNATLAR tek hücrede virgülle ayrılmalıdır.');
+
+                XLSX.utils.book_append_sheet(templateWorkbook, wsShdb, 'SHDB Taslak');
+                XLSX.utils.book_append_sheet(templateWorkbook, wsAciklama, 'Açıklamalar');
+                XLSX.utils.book_append_sheet(templateWorkbook, wsOzet, 'Özet');
+                XLSX.utils.book_append_sheet(templateWorkbook, wsMerkezler, 'Merkezler');
+                
+                XLSX.writeFile(templateWorkbook, fileName);
+            }
+        }
+
+        // --- AUTH & USER MANAGEMENT ---
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const user = reportUsers.find(u => u.username === username && u.password === password);
+            if (user) { sessionStorage.setItem('loggedInUser', JSON.stringify(user)); showAppForUser(user); }
+            else { loginError.textContent = 'Kullanıcı adı veya şifre hatalı.'; loginError.classList.remove('hidden'); }
+        }
+        
+        function handleLogout() {
+            sessionStorage.removeItem('loggedInUser');
+            loginSection.classList.remove('hidden');
+            appContainer.classList.add('hidden');
+            header.classList.add('hidden');
+            reportContent.classList.add('hidden');
+            dataCheckerContainer.classList.add('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+            document.querySelector('.presentation-controls').classList.add('hidden');
+        }
+
+        function showAppForUser(user) {
+            loginSection.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            reportContent.classList.add('hidden');
+            entryPoint.classList.remove('hidden');
+            dataCheckerContainer.classList.add('hidden'); 
+            
+            const userInfo = document.getElementById('user-info');
+            const usernameDisplay = document.getElementById('username-display');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if(user) {
+                 header.classList.remove('hidden');
+                 usernameDisplay.textContent = user.username;
+                 userInfo.classList.remove('hidden');
+                 document.querySelector('.presentation-controls').classList.add('hidden');
+                 logoutBtn.addEventListener('click', handleLogout);
+            } else {
+                 header.classList.add('hidden');
+            }
+
+
+            renderEntryPoint(user);
+        }
+        
+        // --- RAPOR OLUŞTURMA SİHİRBAZI ---
+        function renderReportWizard() {
+            entryPoint.innerHTML = `<div id="wizard-container" class="entry-point-section" style="text-align:left; transition: max-width 0.3s ease-in-out;"></div>`;
+            const wizardContainer = document.getElementById('wizard-container');
+            let selections = {
+                mudurlukler: [],
+                hizmetler: {},
+                locations: [],
+                options: {}
+            };
+
+            // --- Adım 1: Müdürlük ---
+            function renderStep1() {
+                wizardContainer.style.maxWidth = '650px';
+                const mudurlukler = [];
+                cleanedDataGlobal.forEach(item => {
+                    if (item.mudurluk && !mudurlukler.includes(item.mudurluk)) {
+                        mudurlukler.push(item.mudurluk);
+                    }
+                });
+
+                wizardContainer.innerHTML = `
+                    <div class="wizard-step active" style="text-align:center;">
+                        <h2>Adım 1: Müdürlük Seçimi</h2>
+                        <p>Raporda yer alacak müdürlükleri seçin.</p>
+                        <div class="wizard-list-container">
+                            <label><input type="checkbox" id="select-all-mudurlukler"> <strong>Tümünü Seç</strong></label><hr style="margin: 0.5rem 0;">
+                            ${mudurlukler.map(m => `<label><input type="checkbox" class="mudurluk-check" value="${m}"> ${m}</label>`).join('')}
+                        </div>
+                        <div class="button-group">
+                             <button id="back-to-main-btn" class="action-btn secondary">Ana Menü</button>
+                            <button id="wizard-step1-next" class="action-btn">İlerle</button>
+                        </div>
+                    </div>`;
+                
+                document.getElementById('select-all-mudurlukler').addEventListener('change', (e) => {
+                    document.querySelectorAll('.mudurluk-check').forEach(chk => chk.checked = e.target.checked);
+                });
+                document.getElementById('wizard-step1-next').addEventListener('click', () => {
+                    const selected = [...document.querySelectorAll('.mudurluk-check:checked')].map(chk => chk.value);
+                    if (selected.length === 0) { alert('Lütfen en az bir müdürlük seçin.'); return; }
+                    selections.mudurlukler = selected;
+                    renderStep2();
+                });
+                 document.getElementById('back-to-main-btn').addEventListener('click', () => {
+                    const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+                    renderEntryPoint(user);
+                 });
+            }
+
+            // --- Adım 2: Hizmetler ve Kırılımlar ---
+            function renderStep2() {
+                wizardContainer.style.maxWidth = '900px';
+                const uniqueKirilimlar = new Set();
+                let hizmetHTML = '';
+
+                const orderedSelectedMudurlukler = [];
+                 cleanedDataGlobal.forEach(item => {
+                    if (item.mudurluk && !orderedSelectedMudurlukler.includes(item.mudurluk) && selections.mudurlukler.includes(item.mudurluk)) {
+                        orderedSelectedMudurlukler.push(item.mudurluk);
+                    }
+                });
+
+                orderedSelectedMudurlukler.forEach(mudurluk => {
+                    hizmetHTML += `<div class="mudurluk-group" style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem;"><h3>${mudurluk}</h3>`;
+                    
+                    const hizmetlerForMudurluk = {};
+                     cleanedDataGlobal
+                        .filter(row => row.mudurluk === mudurluk)
+                        .forEach(row => {
+                            if (!hizmetlerForMudurluk[row.hizmet]) {
+                                hizmetlerForMudurluk[row.hizmet] = new Set();
+                            }
+                            if(row.tur) {
+                                hizmetlerForMudurluk[row.hizmet].add(row.tur);
+                                uniqueKirilimlar.add(row.tur);
+                            }
+                        });
+
+                    const orderedHizmetler = [];
+                    cleanedDataGlobal
+                        .filter(row => row.mudurluk === mudurluk)
+                        .forEach(row => {
+                            if (row.hizmet && !orderedHizmetler.includes(row.hizmet)) {
+                                orderedHizmetler.push(row.hizmet);
+                            }
+                        });
+
+                    orderedHizmetler.forEach(hizmet => {
+                        const kirilimlar = hizmetlerForMudurluk[hizmet] ? [...hizmetlerForMudurluk[hizmet]].sort() : [];
+                        hizmetHTML += `
+                            <div class="hizmet-item" style="padding-left: 1rem;">
+                                <h4><label><input type="checkbox" class="hizmet-check" data-mudurluk="${mudurluk}" value="${hizmet}"> ${hizmet}</label></h4>
+                                <div class="kirilim-list" style="display:none;">
+                                    ${kirilimlar.map(k => `<label><input type="checkbox" class="kirilim-check" data-hizmet="${hizmet}" value="${k}"> ${k}</label>`).join('')}
+                                </div>
+                            </div>`;
+                    });
+                    hizmetHTML += `</div>`;
+                });
+                
+                const quickFiltersHTML = [...uniqueKirilimlar].sort().map(k => `<button data-kirilim="${k}">Tüm "${k}" Seç/Kaldır</button>`).join('');
+
+                wizardContainer.innerHTML = `
+                    <div class="wizard-step active" style="text-align:center;">
+                        <h2>Adım 2: Hizmet ve Kırılım Seçimi</h2>
+                        <p>Görüntülenecek hizmetleri ve onların dökümlerini (türlerini) seçin.</p>
+                        
+                        <div style="margin: 1.5rem 0 0.5rem 0; padding: 0.75rem; border-radius: 8px; background-color: var(--background-body);">
+                             <h4 style="cursor: pointer; color: var(--primary-accent); margin:0; padding: 0.5rem;" id="toggle-quick-filters">
+                                Hızlı Kırılım Filtreleri <span id="quick-filters-toggle">▶</span>
+                            </h4>
+                            <div class="quick-filters" id="quick-filters-container" style="display:none; padding-top:0.75rem; margin-top:0.75rem; border-top: 1px solid var(--border-color);">
+                                ${quickFiltersHTML}
+                            </div>
+                        </div>
+
+                        <div class="wizard-list-container" style="max-height: 50vh;">
+                            <label><input type="checkbox" id="select-all-hizmetler"> <strong>Tüm Hizmetleri Seç/Kaldır</strong></label><hr style="margin: 0.5rem 0;">
+                            ${hizmetHTML}
+                        </div>
+                        <div class="button-group">
+                            <button id="wizard-step2-back" class="action-btn secondary">Geri</button>
+                            <button id="wizard-step2-next" class="action-btn">İlerle</button>
+                        </div>
+                    </div>`;
+
+                function updateParentCheckbox(hizmetItem) {
+                    const parentCheck = hizmetItem.querySelector('.hizmet-check');
+                    const kirilimChecks = hizmetItem.querySelectorAll('.kirilim-check');
+                    if (!parentCheck || kirilimChecks.length === 0) return;
+                    const allChecked = [...kirilimChecks].every(k => k.checked);
+                    parentCheck.checked = allChecked;
+                }
+
+                function updateAllParentCheckboxes() {
+                    document.querySelectorAll('.hizmet-item').forEach(updateParentCheckbox);
+                }
+
+                document.getElementById('toggle-quick-filters').addEventListener('click', () => {
+                    const filtersContainer = document.getElementById('quick-filters-container');
+                    const toggleIcon = document.getElementById('quick-filters-toggle');
+                    const isHidden = filtersContainer.style.display === 'none';
+                    filtersContainer.style.display = isHidden ? 'flex' : 'none';
+                    toggleIcon.textContent = isHidden ? '▼' : '▶';
+                });
+
+                document.getElementById('select-all-hizmetler').addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    document.querySelectorAll('.hizmet-check, .kirilim-check').forEach(chk => chk.checked = isChecked);
+                    document.querySelectorAll('.kirilim-list').forEach(list => list.style.display = isChecked ? 'block' : 'none');
+                });
+                
+                document.querySelectorAll('.quick-filters button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const kirilim = e.target.dataset.kirilim;
+                        const targetChecks = document.querySelectorAll(`.kirilim-check[value="${kirilim}"]`);
+                        if(targetChecks.length === 0) return;
+                        const shouldSelect = ![...targetChecks].every(c => c.checked);
+                        targetChecks.forEach(chk => {
+                            chk.checked = shouldSelect;
+                            const list = chk.closest('.kirilim-list');
+                            if(list && shouldSelect) list.style.display = 'block';
+                        });
+                        updateAllParentCheckboxes();
+                    });
+                });
+
+                document.querySelectorAll('.hizmet-check').forEach(chk => {
+                    chk.addEventListener('change', (e) => {
+                        const list = e.target.closest('.hizmet-item').querySelector('.kirilim-list');
+                        if (list) {
+                            list.style.display = e.target.checked ? 'block' : 'none';
+                            list.querySelectorAll('.kirilim-check').forEach(kChk => kChk.checked = e.target.checked);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.kirilim-check').forEach(chk => {
+                    chk.addEventListener('change', (e) => {
+                       updateParentCheckbox(e.target.closest('.hizmet-item'));
+                    });
+                });
+
+                 document.getElementById('wizard-step2-back').addEventListener('click', renderStep1);
+                 document.getElementById('wizard-step2-next').addEventListener('click', () => {
+                    selections.hizmetler = {};
+                    document.querySelectorAll('.kirilim-check:checked').forEach(chk => {
+                        const hizmet = chk.dataset.hizmet;
+                        if (!selections.hizmetler[hizmet]) {
+                            selections.hizmetler[hizmet] = [];
+                        }
+                        selections.hizmetler[hizmet].push(chk.value);
+                    });
+                    if (Object.keys(selections.hizmetler).length === 0) {
+                        alert('Lütfen en az bir hizmet ve kırılım seçin.');
+                        return;
+                    }
+                    renderStep3_Location();
+                });
+            }
+
+            // --- Adım 3: Lokasyon Seçimi ---
+            function renderStep3_Location() {
+                wizardContainer.style.maxWidth = '650px';
+                
+                const relevantData = cleanedDataGlobal.filter(row => selections.mudurlukler.includes(row.mudurluk));
+                const locations = [...new Set(relevantData.map(item => item.lokasyon).filter(Boolean))].sort();
+
+                wizardContainer.innerHTML = `
+                    <div class="wizard-step active" style="text-align:center;">
+                        <h2>Adım 3: Lokasyon Seçimi</h2>
+                        <p>Raporun kapsayacağı lokasyonları seçin.</p>
+                        <div class="wizard-list-container">
+                            <label><input type="checkbox" id="select-all-locations" checked> <strong>Tüm Lokasyonlar (İstanbul Geneli)</strong></label>
+                            <hr style="margin: 0.5rem 0;">
+                            <div id="location-list-wrapper">
+                                ${locations.map(l => `<label style="color: #ccc;"><input type="checkbox" class="location-check" value="${l}" disabled> ${l}</label>`).join('')}
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button id="wizard-step3-back" class="action-btn secondary">Geri</button>
+                            <button id="wizard-step3-next" class="action-btn">İlerle</button>
+                        </div>
+                    </div>`;
+
+                const allLocationsCheck = document.getElementById('select-all-locations');
+                const locationChecks = document.querySelectorAll('.location-check');
+
+                allLocationsCheck.addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    locationChecks.forEach(chk => {
+                        chk.disabled = isChecked;
+                        chk.checked = false;
+                        chk.parentElement.style.color = isChecked ? '#ccc' : '';
+                    });
+                });
+
+                document.getElementById('wizard-step3-back').addEventListener('click', renderStep2);
+                document.getElementById('wizard-step3-next').addEventListener('click', () => {
+                    if (allLocationsCheck.checked) {
+                        selections.locations = ['TÜMÜ'];
+                    } else {
+                        const selected = [...document.querySelectorAll('.location-check:checked')].map(chk => chk.value);
+                        if (selected.length === 0) {
+                            alert('Lütfen en az bir lokasyon seçin veya "Tüm Lokasyonlar"ı işaretleyin.');
+                            return;
+                        }
+                        selections.locations = selected;
+                    }
+                    renderStep4();
+                });
+            }
+
+            // --- Adım 4: Rapor Seçenekleri ---
+            function renderStep4() {
+                wizardContainer.style.maxWidth = '650px';
+                const showMapOption = selections.locations.includes('TÜMÜ');
+
+                wizardContainer.innerHTML = `
+                     <div class="wizard-step active" style="text-align:center;">
+                        <h2>Adım 4: Rapor Seçenekleri</h2>
+                        <p>Raporda hangi bölümlerin yer alacağını seçin.</p>
+                        <div class="wizard-list-container" style="text-align:center;">
+                            <div style="display:inline-block; text-align:left;">
+                                <label><input type="checkbox" id="opt-genel" checked> Genel Verileri Göster</label>
+                                <label><input type="checkbox" id="opt-yillik" checked> Yıllık Verileri Göster</label>
+                                ${showMapOption ? `<label><input type="checkbox" id="opt-harita" checked> Haritayı Göster</label>` : ''}
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button id="wizard-step4-back" class="action-btn secondary">Geri</button>
+                            <button id="wizard-step4-create" class="action-btn">Raporu Oluştur</button>
+                        </div>
+                    </div>
+                `;
+                 document.getElementById('wizard-step4-back').addEventListener('click', renderStep3_Location);
+                 document.getElementById('wizard-step4-create').addEventListener('click', () => {
+                    selections.options = {
+                        showGeneral: document.getElementById('opt-genel').checked,
+                        showAnnual: document.getElementById('opt-yillik').checked,
+                        showMap: showMapOption ? document.getElementById('opt-harita').checked : false,
+                    };
+                    entryPoint.innerHTML = '<div class="loading-spinner"></div>';
+                    setTimeout(() => processAndRenderReport(selections), 100);
+                 });
+            }
+
+            renderStep1();
+        }
+
+        async function handlePdfDownload() {
+            const { jsPDF } = window.jspdf;
+            const slidesToCapture = document.querySelectorAll('.presentation-slide');
+            if (slidesToCapture.length === 0) {
+                alert("PDF oluşturulacak slayt bulunamadı.");
+                return;
+            }
+
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.textContent = 'PDF oluşturuluyor, lütfen bekleyin...';
+            loadingIndicator.style.position = 'fixed';
+            loadingIndicator.style.top = '50%';
+            loadingIndicator.style.left = '50%';
+            loadingIndicator.style.transform = 'translate(-50%, -50%)';
+            loadingIndicator.style.backgroundColor = 'white';
+            loadingIndicator.style.padding = '2rem';
+            loadingIndicator.style.borderRadius = '12px';
+            loadingIndicator.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
+            loadingIndicator.style.zIndex = '10001';
+            document.body.appendChild(loadingIndicator);
+            
+            const presentationControls = document.querySelector('.presentation-controls');
+            presentationControls.classList.add('hidden');
+
+            const originalSlideIndex = currentSlideIndex;
+            try {
+                await document.documentElement.requestFullscreen();
+                await new Promise(resolve => setTimeout(resolve, 500)); 
+                const w = window.screen.width;
+                const h = window.screen.height;
+                const orientation = w > h ? 'l' : 'p';
+                const pdf = new jsPDF(orientation, 'px', [w, h]);
+                for (let i = 0; i < slidesToCapture.length; i++) {
+                    showSlide(i);
+                    await new Promise(resolve => setTimeout(resolve, 1000)); 
+                    try {
+                        loadingIndicator.classList.add('hidden');
+                        const canvas = await html2canvas(document.body, { 
+                            scale: 2, 
+                            useCORS: true, 
+                            width: w, 
+                            height: h, 
+                            windowWidth: w, 
+                            windowHeight: h, 
+                            x: 0, 
+                            y: 0 
+                        });
+                        loadingIndicator.classList.remove('hidden');
+                        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                        if (i > 0) { pdf.addPage([w, h], orientation); }
+                        pdf.addImage(imgData, 'JPEG', 0, 0, w, h);
+                    } catch (error) { console.error(`Slayt ${i+1} işlenirken hata oluştu:`, error); }
+                }
+                pdf.save('rapor.pdf');
+            } catch(err) {
+                 alert('Tam ekran moduna geçilemedi veya bir hata oluştu.');
+                 console.error(err);
+            } finally {
+                if (document.fullscreenElement) { await document.exitFullscreen(); }
+                showSlide(originalSlideIndex); 
+                document.body.removeChild(loadingIndicator);
+                presentationControls.classList.remove('hidden');
+            }
+        }
+
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedUser = sessionStorage.getItem('loggedInUser');
+            if (savedUser) {
+                showAppForUser(JSON.parse(savedUser));
+            } else {
+                loginSection.classList.remove('hidden');
+            }
+            loginForm.addEventListener('submit', handleLogin);
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+            document.addEventListener('keydown', (e) => {
+                if (!reportContent.classList.contains('hidden')) {
+                    if (e.key === 'ArrowRight') changeSlide(1);
+                    else if (e.key === 'ArrowLeft') changeSlide(-1);
+                }
+            });
+            
+            // Custom context menu for PDF download
+            reportContent.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                contextMenu.style.top = `${e.clientY}px`;
+                contextMenu.style.left = `${e.clientX}px`;
+                contextMenu.classList.remove('hidden');
+            });
+            document.addEventListener('click', e => {
+                if (!contextMenu.contains(e.target)) contextMenu.classList.add('hidden');
+            });
+             document.getElementById('context-download-pdf').addEventListener('click', () => {
+                contextMenu.classList.add('hidden');
+                handlePdfDownload();
+            });
+        });
+    </script>
+</body>
+</html>
+

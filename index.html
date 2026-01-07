@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sosyal Hizmetler Portal</title>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+
+    <!-- XLSX Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* Portal Dashboard */
+        .portal-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .portal-header {
+            padding: var(--space-4) var(--space-6);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .portal-header h1 {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .portal-content {
+            flex: 1;
+            padding: var(--space-8);
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Section Styling */
+        .portal-section {
+            margin-bottom: var(--space-8);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+        }
+
+        .section-title {
+            font-size: var(--text-sm);
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .section-desc {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .tool-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-5);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .tool-card:hover {
+            border-color: var(--text-main);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: var(--space-2);
+            color: var(--text-main);
+        }
+
+        .tool-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text-main);
+        }
+
+        .tool-name {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .tool-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .tool-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tool-card.disabled:hover {
+            border-color: var(--border);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .coming-soon {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: var(--gray-100);
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-top: var(--space-2);
+        }
+
+        .footer-text {
+            text-align: center;
+            padding: var(--space-4);
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        /* Section Colors */
+        .section-view .section-icon {
+            color: #3b82f6;
+        }
+
+        .section-view .section-title {
+            color: #3b82f6;
+        }
+
+        .section-create .section-icon {
+            color: #16a34a;
+        }
+
+        .section-create .section-title {
+            color: #16a34a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="portal-container">
+        <header class="portal-header">
+            <h1>Sosyal Hizmetler Portal</h1>
+        </header>
+
+        <main class="portal-content">
+            <!-- Rapor Görüntüle Bölümü -->
+            <section class="portal-section section-view">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <h2 class="section-title">Rapor Görüntüle</h2>
+                    <span class="section-desc" style="display:flex;align-items:center;gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        Veri Dönemi: <strong id="data-period" style="color:#3b82f6;">Yükleniyor...</strong>
+                        <button id="temp-data-btn" title="Geçici Veri Yükle"
+                            style="margin-left:8px;padding:4px;background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6"
+                                stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            </svg>
+                        </button>
+                    </span>
+                </div>
+
+                <div class="tools-grid">
+                    <!-- Hizmet Kartları -->
+                    <a href="gallery.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Hizmet Kartları</span>
+                        <span class="tool-desc">Lokasyon bazlı raporlar</span>
+                    </a>
+
+                    <!-- Stratejik Yönetim -->
+                    <a href="strateji-viewer.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 20V10"></path>
+                                <path d="M18 20V4"></path>
+                                <path d="M6 20v-4"></path>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Stratejik Yönetim</span>
+                        <span class="tool-desc">Hedef ve gösterge takibi</span>
+                    </a>
+
+                    <!-- Harita (Placeholder) -->
+                    <div class="tool-card disabled">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                                <line x1="8" y1="2" x2="8" y2="18"></line>
+                                <line x1="16" y1="6" x2="16" y2="22"></line>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Harita</span>
+                        <span class="tool-desc">Coğrafi görselleştirme</span>
+                        <span class="coming-soon">Yakında</span>
+                    </div>
+
+                    <!-- İstatistikler -->
+                    <a href="istatistikler.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </div>
+                        <span class="tool-name">İstatistikler</span>
+                        <span class="tool-desc">Veri analizi</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Rapor Oluştur Bölümü -->
+            <section class="portal-section section-create">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    <h2 class="section-title">Rapor Oluştur</h2>
+                    <span class="section-desc">Veri hazırlama ve yapılandırma</span>
+                </div>
+
+                <div class="tools-grid">
+                    <!-- Veri Kontrol -->
+                    <a href="veri-kontrol.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Veri Kontrol</span>
+                        <span class="tool-desc">Ham veri doğrulama</span>
+                    </a>
+
+                    <!-- Dosya Hazırlama -->
+                    <a href="dosya-hazirlama.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="12" y1="18" x2="12" y2="12"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Dosya Hazırlama</span>
+                        <span class="tool-desc">Rapor dosyası oluştur</span>
+                    </a>
+
+                    <!-- Gösterge Tanımla -->
+                    <a href="gosterge-tanimla.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Gösterge Tanımla</span>
+                        <span class="tool-desc">Stratejik hedef yapılandırma</span>
+                    </a>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer-text">
+            Sosyal Hizmetler Portal v15.0.0
+        </footer>
+    </div>
+</body>
+
+<script>
+    // Load data period from localStorage (temp data) or Excel (default)
+    (async function loadDataPeriod() {
+        const periodEl = document.getElementById('data-period');
+
+        // Önce localStorage'dan geçici veri dönemi kontrolü
+        const tempPeriod = localStorage.getItem('temp_data_period');
+        if (tempPeriod) {
+            periodEl.textContent = tempPeriod;
+            periodEl.style.color = '#10b981'; // Yeşil: geçici veri aktif
+            console.log('📅 Geçici veri dönemi yüklendi:', tempPeriod);
+            return; // Geçici veri varsa veri.xlsx'i yükleme
+        }
+
+        try {
+            const response = await fetch('hizmet-verileri/veri.xlsx');
+            if (!response.ok) throw new Error('Dosya bulunamadı');
+            const buffer = await response.arrayBuffer();
+            const wb = XLSX.read(buffer, { type: 'array' });
+
+            let maxDate = null;
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+            // Search all sheets for Son Tarih column
+            wb.SheetNames.forEach(sheetName => {
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+                rows.forEach(row => {
+                    let tarih = row['Son Tarih'];
+                    if (tarih) {
+                        let d = null;
+                        if (typeof tarih === 'number') {
+                            d = new Date((tarih - 25569) * 86400 * 1000);
+                        } else if (typeof tarih === 'string') {
+                            const parts = tarih.split('.');
+                            if (parts.length === 3) d = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                        if (d && !isNaN(d) && (maxDate === null || d > maxDate)) {
+                            maxDate = d;
+                        }
+                    }
+                });
+            });
+
+            if (maxDate) {
+                periodEl.textContent = monthNames[maxDate.getMonth()] + ' ' + maxDate.getFullYear();
+            } else {
+                periodEl.textContent = 'Bilinmiyor';
+            }
+        } catch (err) {
+            console.error('Veri dönemi okunamadı:', err);
+            periodEl.textContent = 'Okunamadı';
+        }
+    })();
+
+    // Temp Data Modal Logic
+    const tempDataBtn = document.getElementById('temp-data-btn');
+    let tempModal = null;
+
+    tempDataBtn.addEventListener('click', () => {
+        if (tempModal) {
+            tempModal.remove();
+        }
+
+        tempModal = document.createElement('div');
+        tempModal.innerHTML = `
+            <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;">
+                <div style="background:white;border-radius:12px;padding:24px;max-width:400px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,0.2);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <h3 style="margin:0;font-size:18px;font-weight:600;color:#1e293b;">Geçici Veri Yükle</h3>
+                        <button id="close-temp-modal" style="background:none;border:none;cursor:pointer;padding:4px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <p style="color:#64748b;font-size:13px;margin-bottom:16px;">Yüklenen veriler sadece bu oturum için geçerlidir. Sayfa yenilendiğinde varsayılan veriler kullanılır.</p>
+                    
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                        <label style="display:flex;align-items:center;gap:12px;padding:14px;border:1px dashed #cbd5e1;border-radius:8px;cursor:pointer;transition:all 0.2s;" id="hizmet-upload-label">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            <div>
+                                <div style="font-weight:500;color:#1e293b;">Hizmet Verileri</div>
+                                <div style="font-size:12px;color:#64748b;" id="hizmet-status">Excel dosyaları seçin (birden fazla olabilir)</div>
+                            </div>
+                            <input type="file" id="hizmet-file" accept=".xlsx,.xls" multiple style="display:none;">
+                        </label>
+                        
+                        <label style="display:flex;align-items:center;gap:12px;padding:14px;border:1px dashed #cbd5e1;border-radius:8px;cursor:pointer;transition:all 0.2s;" id="gosterge-upload-label">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                                <path d="M12 20V10"></path>
+                                <path d="M18 20V4"></path>
+                                <path d="M6 20v-4"></path>
+                            </svg>
+                            <div>
+                                <div style="font-weight:500;color:#1e293b;">Göstergeler</div>
+                                <div style="font-size:12px;color:#64748b;" id="gosterge-status">Excel dosyası seçin</div>
+                            </div>
+                            <input type="file" id="gosterge-file" accept=".xlsx,.xls" style="display:none;">
+                        </label>
+                    </div>
+                    
+                    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+                        <button id="clear-temp-data" style="padding:8px 16px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Temizle</button>
+                        <button id="apply-temp-data" style="padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Uygula</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(tempModal);
+
+        // Event Listeners
+        document.getElementById('close-temp-modal').onclick = () => tempModal.remove();
+        tempModal.querySelector('div').onclick = (e) => { if (e.target === tempModal.querySelector('div')) tempModal.remove(); };
+
+        // File handlers
+        document.getElementById('hizmet-file').onchange = async (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            try {
+                const rawData = [];
+                let maxDate = null;
+                const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+                for (const file of files) {
+                    const buffer = await file.arrayBuffer();
+                    const wb = XLSX.read(buffer, { type: 'array' });
+                    wb.SheetNames.forEach(sheetName => {
+                        if (sheetName === 'Sistem_Tanimlari') return;
+                        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+                        rows.forEach(row => {
+                            const mudurluk = row['Müdürlük'] || row['Müdürluk'] || row['Mudurluk'];
+                            const hizmet = row['Hizmet'] || row['Hizmet Başlığı'] || row['Hizmet Basligi'];
+                            const tur = row['Tür'] || row['Tur'];
+                            let tarih = null;
+                            const sonTarih = row['Son Tarih'];
+                            if (sonTarih) {
+                                if (typeof sonTarih === 'number') {
+                                    tarih = new Date((sonTarih - 25569) * 86400 * 1000);
+                                } else if (typeof sonTarih === 'string') {
+                                    const parts = sonTarih.split('.');
+                                    if (parts.length === 3) tarih = new Date(parts[2], parts[1] - 1, parts[0]);
+                                }
+                            }
+                            const deger = parseFloat(row['Değer'] || row['Deger']) || 0;
+                            // Veri Aralığı: Birden fazla sütun adı ve Türkçe karakter desteği
+                            const veriAraligiRaw = row['Veri Aralığı'] || row['Veri Araligi'] || row['VeriAraligi'] || row['veri_araligi'] || '';
+                            const veriAraligi = veriAraligiRaw.toString().trim().toLocaleUpperCase('tr-TR');
+
+                            if (mudurluk && hizmet && tur && tarih && !isNaN(tarih)) {
+                                rawData.push({
+                                    mudurluk, hizmet, tur, deger, tarih: tarih.toISOString(),
+                                    lokasyon: row['Lokasyon'] || row['lokasyon'] || 'İstanbul Geneli',
+                                    veriAraligi: veriAraligi || 'BGG'
+                                });
+                                // Track max date for data period display
+                                if (!maxDate || tarih > maxDate) maxDate = tarih;
+                            }
+                        });
+                    });
+                }
+
+                sessionStorage.setItem('temp_strateji_rawdata', JSON.stringify(rawData));
+                // Ayrıca localStorage'a da kaydet (sekmeler arası paylaşım için)
+                localStorage.setItem('temp_hizmet_rawdata', JSON.stringify(rawData));
+
+                // Veri aralığı dağılımını göster (debug)
+                const bggCount = rawData.filter(r => r.veriAraligi === 'BGG').length;
+                const kumCount = rawData.filter(r => r.veriAraligi === 'KÜMÜLATİF').length;
+                const aylikCount = rawData.filter(r => r.veriAraligi === 'AYLIK').length;
+                console.log('📊 Veri Aralığı Dağılımı:', bggCount, 'BGG,', kumCount, 'KÜMÜLATİF,', aylikCount, 'AYLIK');
+
+                document.getElementById('hizmet-status').textContent = '✓ ' + rawData.length + ' kayıt yüklendi (' + files.length + ' dosya)';
+                document.getElementById('hizmet-upload-label').style.borderColor = '#3b82f6';
+                document.getElementById('hizmet-upload-label').style.background = '#eff6ff';
+
+                // Update data period display on main page
+                if (maxDate) {
+                    const periodStr = monthNames[maxDate.getMonth()] + ' ' + maxDate.getFullYear();
+                    document.getElementById('data-period').textContent = periodStr;
+                    sessionStorage.setItem('temp_data_period', periodStr);
+                    localStorage.setItem('temp_data_period', periodStr);
+                }
+            } catch (err) {
+                document.getElementById('hizmet-status').textContent = 'Hata: ' + err.message;
+            }
+        };
+
+        document.getElementById('gosterge-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const buffer = await file.arrayBuffer();
+                const wb = XLSX.read(buffer, { type: 'array' });
+                const sheet = wb.Sheets['Sistem_Tanimlari'];
+                if (!sheet) throw new Error('Sistem_Tanimlari sayfası bulunamadı');
+
+                const rows = XLSX.utils.sheet_to_json(sheet);
+                const dirMap = new Map();
+                const modMap = new Map();
+                const goalMap = new Map();
+                const actMap = new Map();
+                const indicators = [];
+
+                rows.forEach(r => {
+                    if (r.DirectorateID && !dirMap.has(r.DirectorateID))
+                        dirMap.set(r.DirectorateID, { id: String(r.DirectorateID), name: r.DirectorateName });
+                    if (r.ModelID && !modMap.has(r.ModelID))
+                        modMap.set(r.ModelID, { id: String(r.ModelID), directorateId: String(r.DirectorateID), name: r.ModelName });
+                    if (r.GoalID && !goalMap.has(r.GoalID))
+                        goalMap.set(r.GoalID, { id: String(r.GoalID), modelId: String(r.ModelID), name: r.GoalName });
+                    if (r.ActionID && !actMap.has(r.ActionID))
+                        actMap.set(r.ActionID, { id: String(r.ActionID), goalId: String(r.GoalID), name: r.ActionName });
+                    if (r.GostergeID) {
+                        let ind = indicators.find(i => i.id == r.GostergeID);
+                        if (!ind) {
+                            ind = {
+                                id: String(r.GostergeID), modelId: String(r.ModelID), directorateId: String(r.DirectorateID),
+                                goalId: String(r.GoalID), actionId: String(r.ActionID), name: r.GostergeAdi,
+                                type: r.GostergeTipi || 'birim', targetYear: r.HedefYili || 2025,
+                                targets: { q1: r.H_Q1 || 0, q2: r.H_Q2 || 0, q3: r.H_Q3 || 0, q4: r.H_Q4 || 0 },
+                                selections: []
+                            };
+                            indicators.push(ind);
+                        }
+                        if (r.SrcMud && r.SrcHiz && r.SrcTur) {
+                            const plans = [];
+                            for (let i = 1; i <= 12; i++) plans.push(r['P_' + i] || null);
+                            const useForecastVal = (r.TahminAktif !== undefined) ? r.TahminAktif : 1;
+                            ind.selections.push({ mudurluk: r.SrcMud, hizmet: r.SrcHiz, tur: r.SrcTur, plans, useForecast: useForecastVal == 1 });
+                        }
+                    }
+                });
+
+                const data = {
+                    directorates: Array.from(dirMap.values()),
+                    models: Array.from(modMap.values()),
+                    goals: Array.from(goalMap.values()),
+                    actions: Array.from(actMap.values())
+                };
+                sessionStorage.setItem('temp_strateji_indicators', JSON.stringify({ data, indicators }));
+                document.getElementById('gosterge-status').textContent = '✓ ' + indicators.length + ' gösterge yüklendi';
+                document.getElementById('gosterge-upload-label').style.borderColor = '#10b981';
+                document.getElementById('gosterge-upload-label').style.background = '#ecfdf5';
+            } catch (err) {
+                document.getElementById('gosterge-status').textContent = 'Hata: ' + err.message;
+            }
+        };
+
+        document.getElementById('clear-temp-data').onclick = () => {
+            // Clear all temporary data and browser storage
+            sessionStorage.clear();
+            localStorage.clear();
+            tempModal.remove();
+            // Reload page to restore default data
+            location.reload();
+        };
+
+        document.getElementById('apply-temp-data').onclick = () => {
+            if (sessionStorage.getItem('temp_strateji_rawdata') || sessionStorage.getItem('temp_strateji_indicators')) {
+                alert('Geçici veriler kaydedildi!');
+            } else {
+                alert('Henüz veri yüklenmedi.');
+            }
+            tempModal.remove();
+        };
+    });
+</script>
+
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dosya Hazırlama - Sosyal Hizmetler Portal</title>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+
+    <!-- Libraries -->
+    <script src="libs/xlsx.full.min.js"></script>
+
+    <style>
+        .tool-container {
+            min-height: calc(100vh - 60px);
+            padding: var(--space-4);
+        }
+
+        .tool-card {
+            max-width: 650px;
+            margin: var(--space-4) auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: var(--space-6);
+        }
+
+        .tool-header {
+            margin-bottom: var(--space-5);
+            text-align: center;
+        }
+
+        .tool-header h1 {
+            font-size: var(--text-xl);
+            margin-bottom: var(--space-2);
+        }
+
+        .steps-indicator {
+            display: flex;
+            gap: var(--space-2);
+            justify-content: center;
+            margin-bottom: var(--space-5);
+        }
+
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            transition: background var(--transition-base);
+        }
+
+        .step-dot.active {
+            background: var(--text-main);
+        }
+
+        .wizard-step {
+            display: none;
+        }
+
+        .wizard-step.active {
+            display: block;
+        }
+
+        .upload-section {
+            margin: var(--space-4) 0;
+        }
+
+        .upload-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: var(--space-2);
+        }
+
+        .upload-hint {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: var(--space-3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-family);
+            font-size: var(--text-sm);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--space-3);
+            justify-content: center;
+            margin-top: var(--space-5);
+        }
+
+        /* Preview Stats */
+        .preview-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: var(--space-4) 0;
+        }
+
+        .preview-stat {
+            text-align: center;
+        }
+
+        .preview-stat-value {
+            font-size: var(--text-2xl);
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .preview-stat-label {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Month Selector */
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-4);
+            background: var(--gray-50);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: var(--space-4) 0;
+        }
+
+        .month-selector label {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .month-selector input[type="month"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-family);
+            font-size: var(--text-sm);
+        }
+
+        /* Info Box */
+        .info-box {
+            padding: var(--space-4);
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius-sm);
+            margin: var(--space-4) 0;
+        }
+
+        .info-box h4 {
+            font-size: var(--text-sm);
+            color: #1e40af;
+            margin-bottom: var(--space-2);
+        }
+
+        .info-box p {
+            font-size: var(--text-xs);
+            color: #3730a3;
+            margin: 0;
+        }
+
+        /* Success State */
+        .success-state {
+            text-align: center;
+            padding: var(--space-6);
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto var(--space-4);
+            color: var(--success);
+        }
+
+        .success-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .success-state h2 {
+            font-size: var(--text-lg);
+            margin-bottom: var(--space-2);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="page-header">
+        <div class="header-content">
+            <div class="brand">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                <span>Dosya Hazırlama</span>
+            </div>
+            <div class="header-actions">
+                <a href="index.html" class="btn-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Portal
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="tool-container">
+        <div class="tool-card">
+            <div class="tool-header">
+                <h1>Rapor Dosyası Hazırlama</h1>
+                <p>Ham veri ve taslak dosyalarını birleştirerek paket oluşturun</p>
+            </div>
+
+            <div class="steps-indicator">
+                <div class="step-dot active" id="dot-1"></div>
+                <div class="step-dot" id="dot-2"></div>
+                <div class="step-dot" id="dot-3"></div>
+            </div>
+
+            <!-- Step 1: Upload Files -->
+            <div class="wizard-step active" id="step-1">
+                <div class="upload-section">
+                    <label class="upload-label">Ham Veri Dosyası</label>
+                    <input type="file" class="file-input" id="raw-file-input" accept=".xlsx,.xls">
+                    <p class="upload-hint">Müdürlük paket dosyalarını seçin</p>
+                </div>
+
+                <div class="upload-section">
+                    <label class="upload-label">Taslak Dosyası (SHDB Taslak)</label>
+                    <input type="file" class="file-input" id="template-file-input" accept=".xlsx,.xls">
+                    <p class="upload-hint">SHDB Taslak, Açıklamalar, Özet, Merkezler sayfalarını içeren dosya</p>
+                </div>
+
+                <div class="info-box">
+                    <h4>Nasıl Çalışır?</h4>
+                    <p>Ham veri dosyasındaki satırlar, SHDB Taslak'taki seçimlere göre filtrelenir. Sadece eşleşen
+                        Müdürlük + Hizmet + Tür + Veri Aralığı kombinasyonları alınır.</p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="btn-upload">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        Dosyaları Yükle
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Review & Configure -->
+            <div class="wizard-step" id="step-2">
+                <div class="preview-stats">
+                    <div class="preview-stat">
+                        <div class="preview-stat-value" id="stat-raw-rows">0</div>
+                        <div class="preview-stat-label">Ham Veri Satırı</div>
+                    </div>
+                    <div class="preview-stat">
+                        <div class="preview-stat-value" id="stat-template-rows">0</div>
+                        <div class="preview-stat-label">Taslak Satırı</div>
+                    </div>
+                    <div class="preview-stat">
+                        <div class="preview-stat-value" id="stat-matched-rows">0</div>
+                        <div class="preview-stat-label">Eşleşen Satır</div>
+                    </div>
+                </div>
+
+                <div class="month-selector">
+                    <label>Paketlenecek Ay:</label>
+                    <input type="month" id="package-month">
+                </div>
+
+                <div class="info-box">
+                    <h4>Ay Filtresi</h4>
+                    <p>Seçilen ayın sonuna kadar olan tüm veriler dahil edilir. Önceki yılların tamamı + seçilen yılın
+                        yalnızca seçilen ay ve öncesi dahil edilir.</p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-ghost" id="btn-back-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                        Geri
+                    </button>
+                    <button class="btn btn-primary" id="btn-generate">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        Paketi Oluştur
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Success -->
+            <div class="wizard-step" id="step-3">
+                <div class="success-state">
+                    <div class="success-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h2>Paket Oluşturuldu!</h2>
+                    <p>Dosyanız indirilmeye hazır.</p>
+                </div>
+
+                <div class="preview-stats">
+                    <div class="preview-stat">
+                        <div class="preview-stat-value" id="stat-final-rows">0</div>
+                        <div class="preview-stat-label">Toplam Satır</div>
+                    </div>
+                    <div class="preview-stat">
+                        <div class="preview-stat-value" id="stat-final-sheets">0</div>
+                        <div class="preview-stat-label">Sayfa</div>
+                    </div>
+                    <div class="preview-stat">
+                        <div class="preview-stat-value" id="stat-final-month">-</div>
+                        <div class="preview-stat-label">Dönem</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="btn-download">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        İndir
+                    </button>
+                    <button class="btn btn-ghost" id="btn-restart">Yeni Paket</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==================== CONFIG ====================
+        const mudurlukMap = {
+            'KAHM': 'Kadın ve Aile Hizmetleri Şube Müdürlüğü',
+            'SHM': 'Sosyal Hizmetler Şube Müdürlüğü',
+            'ÇHM': 'Çocuk Hizmetleri Şube Müdürlüğü',
+            'EHM': 'Engelli Hizmetleri Şube Müdürlüğü',
+            'EŞM': 'Engelli Hizmetleri Şube Müdürlüğü',
+            'ŞYVGİM': 'Şehit Yakınları ve Gazilerle İlişkiler Şube Müdürlüğü'
+        };
+
+        // ==================== STATE ====================
+        let rawData = [];
+        let templateRows = [];
+        let templateWorkbook = null;
+        let filteredData = [];
+        let finalWorkbook = null;
+        let packageMonthValue = '';
+
+        // ==================== DOM ====================
+        const rawFileInput = document.getElementById('raw-file-input');
+        const templateFileInput = document.getElementById('template-file-input');
+        const packageMonth = document.getElementById('package-month');
+
+        const btnUpload = document.getElementById('btn-upload');
+        const btnBack1 = document.getElementById('btn-back-1');
+        const btnGenerate = document.getElementById('btn-generate');
+        const btnDownload = document.getElementById('btn-download');
+        const btnRestart = document.getElementById('btn-restart');
+
+        const steps = [
+            document.getElementById('step-1'),
+            document.getElementById('step-2'),
+            document.getElementById('step-3')
+        ];
+        const dots = [
+            document.getElementById('dot-1'),
+            document.getElementById('dot-2'),
+            document.getElementById('dot-3')
+        ];
+
+        // ==================== UTILITIES ====================
+        function showStep(index) {
+            steps.forEach((step, i) => step.classList.toggle('active', i === index));
+            dots.forEach((dot, i) => dot.classList.toggle('active', i <= index));
+        }
+
+        const toJsDate = (dateInput) => {
+            if (!dateInput) return null;
+
+            // Handle Excel serial numbers
+            if (typeof dateInput === 'number' && dateInput > 25569 && dateInput < 100000) {
+                try {
+                    const date = new Date(Math.round((dateInput - 25569) * 86400 * 1000));
+                    return (date instanceof Date && !isNaN(date)) ? date : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // Handle Date objects directly
+            if (dateInput instanceof Date) {
+                return isNaN(dateInput) ? null : dateInput;
+            }
+
+            // Handle strings
+            if (typeof dateInput === 'string') {
+                const str = dateInput.trim();
+                if (!str) return null;
+
+                // Turkish format: dd.mm.yyyy
+                const trMatch = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+                if (trMatch) {
+                    const [, d, m, y] = trMatch;
+                    return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                }
+
+                // ISO format or other parseable formats
+                try {
+                    const date = new Date(str);
+                    return (date instanceof Date && !isNaN(date)) ? date : null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            return null;
+        };
+
+        const trNormalize = (str) => {
+            return (str || '')
+                .toString()
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+                .replace(/[ç]/g, 'c').replace(/[ğ]/g, 'g').replace(/[ıiİ]/g, 'i')
+                .replace(/[ö]/g, 'o').replace(/[ş]/g, 's').replace(/[ü]/g, 'u');
+        };
+
+        function getSheetByNamesInsensitive(wb, candidates) {
+            const map = new Map();
+            wb.SheetNames.forEach(n => map.set(trNormalize(n), n));
+            for (const c of candidates) {
+                const key = trNormalize(c);
+                if (map.has(key)) return wb.Sheets[map.get(key)];
+            }
+            // Fallback: contains check
+            for (const n of wb.SheetNames) {
+                const k = trNormalize(n);
+                if (k.includes(trNormalize('shdb taslak'))) return wb.Sheets[n];
+            }
+            return null;
+        }
+
+        const isDateHeader = (h) => /tarih/i.test(h);
+
+        // ==================== STEP 1: UPLOAD ====================
+        btnUpload.addEventListener('click', async () => {
+            const rawFile = rawFileInput.files[0];
+            const templateFile = templateFileInput.files[0];
+
+            if (!rawFile || !templateFile) {
+                alert('Lütfen her iki dosyayı da seçin.');
+                return;
+            }
+
+            btnUpload.disabled = true;
+            btnUpload.textContent = 'Yükleniyor...';
+
+            try {
+                // Read raw data with chunked processing to prevent stack overflow
+                const rawBuffer = await rawFile.arrayBuffer();
+                const rawWb = XLSX.read(new Uint8Array(rawBuffer), {
+                    type: 'array',
+                    cellDates: true,
+                    dense: false  // Use sparse mode to reduce memory
+                });
+
+                rawData = [];
+                for (const sheetName of rawWb.SheetNames) {
+                    try {
+                        const sheet = rawWb.Sheets[sheetName];
+                        // Use sheet_to_json with header option for better performance
+                        const json = XLSX.utils.sheet_to_json(sheet, {
+                            defval: null,
+                            raw: false  // Convert dates to strings first to avoid recursion
+                        });
+
+                        for (let i = 0; i < json.length; i++) {
+                            const row = json[i];
+                            // Expand müdürlük abbreviations
+                            if (row['Müdürlük']) {
+                                const rawMudurluk = String(row['Müdürlük']).trim();
+                                row['Müdürlük'] = mudurlukMap[rawMudurluk] || rawMudurluk;
+                            }
+                            rawData.push(row);
+                        }
+                    } catch (sheetErr) {
+                        console.warn('Sayfa işlenirken hata:', sheetName, sheetErr);
+                    }
+                }
+
+                // Read template
+                const templateBuffer = await templateFile.arrayBuffer();
+                templateWorkbook = XLSX.read(new Uint8Array(templateBuffer), { type: 'array' });
+
+                const shdbSheet = getSheetByNamesInsensitive(templateWorkbook, ['SHDB Taslak', 'Shdb Taslak', 'shdb taslak']);
+                if (!shdbSheet) {
+                    alert('Taslak dosyasında SHDB Taslak sayfası bulunamadı.');
+                    btnUpload.disabled = false;
+                    btnUpload.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Dosyaları Yükle';
+                    return;
+                }
+
+                templateRows = XLSX.utils.sheet_to_json(shdbSheet, { defval: '' }).map(r => ({
+                    mudurluk: (r['Müdürlük'] || '').toString().trim(),
+                    hizmet: (r['Hizmet Başlığı'] || '').toString().trim(),
+                    tur: (r['Tür'] || '').toString().trim(),
+                    veriAraligi: (r['Veri Aralığı'] || '').toString().trim().toUpperCase()
+                })).filter(x => x.mudurluk && x.hizmet && x.tur && x.veriAraligi);
+
+                // Calculate matched rows
+                const wanted = new Set(templateRows.map(t => `${t.mudurluk}||${t.hizmet}||${t.tur}||${t.veriAraligi}`));
+
+                const matchedCount = rawData.filter(row => {
+                    const key = `${(row['Müdürlük'] || '').toString().trim()}||${(row['Hizmet Başlığı'] || '').toString().trim()}||${(row['Tür'] || '').toString().trim()}||${(row['Veri Aralığı'] || '').toString().trim().toUpperCase()}`;
+                    return wanted.has(key);
+                }).length;
+
+                // Update stats
+                document.getElementById('stat-raw-rows').textContent = rawData.length;
+                document.getElementById('stat-template-rows').textContent = templateRows.length;
+                document.getElementById('stat-matched-rows').textContent = matchedCount;
+
+                // Set default month to last month
+                const now = new Date();
+                now.setMonth(now.getMonth() - 1);
+                packageMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+                showStep(1);
+
+            } catch (err) {
+                alert('Dosya okunurken hata: ' + err.message);
+                console.error(err);
+            }
+
+            btnUpload.disabled = false;
+            btnUpload.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Dosyaları Yükle';
+        });
+
+        // ==================== STEP 2: GENERATE ====================
+        btnBack1.addEventListener('click', () => showStep(0));
+
+        btnGenerate.addEventListener('click', () => {
+            const monthVal = packageMonth.value;
+            if (!monthVal) {
+                alert('Lütfen ay seçin.');
+                return;
+            }
+
+            packageMonthValue = monthVal;
+            const [yy, mm] = monthVal.split('-');
+            const targetYear = parseInt(yy, 10);
+            const targetMonthIndex = parseInt(mm, 10) - 1;
+
+            // Filter by template selections
+            const wanted = new Set(templateRows.map(t => `${t.mudurluk}||${t.hizmet}||${t.tur}||${t.veriAraligi}`));
+
+            const isWanted = (row) => {
+                const key = `${(row['Müdürlük'] || '').toString().trim()}||${(row['Hizmet Başlığı'] || '').toString().trim()}||${(row['Tür'] || '').toString().trim()}||${(row['Veri Aralığı'] || '').toString().trim().toUpperCase()}`;
+                return wanted.has(key);
+            };
+
+            // Month filter
+            const monthFilter = (row) => {
+                const d = row['Son Tarih'] || row['İlk Tarih'];
+                const jsd = toJsDate(d);
+                if (!jsd) return false;
+                const y = jsd.getFullYear();
+                const m = jsd.getMonth();
+                return (y < targetYear) || (y === targetYear && m <= targetMonthIndex);
+            };
+
+            // Apply filters
+            filteredData = rawData.filter(r => isWanted(r) && monthFilter(r));
+
+            // Remove zero values
+            filteredData = filteredData.filter(r => {
+                const val = r['Değer'];
+                const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]/g, '')) : (val || 0);
+                return !isNaN(num) && num !== 0;
+            });
+
+            // Convert date columns
+            const headers = Object.keys(rawData[0] || {});
+            const outRows = filteredData.map(r => {
+                const o = {};
+                headers.forEach(h => {
+                    o[h] = isDateHeader(h) ? toJsDate(r[h]) : r[h];
+                });
+                return o;
+            });
+
+            // Build workbook
+            finalWorkbook = XLSX.utils.book_new();
+
+            // Hizmetler sheet
+            const wsHizmetler = XLSX.utils.json_to_sheet(outRows, { cellDates: true });
+            XLSX.utils.book_append_sheet(finalWorkbook, wsHizmetler, 'Hizmetler');
+
+            // Copy other sheets from template
+            const copyByName = (candidates, outName) => {
+                const s = getSheetByNamesInsensitive(templateWorkbook, candidates);
+                if (s) {
+                    const aoa = XLSX.utils.sheet_to_json(s, { header: 1, raw: true });
+                    const ws = XLSX.utils.aoa_to_sheet(aoa);
+                    XLSX.utils.book_append_sheet(finalWorkbook, ws, outName);
+                }
+            };
+
+            copyByName(['Açıklamalar', 'Aciklamalar'], 'Açıklamalar');
+            copyByName(['Özet', 'Ozet'], 'Özet');
+            copyByName(['Merkezler'], 'Merkezler');
+
+            // Update final stats
+            document.getElementById('stat-final-rows').textContent = outRows.length;
+            document.getElementById('stat-final-sheets').textContent = finalWorkbook.SheetNames.length;
+            document.getElementById('stat-final-month').textContent = monthVal;
+
+            showStep(2);
+        });
+
+        // ==================== STEP 3: DOWNLOAD ====================
+        btnDownload.addEventListener('click', () => {
+            if (finalWorkbook) {
+                XLSX.writeFile(finalWorkbook, `paket-${packageMonthValue}.xlsx`, { cellDates: true });
+            }
+        });
+
+        btnRestart.addEventListener('click', () => {
+            rawFileInput.value = '';
+            templateFileInput.value = '';
+            rawData = [];
+            templateRows = [];
+            templateWorkbook = null;
+            filteredData = [];
+            finalWorkbook = null;
+            showStep(0);
+        });
+    </script>
+</body>
+
+</html>

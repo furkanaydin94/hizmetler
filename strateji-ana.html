@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>İzleme Modeli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- External Logic Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- KÜTÜPHANELER: html-to-image + jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    <style>
+        #custom-context-menu {
+            position: fixed;
+            z-index: 10000;
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            min-width: 150px;
+        }
+
+        .context-menu-item {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #1E214F;
+        }
+
+        .context-menu-item:hover {
+            background-color: #F4F6F9;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['"Playfair Display"', 'serif'], sans: ['"Inter"', 'sans-serif'] },
+                    colors: { nobel: { gold: '#3B82F6', dark: '#1a1a1a', cream: '#F9F8F4' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F9F8F4;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #3B82F6;
+            border-radius: 3px;
+        }
+
+        .custom-input {
+            width: 100%;
+            border: 1px solid #d6d3d1;
+            border-radius: 0.5rem;
+            padding: 0.625rem;
+            font-size: 0.875rem;
+            background-color: white;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .custom-input:focus {
+            box-shadow: 0 0 0 2px #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .custom-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: #1c1917;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            background-color: #292524;
+        }
+
+        .btn-accent {
+            background-color: #3B82F6;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-accent:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid #d6d3d1;
+            color: #44403c;
+        }
+
+        .btn-secondary:hover {
+            background-color: #fafaf9;
+        }
+
+        /* A4 Presentation Styles */
+        .slide {
+            width: 800px;
+            /* A4 width at 96dpi */
+            height: 1131px;
+            /* A4 height at 96dpi */
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            color: #1c1917;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* Fullscreen modunda slide'ı responsive yap */
+        #viewport .slide {
+            width: 100%;
+            height: 100%;
+        }
+
+        .brand-blue {
+            background-color: #3B82F6;
+        }
+
+        /* 3D Sütun Animasyonları */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .animate-cube {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Her sütun farklı gecikme ile başlasın */
+        .animate-cube:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .animate-cube:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .animate-cube:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .animate-cube:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+
+        .animate-cube:nth-child(5) {
+            animation-delay: 0.8s;
+        }
+
+        .animate-cube:nth-child(6) {
+            animation-delay: 1s;
+        }
+
+        .animate-cube:nth-child(7) {
+            animation-delay: 1.2s;
+        }
+
+        .animate-cube:nth-child(8) {
+            animation-delay: 1.4s;
+        }
+
+        .animate-cube:nth-child(9) {
+            animation-delay: 1.6s;
+        }
+
+        .animate-cube:nth-child(10) {
+            animation-delay: 1.8s;
+        }
+
+        .animate-cube:nth-child(11) {
+            animation-delay: 2s;
+        }
+
+        .animate-cube:nth-child(12) {
+            animation-delay: 2.2s;
+        }
+
+        .animate-cube:nth-child(13) {
+            animation-delay: 0.1s;
+        }
+
+        .animate-cube:nth-child(14) {
+            animation-delay: 0.3s;
+        }
+
+        .animate-cube:nth-child(15) {
+            animation-delay: 0.5s;
+        }
+
+        .animate-cube:nth-child(16) {
+            animation-delay: 0.7s;
+        }
+
+        /* Beyaz Kart Tasarımı (Sunum Modu) */
+        .white-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.0/client",
+        "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
+        "@react-three/fiber": "https://aistudiocdn.com/@react-three/fiber@^9.4.0",
+        "@react-three/drei": "https://aistudiocdn.com/@react-three/drei@^10.7.7",
+        "three": "https://aistudiocdn.com/three@^0.181.1",
+        "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
+        "lucide-react": "https://aistudiocdn.com/lucide-react@^0.553.0"
+      }
+    }
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { createPortal } from 'react-dom';
+        import { Canvas, useFrame } from '@react-three/fiber';
+        import { Float, Environment } from '@react-three/drei';
+        import {
+            Activity, BarChart2, Save, Upload, Download, Plus, Trash2,
+            ChevronRight, ChevronLeft, ChevronDown, Settings, Database, Layers, Target,
+            FileText, PieChart, TrendingUp, Calendar, Search, X, Menu,
+            ArrowRight, ArrowLeft, Maximize2, Minimize2, MoreVertical, Folder, Key,
+            AlertCircle, BarChart3, PlaySquare, Maximize
+        } from 'lucide-react';
+        import { motion, AnimatePresence } from 'framer-motion';
+
+        // --- 3D Background ---
+        const DataColumn = ({ position, color, speed, phase }) => {
+            const mesh = useRef();
+            useFrame((state) => { if (mesh.current) { const t = state.clock.elapsedTime; const h = Math.max(0.2, 1.5 + Math.sin(t * speed + phase) * 0.5 + Math.sin(t * speed * 0.5 + phase) * 0.3); mesh.current.scale.y = h; mesh.current.position.y = position[1] + h / 2 - 0.75; } });
+            return <mesh ref={mesh} position={position} castShadow receiveShadow><boxGeometry args={[0.8, 1.5, 0.8]} /><meshStandardMaterial color={color} metalness={0.6} roughness={0.2} /></mesh>;
+        };
+        const HeroScene = () => {
+            const columns = useMemo(() => { const c = []; for (let x = -6; x <= 6; x++)for (let z = -6; z <= 6; z++)if (Math.sqrt(x * x + z * z) < 6) c.push({ position: [x * 1.2, -2, z * 1.2], color: Math.random() > 0.85 ? "#3B82F6" : (Math.random() > 0.5 ? "#1a1a1a" : "#2a2a2a"), speed: 1 + Math.random(), phase: Math.random() * Math.PI * 2, key: `c${x}${z}` }); return c; }, []);
+            return <div className="absolute inset-0 z-0 opacity-80 pointer-events-none"><Canvas camera={{ position: [8, 8, 8], fov: 35 }}><color attach="background" args={['#F9F8F4']} /><ambientLight intensity={0.5} /><directionalLight position={[5, 10, 5]} intensity={1} /><group rotation={[0, Math.PI / 4, 0]}>{columns.map(c => <DataColumn key={c.key} {...c} />)}</group><Environment preset="city" /></Canvas></div>;
+        };
+
+        // --- UTILS ---
+        const formatNumber = (num) => (num || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 });
+        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+        // --- APP LOGIC WRAPPER ---
+
+        // --- CHART MANAGER LOGIC (Ported) ---
+        const chartManager = {
+            calculateRealized: (indicator, rawData) => {
+                const realized = Array(12).fill(0);
+                const hasData = Array(12).fill(false);
+
+                if (!indicator.selections || indicator.selections.length === 0) {
+                    return { realized, lastRealizedIndex: -1 };
+                }
+
+                indicator.selections.forEach(sel => {
+                    // Filter by KÜMÜLATIF (cumulative data)
+                    const subset = rawData.filter(r =>
+                        r.mudurluk === sel.mudurluk &&
+                        r.hizmet === sel.hizmet &&
+                        r.tur === sel.tur &&
+                        r.tarih && r.tarih.getFullYear() === (indicator.targetYear || 2025) &&
+                        r.veriAraligi && (r.veriAraligi.includes('KÜMÜLATIF') || r.veriAraligi.includes('KÜMÜLATİF'))
+                    );
+
+                    // For cumulative data: Take LATEST value per month per location
+                    const latestByMonthLoc = {};
+
+                    subset.forEach(row => {
+                        const month = row.tarih.getMonth();
+                        const loc = row.lokasyon || 'default';
+                        const key = `${month}-${loc}`;
+
+                        // Keep only the LATEST (most recent date) entry for this month-location
+                        if (!latestByMonthLoc[key] || row.tarih > latestByMonthLoc[key].tarih) {
+                            latestByMonthLoc[key] = { month, deger: row.deger, tarih: row.tarih };
+                        }
+                    });
+
+                    // Sum across locations for each month (but data is already cumulative!)
+                    Object.values(latestByMonthLoc).forEach(entry => {
+                        if (entry.month >= 0 && entry.month < 12) {
+                            realized[entry.month] += entry.deger; // Sum different locations
+                            hasData[entry.month] = true;
+                        }
+                    });
+                });
+
+                const lastRealizedIndex = hasData.lastIndexOf(true);
+                return { realized, lastRealizedIndex };
+            },
+
+            calculateForecast: (realized, lastRealizedIndex, ind, rawData) => {
+                // Bottom-up aggregation: Sum of individual row forecasts
+                const selections = ind.selections || [];
+                if (selections.length === 0) return [...realized];
+
+                let totalForecast = Array(12).fill(0);
+
+                selections.forEach(sel => {
+                    // 1. Get Realized Data for this selection (Row Level)
+                    let compData = Array(12).fill(0);
+                    const subset = rawData.filter(r =>
+                        r.mudurluk === sel.mudurluk && r.hizmet === sel.hizmet && r.tur === sel.tur &&
+                        r.tarih && r.tarih.getFullYear() === (ind.targetYear || 2025) &&
+                        r.veriAraligi && (r.veriAraligi.includes('KÜMÜLATIF') || r.veriAraligi.includes('KÜMÜLATİF'))
+                    );
+
+                    const latest = {};
+                    subset.forEach(r => {
+                        const m = r.tarih.getMonth();
+                        const loc = r.lokasyon || 'default';
+                        const key = `${m}-${loc}`;
+                        if (!latest[key] || r.tarih > latest[key].t) latest[key] = { m, val: r.deger, t: r.tarih };
+                    });
+
+                    Object.values(latest).forEach(v => {
+                        if (v.m >= 0 && v.m < 12) compData[v.m] += v.val;
+                    });
+
+                    let lastReal = -1;
+                    for (let m = 11; m >= 0; m--) {
+                        if (compData[m] > 0) { lastReal = m; break; }
+                    }
+
+                    // 2. Calculate Trend for this selection
+                    let rowForecast = [...compData];
+                    let rowInc = [];
+                    for (let i = 1; i <= lastReal; i++) rowInc.push(compData[i] - compData[i - 1]);
+
+                    let rowAvgInc = 0;
+                    let isDead = false;
+                    if (rowInc.length >= 2) {
+                        if (rowInc.slice(-2).every(x => x === 0)) isDead = true;
+                    }
+
+                    if (!isDead && rowInc.length > 0) {
+                        rowAvgInc = rowInc.reduce((a, b) => a + b, 0) / rowInc.length;
+                    }
+
+                    // 3. Generate Forecast for this selection
+                    const useRowForecast = sel.useForecast !== false;
+
+                    for (let m = lastReal + 1; m < 12; m++) {
+                        const prev = m > 0 ? rowForecast[m - 1] : 0;
+                        if (sel.plans && sel.plans[m] !== null && sel.plans[m] !== undefined && sel.plans[m] !== '') {
+                            rowForecast[m] = prev + parseFloat(sel.plans[m]);
+                        } else if (useRowForecast) {
+                            rowForecast[m] = prev + rowAvgInc;
+                        } else {
+                            rowForecast[m] = prev;
+                        }
+                        // Safety: Ensure strictly non-decreasing for cumulative data
+                        if (rowForecast[m] < prev) rowForecast[m] = prev;
+                    }
+
+                    // 4. Add to total
+                    for (let m = 0; m < 12; m++) totalForecast[m] += rowForecast[m];
+                });
+
+                return totalForecast;
+            }
+        };
+
+        // --- PRESENTATION MANAGER (Simplified for React) ---
+        const presentationManager = {
+            startPresentation: (indicators, rawData) => {
+                const container = document.getElementById('presentation-container');
+                if (!container) return;
+
+                container.style.display = 'block';
+                container.innerHTML = ''; // Clear previous
+
+                // Generate Slides
+                let html = '';
+                indicators.forEach((ind, index) => {
+                    const { realized, lastRealizedIndex } = chartManager.calculateRealized(ind, rawData);
+                    const forecast = chartManager.calculateForecast(realized, lastRealizedIndex, ind, rawData);
+
+                    // Basic Slide Template
+                    html += `<div class="slide ${index === 0 ? 'active' : ''}" id="slide-${index}" style="display:${index === 0 ? 'flex' : 'none'}; flex-direction:column; height:100%; padding:40px; background:white;">
+                        <h1 style="font-size:2rem; font-weight:bold; color:#1e293b; margin-bottom:20px;">${ind.name}</h1>
+                        <div style="flex:1; display:flex; flex-direction:column; gap:20px;">
+                            <div style="height:400px; width:100%;"><canvas id="p-chart-${ind.id}"></canvas></div>
+                            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+                                ${['Q1', 'Q2', 'Q3', 'Q4'].map((q, i) => `
+                                    <div style="background:#f8fafc; padding:15px; border-radius:8px; text-align:center;">
+                                        <div style="font-weight:bold; color:#64748b;">${q}</div>
+                                        <div style="font-size:1.5rem; font-weight:bold; color:#3b82f6;">${formatNumber(forecast[i * 3 + 2])}</div>
+                                        <div style="font-size:0.8rem; color:#94a3b8;">Hedef: ${formatNumber(ind.targets[q.toLowerCase()])}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+                });
+
+                // Controls
+                html += `<div style="position:fixed; bottom:20px; right:20px; display:flex; gap:10px;">
+                    <button onclick="document.getElementById('presentation-container').style.display='none'" style="padding:10px 20px; background:#ef4444; color:white; border-radius:8px;">Kapat</button>
+                    <button onclick="window.print()" style="padding:10px 20px; background:#3b82f6; color:white; border-radius:8px;">Yazdır / PDF</button>
+                </div>`;
+
+                container.innerHTML = html;
+
+                // Render Charts
+                indicators.forEach(ind => {
+                    const ctx = document.getElementById(`p-chart-${ind.id}`);
+                    if (ctx) {
+                        const { realized, lastRealizedIndex } = chartManager.calculateRealized(ind, rawData);
+                        const forecast = chartManager.calculateForecast(realized, lastRealizedIndex, ind, rawData);
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+                                datasets: [
+                                    { label: 'Gerçekleşen', data: realized.map((v, i) => i <= lastRealizedIndex ? v : null), borderColor: '#3B82F6', tension: 0.4 },
+                                    { label: 'Tahmin', data: forecast, borderColor: '#F59E0B', borderDash: [5, 5], tension: 0.4 }
+                                ]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                });
+            }
+        };
+
+        const MonitoringApp = () => {
+            // Global State
+            const [data, setData] = useState({ directorates: [], models: [], goals: [], actions: [] });
+            const [indicators, setIndicators] = useState([]);
+            const [rawData, setRawData] = useState([]);
+
+            // UI State
+            const [activeTab, setActiveTab] = useState('configuration');
+            const [isDataModalOpen, setIsDataModalOpen] = useState(false);
+            const [toast, setToast] = useState(null);
+
+            // Notify Helper
+            const notify = (msg, type = 'info') => {
+                setToast({ msg, type });
+                setTimeout(() => setToast(null), 3000);
+            };
+
+            // --- APP STATE & INIT ---
+            // Removed automatic localStorage loading as per user request.
+            // Data will only be loaded via Excel import or manual entry.
+
+            // LocalStorage Persistence (Saving only, loading removed)
+            useEffect(() => {
+                const toSave = { data, indicators };
+                localStorage.setItem('strateji_data_react', JSON.stringify(toSave));
+            }, [data, indicators]);
+
+            // --- FILE IO HANDLERS (Enhanced) ---
+            const handleRawDataUpload = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                    const buffer = await file.arrayBuffer();
+                    const wb = XLSX.read(buffer, { type: 'array' });
+                    const newRawData = [];
+
+                    wb.SheetNames.forEach(sheetName => {
+                        if (sheetName === 'Sistem_Tanimlari') return;
+                        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+                        rows.forEach(row => {
+                            const mudurluk = row['Müdürlük'] || row['Müdürluk'] || row['Mudurluk'];
+                            const hizmet = row['Hizmet'] || row['Hizmet Başlığı'] || row['Hizmet Basligi'];
+                            const tur = row['Tür'] || row['Tur'];
+
+                            // Flexible Date Parsing
+                            let tarih = null;
+                            const sonTarih = row['Son Tarih'];
+                            if (sonTarih) {
+                                if (typeof sonTarih === 'number') {
+                                    tarih = new Date((sonTarih - 25569) * 86400 * 1000);
+                                } else if (typeof sonTarih === 'string') {
+                                    const parts = sonTarih.split('.');
+                                    if (parts.length === 3) tarih = new Date(parts[2], parts[1] - 1, parts[0]);
+                                    else tarih = new Date(sonTarih);
+                                }
+                            }
+
+                            const deger = parseFloat(row['Değer'] || row['Deger']) || 0;
+
+                            if (mudurluk && hizmet && tur && tarih && !isNaN(tarih)) {
+                                newRawData.push({
+                                    mudurluk, hizmet, tur, deger, tarih,
+                                    lokasyon: row['Lokasyon'] || 'Genel',
+                                    veriAraligi: (row['Veri Aralığı'] || '').toString().toUpperCase()
+                                });
+                            }
+                        });
+                    });
+                    setRawData(newRawData);
+                    notify(`${newRawData.length} satır veri başarıyla yüklendi.`, 'success');
+                } catch (err) {
+                    console.error(err);
+                    notify('Dosya okunamadı: ' + err.message, 'error');
+                }
+            };
+
+            const exportSettings = () => {
+                try {
+                    if (data.directorates.length === 0) {
+                        return notify('Henüz hiç tanım yok! Önce Müdürlük/Model/Amaç/Eylem tanımlarınızı oluşturun.', 'error');
+                    }
+
+                    const wb = XLSX.utils.book_new();
+                    const rows = [];
+
+                    // Iterate through the entire hierarchy
+                    data.directorates.forEach(dir => {
+                        const models = data.models.filter(m => m.directorateId == dir.id);
+
+                        if (models.length === 0) {
+                            rows.push({
+                                DirectorateID: dir.id, DirectorateName: dir.name,
+                                ModelID: '', ModelName: '',
+                                GoalID: '', GoalName: '',
+                                ActionID: '', ActionName: '',
+                                GostergeID: '', GostergeAdi: '', GostergeTipi: '', HedefYili: '',
+                                H_Q1: '', H_Q2: '', H_Q3: '', H_Q4: '', SrcMud: '', SrcHiz: '', SrcTur: '',
+                                TahminAktif: ''
+                            });
+                            return;
+                        }
+
+                        models.forEach(model => {
+                            const goals = data.goals.filter(g => g.modelId == model.id);
+
+                            if (goals.length === 0) {
+                                rows.push({
+                                    DirectorateID: dir.id, DirectorateName: dir.name,
+                                    ModelID: model.id, ModelName: model.name,
+                                    GoalID: '', GoalName: '',
+                                    ActionID: '', ActionName: '',
+                                    GostergeID: '', GostergeAdi: '', GostergeTipi: '', HedefYili: '',
+                                    H_Q1: '', H_Q2: '', H_Q3: '', H_Q4: '', SrcMud: '', SrcHiz: '', SrcTur: '',
+                                    TahminAktif: ''
+                                });
+                                return;
+                            }
+
+                            goals.forEach(goal => {
+                                const actions = data.actions.filter(a => a.goalId == goal.id);
+
+                                if (actions.length === 0) {
+                                    rows.push({
+                                        DirectorateID: dir.id, DirectorateName: dir.name,
+                                        ModelID: model.id, ModelName: model.name,
+                                        GoalID: goal.id, GoalName: goal.name,
+                                        ActionID: '', ActionName: '',
+                                        GostergeID: '', GostergeAdi: '', GostergeTipi: '', HedefYili: '',
+                                        H_Q1: '', H_Q2: '', H_Q3: '', H_Q4: '', SrcMud: '', SrcHiz: '', SrcTur: '',
+                                        TahminAktif: ''
+                                    });
+                                    return;
+                                }
+
+                                actions.forEach(action => {
+                                    const inds = indicators.filter(i => i.actionId == action.id);
+
+                                    if (inds.length === 0) {
+                                        rows.push({
+                                            DirectorateID: dir.id, DirectorateName: dir.name,
+                                            ModelID: model.id, ModelName: model.name,
+                                            GoalID: goal.id, GoalName: goal.name,
+                                            ActionID: action.id, ActionName: action.name,
+                                            GostergeID: '', GostergeAdi: '', GostergeTipi: '', HedefYili: '',
+                                            H_Q1: '', H_Q2: '', H_Q3: '', H_Q4: '', SrcMud: '', SrcHiz: '', SrcTur: '',
+                                            TahminAktif: ''
+                                        });
+                                    } else {
+                                        inds.forEach(ind => {
+                                            if (!ind.selections || ind.selections.length === 0) {
+                                                rows.push({
+                                                    DirectorateID: dir.id, DirectorateName: dir.name,
+                                                    ModelID: model.id, ModelName: model.name,
+                                                    GoalID: goal.id, GoalName: goal.name,
+                                                    ActionID: action.id, ActionName: action.name,
+                                                    GostergeID: ind.id, GostergeAdi: ind.name,
+                                                    GostergeTipi: ind.type, HedefYili: ind.targetYear || 2025,
+                                                    H_Q1: ind.targets.q1, H_Q2: ind.targets.q2,
+                                                    H_Q3: ind.targets.q3, H_Q4: ind.targets.q4,
+                                                    SrcMud: '', SrcHiz: '', SrcTur: '',
+                                                    TahminAktif: ''
+                                                });
+                                            } else {
+                                                ind.selections.forEach(sel => {
+                                                    const row = {
+                                                        DirectorateID: dir.id, DirectorateName: dir.name,
+                                                        ModelID: model.id, ModelName: model.name,
+                                                        GoalID: goal.id, GoalName: goal.name,
+                                                        ActionID: action.id, ActionName: action.name,
+                                                        GostergeID: ind.id, GostergeAdi: ind.name,
+                                                        GostergeTipi: ind.type, HedefYili: ind.targetYear || 2025,
+                                                        H_Q1: ind.targets.q1, H_Q2: ind.targets.q2,
+                                                        H_Q3: ind.targets.q3, H_Q4: ind.targets.q4,
+                                                        SrcMud: sel.mudurluk, SrcHiz: sel.hizmet, SrcTur: sel.tur,
+                                                        TahminAktif: (sel.useForecast !== false) ? 1 : 0
+                                                    };
+                                                    if (sel.plans) {
+                                                        sel.plans.forEach((p, i) => row[`P_${i + 1}`] = p || '');
+                                                    }
+                                                    rows.push(row);
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            });
+                        });
+                    });
+
+                    if (rows.length === 0) {
+                        return notify('Export edilecek veri yok!', 'error');
+                    }
+
+                    // Define fixed header order
+                    const header = [
+                        "DirectorateID", "DirectorateName",
+                        "ModelID", "ModelName",
+                        "GoalID", "GoalName",
+                        "ActionID", "ActionName",
+                        "GostergeID", "GostergeAdi", "GostergeTipi", "HedefYili",
+                        "H_Q1", "H_Q2", "H_Q3", "H_Q4",
+                        "SrcMud", "SrcHiz", "SrcTur", "TahminAktif",
+                        "P_1", "P_2", "P_3", "P_4", "P_5", "P_6", "P_7", "P_8", "P_9", "P_10", "P_11", "P_12"
+                    ];
+
+                    const ws = XLSX.utils.json_to_sheet(rows, { header: header });
+                    XLSX.utils.book_append_sheet(wb, ws, 'Sistem_Tanimlari');
+                    XLSX.writeFile(wb, 'Kurumsal_Strateji_Sistemi.xlsx');
+                    notify('Sistem ayarları başarıyla indirildi!', 'success');
+                } catch (err) {
+                    console.error('Export hatası:', err);
+                    notify('Export başarısız: ' + err.message, 'error');
+                }
+            };
+
+            const importSettings = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                try {
+                    const buffer = await file.arrayBuffer();
+                    const wb = XLSX.read(buffer, { type: 'array' });
+                    const sheet = wb.Sheets['Sistem_Tanimlari'];
+
+                    if (!sheet) {
+                        return notify('Geçersiz dosya formatı (Sistem_Tanimlari sheet bulunamadı)', 'error');
+                    }
+
+                    const rows = XLSX.utils.sheet_to_json(sheet);
+
+                    // Parse data
+                    const dirMap = new Map();
+                    const modMap = new Map();
+                    const goalMap = new Map();
+                    const actMap = new Map();
+                    const newIndicators = [];
+
+                    rows.forEach(r => {
+                        if (r.DirectorateID && !dirMap.has(r.DirectorateID))
+                            dirMap.set(r.DirectorateID, { id: String(r.DirectorateID), name: r.DirectorateName });
+
+                        if (r.ModelID && !modMap.has(r.ModelID))
+                            modMap.set(r.ModelID, { id: String(r.ModelID), directorateId: String(r.DirectorateID), name: r.ModelName });
+
+                        if (r.GoalID && !goalMap.has(r.GoalID))
+                            goalMap.set(r.GoalID, { id: String(r.GoalID), modelId: String(r.ModelID), name: r.GoalName });
+
+                        if (r.ActionID && !actMap.has(r.ActionID))
+                            actMap.set(r.ActionID, { id: String(r.ActionID), goalId: String(r.GoalID), name: r.ActionName });
+
+                        // Find or create indicator
+                        if (r.GostergeID) {
+                            let ind = newIndicators.find(i => i.id == r.GostergeID);
+                            if (!ind) {
+                                ind = {
+                                    id: String(r.GostergeID), modelId: String(r.ModelID), directorateId: String(r.DirectorateID),
+                                    goalId: String(r.GoalID), actionId: String(r.ActionID), name: r.GostergeAdi,
+                                    type: r.GostergeTipi || 'birim', targetYear: r.HedefYili || 2025,
+                                    targets: { q1: r.H_Q1 || 0, q2: r.H_Q2 || 0, q3: r.H_Q3 || 0, q4: r.H_Q4 || 0 },
+                                    selections: []
+                                };
+                                newIndicators.push(ind);
+                            }
+
+                            // Add data source if present
+                            if (r.SrcMud && r.SrcHiz && r.SrcTur) {
+                                const plans = [];
+                                for (let i = 1; i <= 12; i++) {
+                                    plans.push(r[`P_${i}`] || null);
+                                }
+
+                                const useForecastVal = (r.TahminAktif !== undefined) ? r.TahminAktif : 1;
+
+                                ind.selections.push({
+                                    mudurluk: r.SrcMud,
+                                    hizmet: r.SrcHiz,
+                                    tur: r.SrcTur,
+                                    plans: plans,
+                                    useForecast: useForecastVal == 1
+                                });
+                            }
+                        }
+                    });
+
+                    const newData = {
+                        directorates: Array.from(dirMap.values()),
+                        models: Array.from(modMap.values()),
+                        goals: Array.from(goalMap.values()),
+                        actions: Array.from(actMap.values())
+                    };
+
+                    setData(newData);
+                    setIndicators(newIndicators);
+
+                    notify('Sistem ayarları başarıyla yüklendi!', 'success');
+                    setIsDataModalOpen(false);
+
+                } catch (err) {
+                    console.error(err);
+                    notify('Ayarlar yüklenirken hata oluştu: ' + err.message, 'error');
+                }
+            };
+
+            // --- COMPONENTS ---
+
+            const ConfigurationTab = () => {
+                const [formState, setFormState] = useState({
+                    dirName: '',
+                    modelDir: '', modelName: '', modelMode: 'new', modelExisting: '',
+                    goalModel: '', goalName: '', goalMode: 'new', goalExisting: '',
+                    actionGoal: '', actionName: '', actionMode: 'new', actionExisting: ''
+                });
+
+                const addDefinition = (type) => {
+                    const id = generateId();
+                    const newData = { ...data };
+
+                    if (type === 'dir' && formState.dirName) {
+                        newData.directorates.push({ id, name: formState.dirName });
+                        setFormState({ ...formState, dirName: '' });
+                    } else if (type === 'model') {
+                        if (formState.modelMode === 'new' && formState.modelDir && formState.modelName) {
+                            newData.models.push({ id, directorateId: formState.modelDir, name: formState.modelName });
+                            setFormState({ ...formState, modelName: '' });
+                        } else if (formState.modelMode === 'link' && formState.modelDir && formState.modelExisting) {
+                            // Create a new relationship by duplicating the model with new directorate
+                            const existingModel = data.models.find(m => m.id === formState.modelExisting);
+                            if (existingModel) {
+                                newData.models.push({ id, directorateId: formState.modelDir, name: existingModel.name });
+                                setFormState({ ...formState, modelExisting: '' });
+                            } else {
+                                return notify('Model bulunamadı', 'error');
+                            }
+                        } else {
+                            return notify('Lütfen alanları doldurun', 'error');
+                        }
+                    } else if (type === 'goal') {
+                        if (formState.goalMode === 'new' && formState.goalModel && formState.goalName) {
+                            newData.goals.push({ id, modelId: formState.goalModel, name: formState.goalName });
+                            setFormState({ ...formState, goalName: '' });
+                        } else if (formState.goalMode === 'link' && formState.goalModel && formState.goalExisting) {
+                            const existingGoal = data.goals.find(g => g.id === formState.goalExisting);
+                            if (existingGoal) {
+                                newData.goals.push({ id, modelId: formState.goalModel, name: existingGoal.name });
+                                setFormState({ ...formState, goalExisting: '' });
+                            } else {
+                                return notify('Amaç bulunamadı', 'error');
+                            }
+                        } else {
+                            return notify('Lütfen alanları doldurun', 'error');
+                        }
+                    } else if (type === 'action') {
+                        if (formState.actionMode === 'new' && formState.actionGoal && formState.actionName) {
+                            newData.actions.push({ id, goalId: formState.actionGoal, name: formState.actionName });
+                            setFormState({ ...formState, actionName: '' });
+                        } else if (formState.actionMode === 'link' && formState.actionGoal && formState.actionExisting) {
+                            const existingAction = data.actions.find(a => a.id === formState.actionExisting);
+                            if (existingAction) {
+                                newData.actions.push({ id, goalId: formState.actionGoal, name: existingAction.name });
+                                setFormState({ ...formState, actionExisting: '' });
+                            } else {
+                                return notify('Eylem bulunamadı', 'error');
+                            }
+                        } else {
+                            return notify('Lütfen alanları doldurun', 'error');
+                        }
+                    } else {
+                        return notify('Lütfen alanları doldurun', 'error');
+                    }
+                    setData(newData);
+                    notify('Kayıt eklendi', 'success');
+                };
+
+                return (
+                    <div className="flex flex-col md:flex-row gap-6 h-full p-6">
+                        <div className="w-full md:w-1/3 bg-white/60 rounded-xl border border-stone-200 p-4 overflow-y-auto custom-scroll shadow-sm">
+                            <h3 className="font-serif font-bold text-sm border-b border-stone-200 pb-2 text-stone-700 mb-4 sticky top-0 bg-white/0 backdrop-blur-sm">Kurum Yapısı</h3>
+                            <div className="bg-white/50 p-4 rounded-xl border border-stone-200 h-[600px] overflow-y-auto custom-scroll shadow-inner">
+                                {data.directorates.length === 0 ? (
+                                    <div className="text-center text-stone-400 mt-10 italic">Henüz veri girişi yapılmamış.</div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {data.directorates.map(d => (
+                                            <div key={d.id} className="relative group">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="font-bold text-stone-800 flex items-center gap-2">
+                                                        <Database size={16} className="text-blue-600" /> {d.name}
+                                                    </div>
+                                                    <button onClick={() => {
+                                                        if (confirm('Bu müdürlüğü ve altındaki tüm kayıtları silmek istediğinize emin misiniz?')) {
+                                                            const newData = { ...data };
+                                                            newData.directorates = newData.directorates.filter(x => x.id !== d.id);
+                                                            // Cascade delete logic would go here ideally
+                                                            setData(newData);
+                                                        }
+                                                    }} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>
+                                                </div>
+                                                <div className="pl-4 mt-2 space-y-3 border-l-2 border-stone-200 ml-2">
+                                                    {data.models.filter(m => m.directorateId === d.id).map(m => (
+                                                        <div key={m.id} className="relative group/model">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="font-semibold text-stone-700 flex items-center gap-2 text-sm">
+                                                                    <Layers size={14} className="text-amber-600" /> {m.name}
+                                                                </div>
+                                                                <button onClick={() => {
+                                                                    if (confirm('Bu modeli silmek istediğinize emin misiniz?')) {
+                                                                        const newData = { ...data };
+                                                                        newData.models = newData.models.filter(x => x.id !== m.id);
+                                                                        setData(newData);
+                                                                    }
+                                                                }} className="text-red-400 hover:text-red-600 opacity-0 group-hover/model:opacity-100 transition-opacity"><Trash2 size={12} /></button>
+                                                            </div>
+                                                            <div className="pl-4 mt-1 space-y-2 border-l-2 border-stone-100 ml-1">
+                                                                {data.goals.filter(g => g.modelId === m.id).map(g => (
+                                                                    <div key={g.id} className="relative group/goal">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="text-stone-600 flex items-center gap-2 text-xs font-medium">
+                                                                                <Key size={12} className="text-yellow-500" /> {g.name}
+                                                                            </div>
+                                                                            <button onClick={() => {
+                                                                                if (confirm('Bu amacı silmek istediğinize emin misiniz?')) {
+                                                                                    const newData = { ...data };
+                                                                                    newData.goals = newData.goals.filter(x => x.id !== g.id);
+                                                                                    setData(newData);
+                                                                                }
+                                                                            }} className="text-red-400 hover:text-red-600 opacity-0 group-hover/goal:opacity-100 transition-opacity"><Trash2 size={10} /></button>
+                                                                        </div>
+                                                                        <div className="pl-4 mt-1 space-y-1 border-l-2 border-stone-50 ml-1">
+                                                                            {data.actions.filter(a => a.goalId === g.id).map(a => (
+                                                                                <div key={a.id} className="text-stone-500 flex items-center justify-between gap-2 text-[10px] group/action">
+                                                                                    <span className="flex items-center gap-1"><Target size={10} className="text-rose-500" /> {a.name}</span>
+                                                                                    <button onClick={() => {
+                                                                                        if (confirm('Bu eylemi silmek istediğinize emin misiniz?')) {
+                                                                                            const newData = { ...data };
+                                                                                            newData.actions = newData.actions.filter(x => x.id !== a.id);
+                                                                                            setData(newData);
+                                                                                        }
+                                                                                    }} className="text-red-400 hover:text-red-600 opacity-0 group-hover/action:opacity-100 transition-opacity"><Trash2 size={10} /></button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="w-full md:w-2/3 bg-white/80 rounded-xl border border-stone-200 p-8 overflow-y-auto custom-scroll shadow-sm">
+                            <h2 className="font-serif text-3xl mb-8 text-stone-900">Hiyerarşi Tanımla</h2>
+                            <div className="space-y-8 max-w-2xl">
+                                <div className="p-4 bg-white rounded-lg border border-stone-100 shadow-sm">
+                                    <label className="block text-sm font-bold text-stone-700 mb-2">🏛️ Sorumlu Müdürlük</label>
+                                    <div className="flex gap-2">
+                                        <input className="custom-input" placeholder="Örn: Sosyal Hizmetler" value={formState.dirName} onChange={e => setFormState({ ...formState, dirName: e.target.value })} />
+                                        <button className="custom-btn btn-primary" onClick={() => addDefinition('dir')}>Ekle</button>
+                                    </div>
+                                </div>
+
+                                {/* Model Section - with create/link toggle */}
+                                <div className="p-4 bg-white rounded-lg border border-stone-100 shadow-sm">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="block text-sm font-bold text-stone-700">📦 İzleme Modeli</label>
+                                        <div className="flex gap-1 bg-stone-100 p-1 rounded-lg">
+                                            <button onClick={() => setFormState({ ...formState, modelMode: 'new' })} className={`px-3 py-1 text-xs rounded transition-all ${formState.modelMode === 'new' ? 'bg-white shadow-sm font-bold' : 'text-stone-500'}`}>Yeni Oluştur</button>
+                                            <button onClick={() => setFormState({ ...formState, modelMode: 'link' })} className={`px-3 py-1 text-xs rounded transition-all ${formState.modelMode === 'link' ? 'bg-white shadow-sm font-bold' : 'text-stone-500'}`}>Var Olanı Bağla</button>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <select className="custom-input w-1/3" value={formState.modelDir} onChange={e => setFormState({ ...formState, modelDir: e.target.value })}>
+                                            <option value="">Müdürlük Seç...</option>
+                                            {data.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                        </select>
+                                        {formState.modelMode === 'new' ? (
+                                            <input className="custom-input" placeholder="Model Adı" value={formState.modelName} onChange={e => setFormState({ ...formState, modelName: e.target.value })} />
+                                        ) : (
+                                            <select className="custom-input" value={formState.modelExisting} onChange={e => setFormState({ ...formState, modelExisting: e.target.value })}>
+                                                <option value="">Mevcut Model Seç...</option>
+                                                {data.models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                            </select>
+                                        )}
+                                        <button className="custom-btn btn-primary" onClick={() => addDefinition('model')}>{formState.modelMode === 'new' ? 'Oluştur' : 'Bağla'}</button>
+                                    </div>
+                                </div>
+
+                                {/* Goal Section - with create/link toggle */}
+                                <div className="p-4 bg-white rounded-lg border border-stone-100 shadow-sm">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="block text-sm font-bold text-stone-700">🔑 Stratejik Amaç</label>
+                                        <div className="flex gap-1 bg-stone-100 p-1 rounded-lg">
+                                            <button onClick={() => setFormState({ ...formState, goalMode: 'new' })} className={`px-3 py-1 text-xs rounded transition-all ${formState.goalMode === 'new' ? 'bg-white shadow-sm font-bold' : 'text-stone-500'}`}>Yeni Oluştur</button>
+                                            <button onClick={() => setFormState({ ...formState, goalMode: 'link' })} className={`px-3 py-1 text-xs rounded transition-all ${formState.goalMode === 'link' ? 'bg-white shadow-sm font-bold' : 'text-stone-500'}`}>Var Olanı Bağla</button>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <select className="custom-input w-1/3" value={formState.goalModel} onChange={e => setFormState({ ...formState, goalModel: e.target.value })}>
+                                            <option value="">Model Seç...</option>
+                                            {data.models.filter(m => !formState.modelDir || m.directorateId === formState.modelDir).map(m => {
+                                                const dir = data.directorates.find(d => d.id === m.directorateId);
+                                                return <option key={m.id} value={m.id}>{dir?.name} → {m.name}</option>;
+                                            })}
+                                        </select>
+                                        {formState.goalMode === 'new' ? (
+                                            <input className="custom-input" placeholder="Amaç Tanımı" value={formState.goalName} onChange={e => setFormState({ ...formState, goalName: e.target.value })} />
+                                        ) : (
+                                            <select className="custom-input" value={formState.goalExisting} onChange={e => setFormState({ ...formState, goalExisting: e.target.value })}>
+                                                <option value="">Mevcut Amaç Seç...</option>
+                                                {data.goals.map(g => {
+                                                    const model = data.models.find(m => m.id === g.modelId);
+                                                    const dir = data.directorates.find(d => d.id === model?.directorateId);
+                                                    return <option key={g.id} value={g.id}>{dir?.name} → {model?.name} → {g.name}</option>;
+                                                })}
+                                            </select>
+                                        )}
+                                        <button className="custom-btn btn-primary" onClick={() => addDefinition('goal')}>{formState.goalMode === 'new' ? 'Oluştur' : 'Bağla'}</button>
+                                    </div>
+                                </div>
+
+                                {/* Action Section - with create/link toggle */}
+                                <div className="p-4 bg-white rounded-lg border border-stone-100 shadow-sm">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="block text-sm font-bold text-stone-700">🎯 Eylem / Hedef</label>
+                                        <div className="flex gap-1 bg-stone-100 p-1 rounded-lg">
+                                            <button onClick={() => setFormState({ ...formState, actionMode: 'new' })} className={`px-3 py-1 text-xs rounded transition-all ${formState.actionMode === 'new' ? 'bg-white shadow-sm font-bold' : 'text-stone-500'}`}>Yeni Oluştur</button>
+                                            <button onClick={() => setFormState({ ...formState, actionMode: 'link' })} className={`px-3 py-1 text-xs rounded transition-all ${formState.actionMode === 'link' ? 'bg-white shadow-sm font-bold' : 'text-stone-500'}`}>Var Olanı Bağla</button>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <select className="custom-input w-1/3" value={formState.actionGoal} onChange={e => setFormState({ ...formState, actionGoal: e.target.value })}>
+                                            <option value="">Amaç Seç...</option>
+                                            {data.goals.map(g => {
+                                                const model = data.models.find(m => m.id === g.modelId);
+                                                const dir = data.directorates.find(d => d.id === model?.directorateId);
+                                                return <option key={g.id} value={g.id}>{dir?.name} → {model?.name} → {g.name}</option>;
+                                            })}
+                                        </select>
+                                        {formState.actionMode === 'new' ? (
+                                            <input className="custom-input" placeholder="Eylem Tanımı" value={formState.actionName} onChange={e => setFormState({ ...formState, actionName: e.target.value })} />
+                                        ) : (
+                                            <select className="custom-input" value={formState.actionExisting} onChange={e => setFormState({ ...formState, actionExisting: e.target.value })}>
+                                                <option value="">Mevcut Eylem Seç...</option>
+                                                {data.actions.map(a => {
+                                                    const goal = data.goals.find(g => g.id === a.goalId);
+                                                    const model = data.models.find(m => m.id === goal?.modelId);
+                                                    const dir = data.directorates.find(d => d.id === model?.directorateId);
+                                                    return <option key={a.id} value={a.id}>{dir?.name} → {model?.name} → {goal?.name} → {a.name}</option>;
+                                                })}
+                                            </select>
+                                        )}
+                                        <button className="custom-btn btn-primary" onClick={() => addDefinition('action')}>{formState.actionMode === 'new' ? 'Oluştur' : 'Bağla'}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const DataEntryTab = () => {
+                const [selectedInd, setSelectedInd] = useState(null);
+                const [form, setForm] = useState({ name: '', dirId: '', modelId: '', goalId: '', actionId: '', type: 'birim', targetYear: 2025, q1: 0, q2: 0, q3: 0, q4: 0, selections: [] });
+                const [isSourceModalOpen, setIsSourceModalOpen] = useState(false);
+
+                // Derived Tree Data from rawData
+                const treeData = useMemo(() => {
+                    const tree = {};
+                    rawData.forEach(row => {
+                        if (!tree[row.mudurluk]) tree[row.mudurluk] = {};
+                        if (!tree[row.mudurluk][row.hizmet]) tree[row.mudurluk][row.hizmet] = new Set();
+                        tree[row.mudurluk][row.hizmet].add(row.tur);
+                    });
+                    return tree;
+                }, [rawData]);
+
+                const toggleSelection = (mud, hiz, tur) => {
+                    const exists = form.selections.find(s => s.mudurluk === mud && s.hizmet === hiz && s.tur === tur);
+                    let newSelections;
+                    if (exists) {
+                        newSelections = form.selections.filter(s => s !== exists);
+                    } else {
+                        newSelections = [...form.selections, { mudurluk: mud, hizmet: hiz, tur: tur, plans: Array(12).fill(null), useForecast: true }];
+                    }
+                    setForm({ ...form, selections: newSelections });
+                };
+
+                const updatePlan = (selIndex, monthIndex, val) => {
+                    const newSelections = [...form.selections];
+                    newSelections[selIndex].plans[monthIndex] = val === '' ? null : parseFloat(val); // Allow empty string for clearing, convert to null or number
+                    setForm({ ...form, selections: newSelections });
+                };
+
+                const toggleForecast = (selIndex) => {
+                    const newSelections = [...form.selections];
+                    newSelections[selIndex].useForecast = !newSelections[selIndex].useForecast;
+                    setForm({ ...form, selections: newSelections });
+                };
+
+                const saveIndicator = () => {
+                    if (!form.name || !form.actionId) return notify('Eksik bilgi.', 'error');
+                    const newInd = {
+                        id: selectedInd || generateId(),
+                        name: form.name,
+                        directorateId: form.dirId,  // Map dirId to directorateId
+                        modelId: form.modelId,
+                        goalId: form.goalId,
+                        actionId: form.actionId,
+                        type: form.type,
+                        targetYear: form.targetYear || 2025,
+                        selections: form.selections,
+                        targets: { q1: parseFloat(form.q1), q2: parseFloat(form.q2), q3: parseFloat(form.q3), q4: parseFloat(form.q4) }
+                    };
+
+                    if (selectedInd) {
+                        setIndicators(indicators.map(i => i.id === selectedInd ? newInd : i));
+                    } else {
+                        setIndicators([...indicators, newInd]);
+                    }
+                    notify('Gösterge kaydedildi.', 'success');
+                    setSelectedInd(null);
+                    setForm({ name: '', dirId: '', modelId: '', goalId: '', actionId: '', type: 'birim', targetYear: 2025, q1: 0, q2: 0, q3: 0, q4: 0, selections: [] });
+                };
+
+                const loadInd = (ind) => {
+                    setSelectedInd(ind.id);
+                    setForm({
+                        name: ind.name, dirId: ind.directorateId, modelId: ind.modelId, goalId: ind.goalId, actionId: ind.actionId,
+                        type: ind.type, targetYear: ind.targetYear || 2025, q1: ind.targets.q1, q2: ind.targets.q2, q3: ind.targets.q3, q4: ind.targets.q4,
+                        selections: ind.selections || []
+                    });
+                };
+
+                return (
+                    <div className="flex flex-col md:flex-row gap-6 h-full p-6">
+                        <div className="w-full md:w-1/4 bg-white/60 rounded-xl border border-stone-200 flex flex-col shadow-sm">
+                            <div className="p-4 border-b border-stone-200 flex justify-between bg-stone-50/50 rounded-t-xl backdrop-blur-sm">
+                                <h3 className="font-serif font-bold text-stone-700">Göstergeler</h3>
+                                <button className="custom-btn btn-secondary text-xs py-1 px-2" onClick={() => { setSelectedInd(null); setForm({ name: '', dirId: '', modelId: '', goalId: '', actionId: '', type: 'birim', targetYear: 2025, q1: 0, q2: 0, q3: 0, q4: 0, selections: [] }); }}>+ Yeni</button>
+                            </div>
+                            <div className="p-2 space-y-2 overflow-y-auto custom-scroll flex-1">
+                                {indicators.map(i => (
+                                    <div key={i.id} className={`p-3 rounded border transition-all group relative ${selectedInd === i.id ? 'bg-blue-50 border-nobel-gold ring-1 ring-nobel-gold' : 'bg-white border-stone-200 hover:border-nobel-gold'}`}>
+                                        <div onClick={() => loadInd(i)} className="cursor-pointer">
+                                            <div className="text-xs text-stone-500 font-mono mb-1">Kod: {String(i.id).substring(0, 6)}...</div>
+                                            <div className="font-bold text-sm text-stone-800 line-clamp-2">{i.name}</div>
+                                        </div>
+                                        <button onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm('Bu göstergeyi silmek istediğinize emin misiniz?')) {
+                                                setIndicators(indicators.filter(x => x.id !== i.id));
+                                                if (selectedInd === i.id) {
+                                                    setSelectedInd(null);
+                                                    setForm({ name: '', dirId: '', modelId: '', goalId: '', actionId: '', type: 'birim', q1: 0, q2: 0, q3: 0, q4: 0, selections: [] });
+                                                }
+                                            }
+                                        }} className="absolute top-2 right-2 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 rounded p-1">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                                {indicators.length === 0 && <div className="text-center text-sm text-stone-400 mt-4">Kayıt yok.</div>}
+                            </div>
+                        </div>
+
+                        <div className="w-full md:w-3/4 bg-white/80 rounded-xl border border-stone-200 p-6 overflow-y-auto custom-scroll shadow-sm">
+                            <h2 className="font-serif text-3xl mb-6 text-stone-900">{selectedInd ? 'Gösterge Düzenle' : 'Yeni Gösterge'}</h2>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div><label className="text-xs font-bold text-stone-500 mb-1 block">Müdürlük</label><select className="custom-input" value={form.dirId} onChange={e => setForm({ ...form, dirId: e.target.value })}> <option value="">Seçiniz...</option>{data.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)} </select></div>
+                                <div><label className="text-xs font-bold text-stone-500 mb-1 block">Model</label><select className="custom-input" value={form.modelId} onChange={e => setForm({ ...form, modelId: e.target.value })}> <option value="">Seçiniz...</option>{data.models.filter(m => m.directorateId == form.dirId).map(m => <option key={m.id} value={m.id}>{m.name}</option>)} </select></div>
+                                <div><label className="text-xs font-bold text-stone-500 mb-1 block">Amaç</label><select className="custom-input" value={form.goalId} onChange={e => setForm({ ...form, goalId: e.target.value })}> <option value="">Seçiniz...</option>{data.goals.filter(g => g.modelId == form.modelId).map(g => <option key={g.id} value={g.id}>{g.name}</option>)} </select></div>
+                                <div><label className="text-xs font-bold text-stone-500 mb-1 block">Eylem</label><select className="custom-input" value={form.actionId} onChange={e => setForm({ ...form, actionId: e.target.value })}> <option value="">Seçiniz...</option>{data.actions.filter(a => a.goalId == form.goalId).map(a => <option key={a.id} value={a.id}>{a.name}</option>)} </select></div>
+                            </div>
+                            <div className="mb-4">
+                                <label className="text-xs font-bold text-stone-500 mb-1 block">Gösterge Adı</label>
+                                <input className="custom-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Örn: Nakdi Yardım Alan Kişi Sayısı" />
+                            </div>
+                            <div className="mb-6 p-4 bg-stone-50 rounded-lg border border-stone-200">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className="font-bold text-sm text-stone-700">Dönemsel Hedefler (Kümülatif)</h4>
+                                    <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-stone-200 shadow-sm">
+                                        <label className="text-xs font-bold text-stone-500">Hedef Yılı:</label>
+                                        <input
+                                            type="number"
+                                            className="w-16 text-center font-bold text-sm text-stone-700 outline-none bg-transparent"
+                                            value={form.targetYear}
+                                            onChange={e => setForm({ ...form, targetYear: e.target.value })}
+                                            placeholder="2025"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {['q1', 'q2', 'q3', 'q4'].map((q, i) => (
+                                        <div key={q}><label className="text-[10px] block text-center mb-1 font-bold text-stone-400">Q{i + 1}</label><input type="number" className="custom-input text-center font-bold" value={form[q]} onChange={e => setForm({ ...form, [q]: e.target.value })} /></div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Data Sources Section */}
+                            <div className="mb-6">
+                                <h4 className="font-bold text-sm mb-3 text-stone-700 flex items-center gap-2"><Database size={14} /> Veri Kaynakları (Opsiyonel)</h4>
+                                <button onClick={() => setIsSourceModalOpen(true)} className="w-full py-3 border border-dashed border-stone-300 rounded-lg text-stone-500 hover:bg-stone-50 hover:border-nobel-gold hover:text-nobel-gold transition-all text-sm font-medium">
+                                    {form.selections.length > 0 ? `${form.selections.length} veri kaynağı seçildi` : '+ Veri Kaynaklarını Göster / Ekle'}
+                                </button>
+
+                                {/* Selected Sources & Planning */}
+                                {form.selections.length > 0 && (
+                                    <div className="mt-4 space-y-4">
+                                        {form.selections.map((sel, idx) => (
+                                            <div key={idx} className="bg-white border border-stone-200 rounded-lg p-4 shadow-sm">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <div className="text-xs font-bold text-stone-700">{sel.mudurluk} &gt; {sel.hizmet} &gt; {sel.tur}</div>
+                                                    <div className="flex items-center gap-2">
+                                                        <label className="flex items-center gap-1 text-xs cursor-pointer bg-blue-50 px-2 py-1 rounded text-blue-700"><input type="checkbox" checked={sel.useForecast} onChange={() => toggleForecast(idx)} /> Otomatik Tahmin</label>
+                                                        <button onClick={() => toggleSelection(sel.mudurluk, sel.hizmet, sel.tur)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={14} /></button>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-12 gap-1">
+                                                    {['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'].map((m, mi) => (
+                                                        <div key={m}>
+                                                            <label className="text-[9px] block text-center text-stone-400">{m}</label>
+                                                            <input type="number" className="w-full text-center border border-stone-200 rounded text-xs py-1 focus:border-blue-500 outline-none" value={sel.plans[mi] || ''} onChange={(e) => updatePlan(idx, mi, e.target.value)} />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-end">
+                                <button className="custom-btn btn-accent px-8" onClick={saveIndicator}><Save size={18} /> Kaydet</button>
+                            </div>
+                        </div>
+
+                        {/* Data Source Modal */}
+                        <AnimatePresence>
+                            {isSourceModalOpen && (
+                                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4">
+                                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-xl shadow-2xl w-full max-w-3xl h-[80vh] flex flex-col border border-stone-200">
+                                        <div className="p-4 border-b flex justify-between items-center bg-stone-50">
+                                            <h2 className="text-lg font-serif font-bold text-stone-800">Veri Kaynağı Seçimi</h2>
+                                            <button onClick={() => setIsSourceModalOpen(false)}><X size={20} className="text-stone-500 hover:text-stone-800" /></button>
+                                        </div>
+                                        <div className="p-4 flex-1 overflow-y-auto custom-scroll">
+                                            {Object.keys(treeData).length === 0 ? (
+                                                <div className="text-center text-stone-400 mt-10">
+                                                    <Database size={48} className="mx-auto mb-4 opacity-20" />
+                                                    <p>Henüz ham veri yüklenmemiş.</p>
+                                                    <button onClick={() => { setIsSourceModalOpen(false); setIsDataModalOpen(true); }} className="text-blue-600 hover:underline mt-2 text-sm">Veri Yönetimi'nden yükle</button>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {Object.keys(treeData).sort().map(mud => (
+                                                        <div key={mud} className="border border-stone-100 rounded-lg overflow-hidden">
+                                                            <div className="bg-stone-50 p-2 font-bold text-sm text-stone-700">{mud}</div>
+                                                            <div className="p-2 pl-4 space-y-2">
+                                                                {Object.keys(treeData[mud]).sort().map(hiz => (
+                                                                    <div key={hiz}>
+                                                                        <div className="text-xs font-semibold text-stone-600 mb-1">{hiz}</div>
+                                                                        <div className="pl-2 space-y-1">
+                                                                            {Array.from(treeData[mud][hiz]).sort().map(tur => {
+                                                                                const isSelected = form.selections.some(s => s.mudurluk === mud && s.hizmet === hiz && s.tur === tur);
+                                                                                return (
+                                                                                    <label key={tur} className={`flex items-center gap-2 text-xs p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-stone-50 text-stone-500'}`}>
+                                                                                        <input type="checkbox" checked={isSelected} onChange={() => toggleSelection(mud, hiz, tur)} className="rounded border-stone-300 text-blue-600 focus:ring-blue-500" />
+                                                                                        {tur}
+                                                                                    </label>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-4 border-t bg-stone-50 text-right">
+                                            <button onClick={() => setIsSourceModalOpen(false)} className="custom-btn btn-primary text-sm">Tamam</button>
+                                        </div>
+                                    </motion.div>
+                                </div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                );
+            };
+
+            // ChartJS Component with proper rendering
+            const ChartComponent = ({ reportData, selectedInd, chartId }) => {
+                const canvasRef = useRef(null);
+                const chartRef = useRef(null);
+
+                useEffect(() => {
+                    if (!reportData || !selectedInd || !canvasRef.current) return;
+
+                    const { realized, forecast, optimistic, pessimistic, lastRealizedIndex } = reportData;
+
+                    const chartRealized = realized.map((v, i) => i <= lastRealizedIndex ? v : null);
+                    const chartForecast = forecast.map((v, i) => i < lastRealizedIndex ? null : i === lastRealizedIndex ? realized[i] : v);
+                    const chartOptimistic = optimistic.map((v, i) => i < lastRealizedIndex ? null : i === lastRealizedIndex ? realized[i] : v);
+                    const chartPessimistic = pessimistic.map((v, i) => i < lastRealizedIndex ? null : i === lastRealizedIndex ? realized[i] : v);
+
+                    // Destroy existing
+                    if (chartRef.current) {
+                        chartRef.current.destroy();
+                    }
+
+                    const ctx = canvasRef.current.getContext('2d');
+                    chartRef.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+                            datasets: [
+                                { label: 'Gerçekleşen', data: chartRealized, borderColor: '#2563eb', backgroundColor: '#2563eb', borderWidth: 3, tension: 0.3, fill: false, pointRadius: 4 },
+                                { label: 'Tahmin', data: chartForecast, borderColor: '#f97316', backgroundColor: '#f97316', borderWidth: 3, borderDash: [8, 6], tension: 0.3, fill: false },
+                                { label: 'İyimser (1.382x)', data: chartOptimistic, borderColor: '#22c55e', borderWidth: 2, borderDash: [3, 3], tension: 0.3, fill: false },
+                                { label: 'Kötümser (0.618x)', data: chartPessimistic, borderColor: '#ef4444', borderWidth: 2, borderDash: [3, 3], tension: 0.3, fill: false },
+                                { label: 'Hedef', data: [0, null, selectedInd.targets.q1, null, null, selectedInd.targets.q2, null, null, selectedInd.targets.q3, null, null, selectedInd.targets.q4], borderColor: 'rgba(59, 130, 246, 0.6)', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3, spanGaps: true }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: false,
+                            interaction: { mode: 'index', intersect: false },
+                            plugins: {
+                                legend: { position: 'bottom', labels: { boxWidth: 20, font: { size: 10 }, padding: 8 } },
+                                tooltip: { enabled: true, callbacks: { label: (c) => c.dataset.label + ': ' + formatNumber(c.raw) } }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { font: { size: 10 } } },
+                                x: { ticks: { font: { size: 10 } } }
+                            }
+                        }
+                    });
+
+                    return () => {
+                        if (chartRef.current) {
+                            chartRef.current.destroy();
+                            chartRef.current = null;
+                        }
+                    };
+                }, [reportData, selectedInd]);
+
+                return <canvas ref={canvasRef} id={chartId} style={{ width: '100%', height: '100%' }}></canvas>;
+            };
+
+            // SVG KPI Cards Component
+            const SVGKPICards = ({ reportData, selectedInd }) => {
+                if (!reportData || !selectedInd) return null;
+                const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+                const targets = [selectedInd.targets.q1, selectedInd.targets.q2, selectedInd.targets.q3, selectedInd.targets.q4];
+
+                // Define card dimensions
+                const cardWidth = 205;
+                const height = 75;
+
+                // Prepare data for the new structure
+                const targetData = [selectedInd.targets.q1, selectedInd.targets.q2, selectedInd.targets.q3, selectedInd.targets.q4];
+                const realizedData = quarters.map((_, i) => reportData.forecast[i * 3 + 2]);
+
+                return (
+                    <svg width="100%" height="80" viewBox="0 0 850 80" style={{ display: 'block' }}>
+                        {quarters.map((q, i) => {
+                            const t = targetData[i];
+                            const r = realizedData[i];
+                            const p = (t > 0 ? (r / t) * 100 : 0);
+
+                            // Progress Bar Color
+                            let barColor = '#ef4444'; // Red
+                            if (p >= 95) barColor = '#10b981'; // Green
+                            else if (p >= 60) barColor = '#f59e0b'; // Orange
+
+                            const x = i * 210;
+
+                            return (
+                                <g key={i} transform={`translate(${x}, 0)`}>
+                                    {/* Card Background - White with thin border */}
+                                    <rect x="0" y="0" width={cardWidth} height={height} rx="4" fill="white" stroke="#e5e7eb" strokeWidth="1" />
+
+                                    {/* Header: Q{i+1} */}
+                                    <text x="16" y="24" fontSize="14" fontWeight="700" fill="#4b5563" style={{ fontFamily: 'serif' }}>Q{i + 1}</text>
+
+                                    {/* Target Value - No pill, just text */}
+                                    <text x={cardWidth - 16} y="24" fontSize="11" fontWeight="400" fill="#9ca3af" textAnchor="end">
+                                        H:{formatNumber(t)}
+                                    </text>
+
+                                    {/* Realized Value */}
+                                    <text x="16" y="52" fontSize="24" fontWeight="600" fill="#111827" style={{ fontFamily: 'serif' }}>
+                                        {formatNumber(r)}
+                                    </text>
+
+                                    {/* Progress Bar Background */}
+                                    <rect x="16" y="65" width={cardWidth - 32} height="4" rx="2" fill="#f3f4f6" />
+
+                                    {/* Progress Bar Fill */}
+                                    <rect x="16" y="65" width={Math.min((cardWidth - 32) * (p / 100), cardWidth - 32)} height="4" rx="2" fill={barColor} />
+                                </g>
+                            );
+                        })}
+                    </svg>
+                );
+            };
+
+            // SVG Monthly Table Component - TRANSPOSED (Months as Columns)
+            const SVGMonthlyTable = ({ reportData }) => {
+                if (!reportData || !reportData.selectionData) return null;
+
+                const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+                // COMPACT horizontal dimensions for A4 (Total width ~720px available)
+                const numMonths = 12;
+                const serviceNameColWidth = 140; // Fixed width for service name
+                const monthColWidth = 48; // Reduced to fit all months
+                const width = serviceNameColWidth + (numMonths * monthColWidth); // 140 + 576 = 716px
+
+                // DYNAMIC vertical dimensions
+                const numServices = reportData.selectionData.length;
+                const headerHeight = 32;
+                const rowHeight = 30;
+                const height = headerHeight + (numServices * rowHeight);
+
+                return (
+                    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', margin: '0 auto' }}>
+                        {/* Header Background */}
+                        <rect x="0" y="0" width={width} height={headerHeight} fill="#f8fafc" />
+                        <line x1="0" y1={headerHeight} x2={width} y2={headerHeight} stroke="#e2e8f0" strokeWidth="1" />
+
+                        {/* Header - Service Name Column */}
+                        <text x="10" y="20" fontSize="10" fontWeight="bold" fill="#64748b" textAnchor="start">Hizmet</text>
+
+                        {/* Header - Month Columns */}
+                        {months.map((month, m) => {
+                            const x = serviceNameColWidth + (m * monthColWidth) + monthColWidth / 2;
+                            return (
+                                <text key={m} x={x} y="20" fontSize="10" fontWeight="bold" fill="#64748b" textAnchor="middle">{month}</text>
+                            );
+                        })}
+
+                        {/* Service Rows */}
+                        {reportData.selectionData.map((sel, sIdx) => {
+                            const y = headerHeight + (sIdx * rowHeight);
+                            const isEven = sIdx % 2 === 0;
+
+                            return (
+                                <g key={sIdx}>
+                                    {/* Row Background */}
+                                    <rect x="0" y={y} width={width} height={rowHeight} fill={isEven ? '#ffffff' : '#f8fafc'} />
+
+                                    {/* Service Name */}
+                                    <text x="10" y={y + 19} fontSize="10" fontWeight="600" fill="#334155" textAnchor="start">
+                                        {sel.hizmet.length > 22 ? sel.hizmet.substring(0, 22) + '...' : sel.hizmet}
+                                    </text>
+                                    <text x="10" y={y + 28} fontSize="8" fill="#94a3b8" textAnchor="start">
+                                        {sel.tur}
+                                    </text>
+
+                                    {/* Monthly Values */}
+                                    {months.map((_, m) => {
+                                        const isReal = sel.realized[m] > 0;
+                                        const isPlanned = !isReal && sel.plans && sel.plans[m];
+                                        const isForecast = !isReal && !isPlanned && sel.useRowForecast;
+
+                                        let val = sel.realized[m];
+                                        if (!isReal) val = sel.forecast[m];
+
+                                        let color = "#334155"; // Default (Realized)
+                                        let fontStyle = "normal";
+                                        let fontWeight = "400";
+
+                                        if (isReal) {
+                                            fontWeight = "600";
+                                        } else if (isPlanned) {
+                                            color = "#16a34a"; // Green
+                                            fontStyle = "italic";
+                                            fontWeight = "600";
+                                        } else if (isForecast) {
+                                            color = "#ea580c"; // Orange
+                                            fontStyle = "italic";
+                                        } else {
+                                            color = "#94a3b8"; // Gray/Empty
+                                            fontStyle = "italic";
+                                        }
+
+                                        const x = serviceNameColWidth + (m * monthColWidth) + monthColWidth / 2;
+
+                                        return (
+                                            <text key={m} x={x} y={y + 20} fontSize="10"
+                                                fontWeight={fontWeight}
+                                                fill={color}
+                                                fontStyle={fontStyle}
+                                                textAnchor="middle">
+                                                {val > 0 ? formatNumber(val) : '-'}
+                                            </text>
+                                        );
+                                    })}
+
+                                    {/* Row Border */}
+                                    <line x1="0" y1={y + rowHeight} x2={width} y2={y + rowHeight} stroke="#f1f5f9" strokeWidth="1" />
+                                </g>
+                            );
+                        })}
+                    </svg>
+                );
+            };
+
+            // SVG Summary Table Component - REDUCED WIDTH
+            const SVGSummaryTable = ({ indicators, rawData, onIndicatorClick }) => {
+                if (!indicators || indicators.length === 0) return null;
+
+                // SUNUM MODU: Daha büyük tablo - TEKRAR BÜYÜTÜLDÜ (2. Kez)
+                const width = 1050;
+                const headerHeight = 60; // 40 -> 60
+                const rowHeight = 80; // 50 -> 80
+                const height = headerHeight + (indicators.length * rowHeight);
+
+                // Column Widths (Total must be 1050) - YIL SONU KALDIRILDI
+                // Name (414) + Q1(159) + Q2(159) + Q3(159) + Q4(159) = 1050
+                const colWidths = [414, 159, 159, 159, 159];
+                const headers = ['Gösterge Adı', 'Q1 (Küm.)', 'Q2 (Küm.)', 'Q3 (Küm.)', 'Q4 (Küm.)'];
+
+                return (
+                    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+                        {/* Header */}
+                        <rect x="0" y="0" width={width} height={headerHeight} fill="#f9fafb" rx="4" />
+
+                        {headers.map((h, i) => {
+                            const x = i === 0 ? 10 : colWidths.slice(0, i).reduce((a, b) => a + b, 0) + colWidths[i] / 2;
+                            const anchor = i === 0 ? 'start' : 'middle';
+                            return (
+                                <text key={i} x={x} y="35" fontSize="16" fontWeight="bold" fill="#64748b" textAnchor={anchor}>{h}</text>
+                            );
+                        })}
+
+                        {/* Rows */}
+                        {indicators.map((ind, indIdx) => {
+                            const y = headerHeight + (indIdx * rowHeight);
+                            const { realized, lastRealizedIndex } = chartManager.calculateRealized(ind, rawData);
+                            const forecast = chartManager.calculateForecast(realized, lastRealizedIndex, ind, rawData);
+
+                            // Q Values (Indices: 2, 5, 8, 11)
+                            const qIndices = [2, 5, 8, 11];
+                            const qValues = qIndices.map(idx => forecast[idx]);
+                            const qTargets = [ind.targets.q1, ind.targets.q2, ind.targets.q3, ind.targets.q4];
+
+                            return (
+                                <g key={ind.id} onClick={() => onIndicatorClick(ind)} style={{ cursor: 'pointer' }}>
+                                    {/* Row Background */}
+                                    <rect x="0" y={y} width={width} height={rowHeight} fill={indIdx % 2 === 0 ? 'white' : '#f8fafc'} />
+
+                                    {/* Indicator Name */}
+                                    <text x="10" y={y + 30} fontSize="16" fontWeight="600" fill="#334155" textAnchor="start">
+                                        {ind.name.length > 35 ? ind.name.substring(0, 35) + '...' : ind.name}
+                                    </text>
+                                    <text x="10" y={y + 55} fontSize="13" fill="#94a3b8" textAnchor="start">
+                                        {data.models.find(m => m.id === ind.modelId)?.name || 'Stratejik Hedef'}
+                                    </text>
+
+                                    {/* Q Columns */}
+                                    {qValues.map((val, i) => {
+                                        const target = qTargets[i];
+                                        const realX = colWidths.slice(0, i + 1).reduce((a, b) => a + b, 0) + colWidths[i + 1] / 2;
+
+                                        const isRealized = qIndices[i] <= lastRealizedIndex;
+                                        const pct = target > 0 ? (val / target) * 100 : 0;
+                                        const color = pct >= 95 ? '#16a34a' : pct >= 70 ? '#d97706' : '#dc2626';
+
+                                        return (
+                                            <g key={i}>
+                                                <text x={realX} y={y + 35} fontSize="20" fontWeight="bold" fill={isRealized ? color : '#94a3b8'} textAnchor="middle">
+                                                    {formatNumber(val)}
+                                                </text>
+                                                <text x={realX} y={y + 60} fontSize="12" fill="#cbd5e1" textAnchor="middle">
+                                                    H: {formatNumber(target)}
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
+
+                                    {/* YIL SONU SUTUNU KALDIRILDI - Q4 ZATEN YIL SONU */}
+
+                                    {/* Separator */}
+                                    <line x1="0" y1={y + rowHeight} x2={width} y2={y + rowHeight} stroke="#f1f5f9" strokeWidth="1" />
+                                </g>
+                            );
+                        })}
+                    </svg>
+                );
+            };
+
+            const ReportsTab = ({ indicators, rawData, data }) => {
+                const [selectedIndId, setSelectedIndId] = useState(null);
+                const [searchTerm, setSearchTerm] = useState('');
+                const [selectedModels, setSelectedModels] = useState([]);
+                const [selectedDirectorates, setSelectedDirectorates] = useState([]);
+                const [viewMode, setViewMode] = useState('summary'); // 'summary' or 'detail'
+                const [isFullScreen, setIsFullScreen] = useState(false);
+                const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
+
+                // Context Menu Logic
+                useEffect(() => {
+                    const handleClick = () => setContextMenu({ ...contextMenu, visible: false });
+                    document.addEventListener('click', handleClick);
+                    return () => document.removeEventListener('click', handleClick);
+                }, [contextMenu]);
+
+                // Fullscreen değişikliklerini dinle ve viewport'u güncelle
+                useEffect(() => {
+                    const handleFullscreenChange = () => {
+                        // Force re-render to update viewport styles
+                        setIsFullScreen(!!document.fullscreenElement);
+                    };
+
+                    document.addEventListener('fullscreenchange', handleFullscreenChange);
+                    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+                }, []);
+
+                const handleContextMenu = (e) => {
+                    e.preventDefault();
+                    setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+                };
+
+                // PDF Download Logic (A4 Style)
+                const handlePdfDownload = async () => {
+                    const { jsPDF } = window.jspdf;
+                    const viewport = document.getElementById('viewport');
+                    if (!viewport) return;
+
+                    // Loading Indicator
+                    const loadingIndicator = document.createElement('div');
+                    loadingIndicator.textContent = 'PDF oluşturuluyor, lütfen bekleyin...';
+                    Object.assign(loadingIndicator.style, {
+                        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                        backgroundColor: 'white', padding: '2rem', borderRadius: '12px',
+                        boxShadow: '0 8px 25px rgba(0,0,0,0.2)', zIndex: '10001', color: '#1E214F', fontWeight: 'bold'
+                    });
+                    document.body.appendChild(loadingIndicator);
+
+                    const originalSlide = currentSlide;
+                    const originalTransform = viewport.style.transform;
+                    viewport.style.transform = 'none'; // Reset scale for capture
+
+                    try {
+                        // Wait for fonts
+                        await document.fonts.ready;
+                        await new Promise(r => setTimeout(r, 500));
+
+                        const pdf = new jsPDF('p', 'pt', [595.28, 841.89]);
+                        const pdfW = 595.28;
+                        const pdfH = 841.89;
+
+                        // Total slides: Cover (-1) + Summary (0) + Indicators (1..N)
+                        const totalSlides = filteredIndicators.length;
+
+                        for (let i = -1; i <= totalSlides; i++) {
+                            setCurrentSlide(i);
+                            if (i > 0) setSelectedIndId(filteredIndicators[i - 1].id);
+
+                            // Wait for render
+                            await new Promise(r => setTimeout(r, 500));
+
+                            // Capture using html-to-image
+                            const imgData = await htmlToImage.toPng(viewport, {
+                                quality: 1.0,
+                                pixelRatio: 2,
+                                width: 800,
+                                height: 1131,
+                                backgroundColor: '#ffffff',
+                                style: { transform: 'none', margin: 0 }
+                            });
+
+                            if (i > -1) pdf.addPage();
+                            pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+                        }
+
+                        pdf.save('Stratejik_Rapor.pdf');
+
+                    } catch (err) {
+                        console.error(err);
+                        alert('PDF oluşturulurken bir hata oluştu: ' + err.message);
+                    } finally {
+                        // Restore state
+                        viewport.style.transform = originalTransform;
+                        setCurrentSlide(originalSlide);
+                        if (document.body.contains(loadingIndicator)) {
+                            document.body.removeChild(loadingIndicator);
+                        }
+                    }
+                };
+                const [currentSlide, setCurrentSlide] = useState(0); // 0 = Summary, 1+ = Indicators
+                const chartsRef = useRef({});
+
+                // Wizard state'leri
+                const [wizardActive, setWizardActive] = useState(true); // Başlangıçta wizard aktif
+                const [wizardStep, setWizardStep] = useState(1); // 1: Müdürlük, 2: Model
+                const [selectedDirectoratesForWizard, setSelectedDirectoratesForWizard] = useState([]);
+                const [selectedModelsForWizard, setSelectedModelsForWizard] = useState([]);
+
+                const selectedInd = indicators.find(i => i.id === selectedIndId);
+
+                const filteredIndicators = indicators.filter(i => {
+                    const matchesSearch = i.name.toLowerCase().includes(searchTerm.toLowerCase()) || String(i.id).toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesModel = selectedModels.length === 0 || selectedModels.includes(i.modelId);
+                    const directorateId = data.models.find(m => m.id === i.modelId)?.directorateId;
+                    const matchesDirectorate = selectedDirectorates.length === 0 || selectedDirectorates.includes(directorateId);
+                    return matchesSearch && matchesModel && matchesDirectorate;
+                });
+
+                // Calculate Report Data for selected indicator
+                const reportData = useMemo(() => {
+                    if (!selectedInd || !rawData.length) return null;
+
+                    const { realized, lastRealizedIndex } = chartManager.calculateRealized(selectedInd, rawData);
+                    const forecast = chartManager.calculateForecast(realized, lastRealizedIndex, selectedInd, rawData);
+
+                    // Fibonacci Projections
+                    const optimistic = [...forecast];
+                    const pessimistic = [...forecast];
+
+                    if (lastRealizedIndex >= 0 && lastRealizedIndex < 11) {
+                        for (let m = lastRealizedIndex + 1; m < 12; m++) {
+                            const prevForecast = m > 0 ? forecast[m - 1] : 0;
+                            const monthlyInc = forecast[m] - prevForecast;
+
+                            optimistic[m] = optimistic[m - 1] + (monthlyInc * 1.382);
+                            pessimistic[m] = pessimistic[m - 1] + (monthlyInc * 0.618);
+                        }
+                    }
+
+                    // Calculate detailed selection data
+                    const selectionData = (selectedInd.selections || []).map(sel => {
+                        let compData = Array(12).fill(0);
+                        const subset = rawData.filter(r =>
+                            r.mudurluk === sel.mudurluk && r.hizmet === sel.hizmet && r.tur === sel.tur &&
+                            r.tarih && r.tarih.getFullYear() === (selectedInd.targetYear || 2025) &&
+                            r.veriAraligi && (r.veriAraligi.includes('KÜMÜLATIF') || r.veriAraligi.includes('KÜMÜLATİF'))
+                        );
+
+                        const latest = {};
+                        subset.forEach(r => {
+                            const m = r.tarih.getMonth();
+                            const loc = r.lokasyon || 'default';
+                            const key = `${m}-${loc}`;
+                            if (!latest[key] || r.tarih > latest[key].t) latest[key] = { m, val: r.deger, t: r.tarih };
+                        });
+
+                        Object.values(latest).forEach(v => {
+                            if (v.m >= 0 && v.m < 12) compData[v.m] += v.val;
+                        });
+
+                        let lastReal = -1;
+                        for (let m = 11; m >= 0; m--) {
+                            if (compData[m] > 0) { lastReal = m; break; }
+                        }
+
+                        let rowForecast = [...compData];
+                        let rowInc = [];
+                        for (let i = 1; i <= lastReal; i++) rowInc.push(compData[i] - compData[i - 1]);
+
+                        let rowAvgInc = 0;
+                        if (rowInc.length >= 2 && !rowInc.slice(-2).every(x => x === 0)) {
+                            rowAvgInc = rowInc.reduce((a, b) => a + b, 0) / rowInc.length;
+                        }
+
+                        const useRowForecast = sel.useForecast !== false;
+
+                        for (let m = lastReal + 1; m < 12; m++) {
+                            const prev = m > 0 ? rowForecast[m - 1] : 0;
+                            if (sel.plans && sel.plans[m] !== null && sel.plans[m] !== undefined && sel.plans[m] !== '') {
+                                rowForecast[m] = prev + parseFloat(sel.plans[m]);
+                            } else if (useRowForecast) {
+                                rowForecast[m] = prev + rowAvgInc;
+                            } else {
+                                rowForecast[m] = prev;
+                            }
+                            if (rowForecast[m] < prev) rowForecast[m] = prev;
+                        }
+
+                        return { ...sel, realized: compData, forecast: rowForecast, lastReal, useRowForecast };
+                    });
+                    return { realized, forecast, optimistic, pessimistic, lastRealizedIndex, selectionData };
+                }, [selectedInd, rawData]);
+
+
+
+                // Auto-select first indicator when switching to detail view
+                useEffect(() => {
+                    if (viewMode === 'detail' && !selectedIndId && filteredIndicators.length > 0) {
+                        setSelectedIndId(filteredIndicators[0].id);
+                    }
+                }, [viewMode, selectedIndId, filteredIndicators]);
+
+                // Full Screen Navigation
+                const nextSlide = () => {
+                    // -1 (Cover) -> 0 (Summary) or 1 (Detail) -> ... -> filteredIndicators.length (last detail)
+                    if (currentSlide === -1) {
+                        // From cover, go to summary (0) or first indicator (1)
+                        if (viewMode === 'detail' && selectedIndId) {
+                            setCurrentSlide(1);
+                            setSelectedIndId(filteredIndicators[0].id);
+                        } else {
+                            setCurrentSlide(0);
+                        }
+                    } else if (currentSlide < filteredIndicators.length) {
+                        const next = currentSlide + 1;
+                        setCurrentSlide(next);
+                        if (next > 0) setSelectedIndId(filteredIndicators[next - 1].id);
+                    }
+                };
+
+                const prevSlide = () => {
+                    // ... -> 1 (first detail) -> 0 (summary) -> -1 (cover)
+                    if (currentSlide > -1) {
+                        const prev = currentSlide - 1;
+                        setCurrentSlide(prev);
+                        if (prev > 0) setSelectedIndId(filteredIndicators[prev - 1].id);
+                    }
+                };
+
+
+
+                useEffect(() => {
+                    const handleKeyDown = (e) => {
+                        if (!isFullScreen) return;
+                        if (e.key === 'ArrowRight') nextSlide();
+                        if (e.key === 'ArrowLeft') prevSlide();
+                        if (e.key === 'Escape') {
+                            setIsFullScreen(false);
+                            setWizardActive(true);
+                            setWizardStep(2); // Go back to Model Selection
+                            if (document.fullscreenElement) document.exitFullscreen();
+                        }
+                    };
+
+                    const handleFullscreenChange = () => {
+                        if (!document.fullscreenElement) {
+                            setIsFullScreen(false);
+                            setWizardActive(true);
+                            setWizardStep(2); // Go back to Model Selection
+                        }
+                    };
+
+                    window.addEventListener('keydown', handleKeyDown);
+                    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+                    return () => {
+                        window.removeEventListener('keydown', handleKeyDown);
+                        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+                    };
+                }, [isFullScreen, currentSlide, filteredIndicators]);
+
+                // --- RENDER HELPERS ---
+                const renderSummaryTable = () => {
+                    if (isFullScreen) {
+                        // Full-screen: BEYAZ KART + 3D SÜTUNLAR
+                        return (
+                            <div className="slide active" style={{ position: 'relative', overflow: 'hidden', background: '#f8f9fa' }}>
+                                {/* 3D Animated Cubes Background */}
+                                <svg
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: '70%',
+                                        width: '100%',
+                                        zIndex: 0
+                                    }}
+                                    viewBox="0 0 1600 700"
+                                    preserveAspectRatio="xMidYMax slice"
+                                >
+                                    {/* Animated 3D Cubes - WIDE MODE (24 cubes) */}
+                                    {Array.from({ length: 24 }).map((_, i) => {
+                                        // 8 columns wide instead of 4
+                                        const x = (i % 8) * 200 + (i % 2) * 50;
+                                        const baseY = 400 + Math.floor(i / 8) * 150;
+                                        // Extended heights pattern
+                                        const heights = [140, 180, 120, 160, 200, 110, 150, 170, 130, 190, 140, 160, 150, 190, 130, 170, 210, 120, 160, 180, 140, 200, 150, 170];
+                                        const h = heights[i];
+                                        const y = baseY - h;
+                                        const isBlue = i % 5 === 0 || i % 7 === 0;
+
+                                        return (
+                                            <g key={i} className="animate-cube">
+                                                <polygon
+                                                    points={`${x},${y} ${x + 50},${y - 25} ${x + 100},${y} ${x + 50},${y + 25}`}
+                                                    fill={isBlue ? '#dbeafe' : '#ffffff'}
+                                                    stroke="#e0e0e0"
+                                                    strokeWidth="1"
+                                                />
+                                                <polygon
+                                                    points={`${x},${y} ${x},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                    fill={isBlue ? '#bfdbfe' : '#e5e7eb'}
+                                                    stroke="#d0d0d0"
+                                                    strokeWidth="1"
+                                                />
+                                                <polygon
+                                                    points={`${x + 100},${y} ${x + 100},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                    fill={isBlue ? '#93c5fd' : '#d1d5db'}
+                                                    stroke="#c0c0c0"
+                                                    strokeWidth="1"
+                                                />
+                                            </g>
+                                        );
+                                    })}
+                                </svg>
+
+                                {/* White Card Content */}
+                                <div className="white-card" style={{ margin: '3rem auto', maxWidth: '90%', height: 'calc(100% - 6rem)' }}>
+                                    {/* Header */}
+                                    <div className="pb-4 border-b-2 border-stone-200">
+                                        <p className="text-stone-500 text-sm font-medium mb-1">
+                                            {[...new Set(filteredIndicators.map(ind => data.models.find(m => m.id === ind.modelId)?.name).filter(Boolean))].join(', ') || 'Stratejik Hedefler'}
+                                        </p>
+                                        <h2 className="text-3xl font-bold text-stone-900 font-serif">
+                                            Yönetici Özeti
+                                        </h2>
+                                    </div>
+
+                                    {/* Summary Table */}
+                                    <div className="mt-4 overflow-auto" style={{ height: 'calc(100% - 100px)' }}>
+                                        <SVGSummaryTable
+                                            indicators={filteredIndicators}
+                                            rawData={rawData}
+                                            onIndicatorClick={(ind) => {
+                                                const idx = filteredIndicators.findIndex(i => i.id === ind.id);
+                                                setCurrentSlide(idx + 1);
+                                                setSelectedIndId(ind.id);
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+                    //Normal view: Use HTML table
+                    return (
+                        <div className={`h-full p-6 overflow-hidden relative`}>
+                            {/* Logo (only in full screen) */}
+                            {isFullScreen && (
+                                <img src="https://i.imgur.com/UUOeqIx.png" crossOrigin="anonymous" alt="Logo" className="absolute top-2 right-2 h-24 opacity-90 z-10" />
+                            )}
+
+                            <div className={`border-b border-stone-200 ${isFullScreen ? 'pb-3 mb-4' : 'pb-6 mb-6'}`}>
+                                <h2 className={`font-serif ${isFullScreen ? 'text-2xl' : 'text-3xl'} font-bold text-stone-900`}>📊 Yönetici Özeti</h2>
+                                <p className={`text-stone-500 ${isFullScreen ? 'text-sm mt-1' : 'mt-2'}`}>Filtrelenen {filteredIndicators.length} göstergenin genel performans özeti</p>
+                            </div>
+
+                            <div className="bg-white border border-stone-200 rounded-lg shadow-sm overflow-auto" style={{ maxHeight: isFullScreen ? 'calc(100% - 120px)' : 'auto' }}>
+                                <table className="w-full text-base">
+                                    <thead className="sticky top-0 bg-stone-50 z-10">
+                                        <tr className="text-stone-700 border-b-2 border-stone-300">
+                                            <th className={`${isFullScreen ? 'p-2' : 'p-4'} text-left font-bold`}>Gösterge Adı</th>
+                                            <th className={`${isFullScreen ? 'p-2 text-xs' : 'p-4'} text-center`}>Q1 (Küm.)</th>
+                                            <th className={`${isFullScreen ? 'p-2 text-xs' : 'p-4'} text-center`}>Q2 (Küm.)</th>
+                                            <th className={`${isFullScreen ? 'p-2 text-xs' : 'p-4'} text-center`}>Q3 (Küm.)</th>
+                                            <th className={`${isFullScreen ? 'p-2 text-xs' : 'p-4'} text-center`}>Q4 (Küm.)</th>
+                                            <th className={`${isFullScreen ? 'p-2 text-xs' : 'p-4'} text-center bg-blue-50 text-blue-900 border-l border-blue-100`}>Yıl Sonu</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-stone-100">
+                                        {filteredIndicators.map(ind => {
+                                            const { realized, lastRealizedIndex } = chartManager.calculateRealized(ind, rawData);
+                                            const forecast = chartManager.calculateForecast(realized, lastRealizedIndex, ind, rawData);
+                                            const qValues = [forecast[2], forecast[5], forecast[8], forecast[11]];
+                                            const targets = [ind.targets.q1, ind.targets.q2, ind.targets.q3, ind.targets.q4];
+
+                                            return (
+                                                <tr key={ind.id} onClick={() => {
+                                                    if (isFullScreen) {
+                                                        const idx = filteredIndicators.findIndex(i => i.id === ind.id);
+                                                        setCurrentSlide(idx + 1);
+                                                        setSelectedIndId(ind.id);
+                                                    } else {
+                                                        setViewMode('detail');
+                                                        setSelectedIndId(ind.id);
+                                                    }
+                                                }} className="hover:bg-stone-50 cursor-pointer transition-colors group">
+                                                    <td className={`${isFullScreen ? 'p-2' : 'p-4'}`}>
+                                                        <div className={`font-bold text-stone-800 group-hover:text-nobel-gold transition-colors ${isFullScreen ? 'text-sm' : ''}`}>{ind.name}</div>
+                                                        <div className={`${isFullScreen ? 'text-[10px]' : 'text-xs'} text-stone-500`}>{data.models.find(m => m.id === ind.modelId)?.name}</div>
+                                                    </td>
+                                                    {qValues.map((val, i) => {
+                                                        const target = targets[i];
+                                                        const pct = target > 0 ? (val / target) * 100 : 0;
+                                                        let colorClass = "text-stone-800";
+                                                        if (target > 0) {
+                                                            if (pct >= 95) colorClass = "text-green-600";
+                                                            else if (pct >= 60) colorClass = "text-yellow-600";
+                                                            else colorClass = "text-red-600";
+                                                        }
+                                                        const isRealized = (i * 3 + 2) <= lastRealizedIndex;
+
+                                                        return (
+                                                            <td key={i} className={`${isFullScreen ? 'p-2' : 'p-4'} text-center`}>
+                                                                <div className={`font-bold ${isFullScreen ? 'text-base' : 'text-lg'} ${isRealized ? colorClass : 'text-stone-400 italic'}`}>{formatNumber(val)}</div>
+                                                                <div className={`${isFullScreen ? 'text-[9px]' : 'text-xs'} text-stone-400 bg-stone-100 inline-block px-1 py-0.5 rounded`}>H: {formatNumber(target)}</div>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                    <td className={`${isFullScreen ? 'p-2' : 'p-4'} text-center bg-blue-50/50 border-l border-blue-100`}>
+                                                        <div className={`font-bold ${isFullScreen ? 'text-base' : 'text-lg'} text-blue-900`}>{formatNumber(forecast[11])}</div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    );
+                };
+
+                const renderDetailView = (ind) => {
+                    if (!ind) return (
+                        <div className="h-full flex flex-col items-center justify-center text-stone-400">
+                            <FileText size={64} className="mb-4 opacity-20" />
+                            <p className="italic">Gösterge seçin...</p>
+                        </div>
+                    );
+
+                    // GERÇEK FULLSCREEN KONTROLÜ: document.fullscreenElement
+                    const isReallyFullscreen = !!document.fullscreenElement;
+
+                    if (isReallyFullscreen) {
+                        // Full-screen: BEYAZ KART + 3D SÜTUNLAR + HORIZONTAL Layout
+                        return (
+                            <div className="slide active" style={{ position: 'relative', overflow: 'hidden', background: '#f8f9fa' }}>
+                                {/* 3D Animated Cubes Background */}
+                                <svg
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: '70%',
+                                        width: '100%',
+                                        zIndex: 0
+                                    }}
+                                    viewBox="0 0 1600 700"
+                                    preserveAspectRatio="xMidYMax slice"
+                                >
+                                    {/* Animated 3D Cubes - WIDE MODE (24 cubes) */}
+                                    {Array.from({ length: 24 }).map((_, i) => {
+                                        // 8 columns wide instead of 4
+                                        const x = (i % 8) * 200 + (i % 2) * 50;
+                                        const baseY = 400 + Math.floor(i / 8) * 150;
+                                        // Extended heights pattern
+                                        const heights = [140, 180, 120, 160, 200, 110, 150, 170, 130, 190, 140, 160, 150, 190, 130, 170, 210, 120, 160, 180, 140, 200, 150, 170];
+                                        const h = heights[i];
+                                        const y = baseY - h;
+                                        const isBlue = i % 5 === 0 || i % 7 === 0;
+
+                                        return (
+                                            <g key={i} className="animate-cube">
+                                                <polygon
+                                                    points={`${x},${y} ${x + 50},${y - 25} ${x + 100},${y} ${x + 50},${y + 25}`}
+                                                    fill={isBlue ? '#dbeafe' : '#ffffff'}
+                                                    stroke="#e0e0e0"
+                                                    strokeWidth="1"
+                                                />
+                                                <polygon
+                                                    points={`${x},${y} ${x},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                    fill={isBlue ? '#bfdbfe' : '#e5e7eb'}
+                                                    stroke="#d0d0d0"
+                                                    strokeWidth="1"
+                                                />
+                                                <polygon
+                                                    points={`${x + 100},${y} ${x + 100},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                    fill={isBlue ? '#93c5fd' : '#d1d5db'}
+                                                    stroke="#c0c0d0"
+                                                    strokeWidth="1"
+                                                />
+                                            </g>
+                                        );
+                                    })}
+                                </svg>
+
+                                {/* White Card Content */}
+                                <div className="white-card" style={{ margin: '1.5rem', maxWidth: 'calc(100% - 3rem)', height: 'calc(100% - 3rem)' }}>
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between pb-4 border-b-2 border-stone-200">
+                                        <div className="flex-1">
+                                            <p className="text-stone-500 text-sm font-medium mb-1">
+                                                {data.models.find(m => m.id === ind.modelId)?.name}
+                                            </p>
+                                            <h2 className="text-2xl font-bold text-stone-900 font-serif line-clamp-1">
+                                                {ind.name}
+                                            </h2>
+                                        </div>
+                                    </div>
+
+                                    {/* HORIZONTAL LAYOUT: Chart (Left) | KPIs + Table (Right) */}
+                                    <div className="flex gap-6 mt-4" style={{ height: 'calc(100% - 100px)' }}>
+
+                                        {/* LEFT: Chart - KÜÇÜLTÜLDÜ */}
+                                        <div className="w-[50%] bg-white rounded-lg border border-stone-200 p-4 flex flex-col">
+                                            <h3 className="font-bold text-stone-900 mb-2 text-lg">Projeksiyon</h3>
+                                            <div className="flex-1 relative min-h-0">
+                                                <ChartComponent reportData={reportData} selectedInd={ind} chartId={`chart-${ind.id}-fs`} />
+                                            </div>
+                                        </div>
+
+                                        {/* RIGHT: KPIs + Monthly Table - BÜYÜTÜLDÜ */}
+                                        <div className="w-[48%] flex flex-col gap-4">
+                                            {/* KPIs */}
+                                            <div className="shrink-0">
+                                                <SVGKPICards reportData={reportData} selectedInd={ind} />
+                                            </div>
+
+                                            {/* Monthly Table */}
+                                            <div className="bg-white rounded-lg border border-stone-200 overflow-hidden flex-grow flex flex-col">
+                                                <div className="px-4 py-2 bg-stone-50 border-b border-stone-200 flex justify-between items-center shrink-0">
+                                                    <div className="font-bold text-sm text-stone-700">Aylık Analiz</div>
+                                                    <div className="flex gap-3 text-[10px]">
+                                                        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-stone-700"></div><span className="text-stone-600 font-medium">Gerçek</span></div>
+                                                        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-orange-500"></div><span className="text-stone-600 font-medium italic">Tahmin</span></div>
+                                                        <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-600"></div><span className="text-stone-600 font-medium font-bold">Plan</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 overflow-auto p-2">
+                                                    <SVGMonthlyTable reportData={reportData} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    // A4 Format: BEYAZ KART + STATİK 3D SÜTUNLAR + VERTICAL Layout
+                    return (
+                        <div className="slide active" style={{ position: 'relative', overflow: 'hidden', background: '#f8f9fa' }}>
+                            {/* 3D Cubes Background - NO ANIMATION (A4) */}
+                            <svg
+                                style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '70%',
+                                    width: '100%',
+                                    zIndex: 0
+                                }}
+                                viewBox="0 0 800 700"
+                                preserveAspectRatio="xMidYMax slice"
+                            >
+                                {/* Animated 3D Cubes (Like Cover Page) */}
+                                {Array.from({ length: 12 }).map((_, i) => {
+                                    const x = (i % 4) * 200 + (i % 2) * 50;
+                                    const baseY = 400 + Math.floor(i / 4) * 150;
+                                    // Reduced heights to match other pages
+                                    const heights = [140, 180, 120, 160, 200, 110, 150, 170, 130, 190, 140, 160];
+                                    const h = heights[i];
+                                    const y = baseY - h;
+                                    const isBlue = i % 5 === 0 || i % 7 === 0;
+
+                                    return (
+                                        <g key={i} className="animate-cube">
+                                            <polygon
+                                                points={`${x},${y} ${x + 50},${y - 25} ${x + 100},${y} ${x + 50},${y + 25}`}
+                                                fill={isBlue ? '#dbeafe' : '#ffffff'}
+                                                stroke="#e0e0e0"
+                                                strokeWidth="1"
+                                            />
+                                            <polygon
+                                                points={`${x},${y} ${x},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                fill={isBlue ? '#bfdbfe' : '#e5e7eb'}
+                                                stroke="#d0d0d0"
+                                                strokeWidth="1"
+                                            />
+                                            <polygon
+                                                points={`${x + 100},${y} ${x + 100},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                fill={isBlue ? '#93c5fd' : '#d1d5db'}
+                                                stroke="#c0c0c0"
+                                                strokeWidth="1"
+                                            />
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+
+                            {/* White Card Content */}
+                            <div className="white-card" style={{ margin: '1.5rem auto', maxWidth: 'calc(100% - 3rem)', height: 'calc(100% - 3rem)' }}>
+                                {/* Header */}
+                                <div className="pb-4 border-b-2 border-stone-200">
+                                    <p className="text-stone-500 text-sm font-medium mb-1">
+                                        {data.models.find(m => m.id === ind.modelId)?.name}
+                                    </p>
+                                    <h2 className="text-2xl font-bold text-stone-900 font-serif line-clamp-1">
+                                        {ind.name}
+                                    </h2>
+                                </div>
+
+                                {/* VERTICAL LAYOUT: KPI → Chart → Monthly Table */}
+                                <div className="mt-4 flex flex-col gap-4" style={{ height: 'calc(100% - 100px)' }}>
+
+                                    {/* 1. KPI Cards (Top) */}
+                                    <div className="shrink-0">
+                                        <SVGKPICards reportData={reportData} selectedInd={ind} />
+                                    </div>
+
+                                    {/* 2. Chart (Middle) */}
+                                    <div className="bg-white rounded-lg border border-stone-200 p-4 flex flex-col" style={{ height: '400px' }}>
+                                        <h3 className="font-bold text-stone-900 mb-2 text-lg">Projeksiyon</h3>
+                                        <div className="flex-1 relative min-h-0">
+                                            <ChartComponent reportData={reportData} selectedInd={ind} chartId={`chart-${ind.id}-a4`} />
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Monthly Table (Bottom) */}
+                                    <div className="bg-white rounded-lg border border-stone-200 overflow-hidden flex flex-col" style={{ height: '350px' }}>
+                                        <div className="px-4 py-2 bg-stone-50 border-b border-stone-200 flex justify-between items-center shrink-0">
+                                            <div className="font-bold text-sm text-stone-700">Aylık Analiz</div>
+                                            <div className="flex gap-3 text-[10px]">
+                                                <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-stone-700"></div><span className="text-stone-600 font-medium">Gerçek</span></div>
+                                                <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-orange-500"></div><span className="text-stone-600 font-medium italic">Tahmin</span></div>
+                                                <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-600"></div><span className="text-stone-600 font-medium font-bold">Plan</span></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 overflow-auto p-2">
+                                            <SVGMonthlyTable reportData={reportData} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                };
+
+                // --- WIZARD FONKSİYONLARI ---
+                // Wizard Step 1 - Müdürlük Seçimi
+                const renderWizardStep1 = () => {
+                    const directorates = data.directorates || [];
+
+                    return (
+                        <div className="h-full flex items-center justify-center p-6">
+                            <div className="bg-white/90 rounded-xl border border-stone-200 p-8 max-w-2xl w-full shadow-xl">
+                                <div className="text-center mb-6">
+                                    <h2 className="font-serif text-3xl font-bold text-stone-900 mb-2">
+                                        Adım 1: Müdürlük Seçimi
+                                    </h2>
+                                    <p className="text-stone-600">
+                                        Raporda yer alacak müdürlükleri seçin.
+                                    </p>
+                                </div>
+
+                                <div className="border border-stone-200 rounded-lg p-4 max-h-96 overflow-y-auto custom-scroll bg-stone-50">
+                                    <label className="flex items-center gap-2 mb-3 font-bold cursor-pointer hover:bg-stone-100 p-2 rounded">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4"
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedDirectoratesForWizard(directorates.map(d => d.id));
+                                                } else {
+                                                    setSelectedDirectoratesForWizard([]);
+                                                }
+                                            }}
+                                            checked={selectedDirectoratesForWizard.length === directorates.length && directorates.length > 0}
+                                        />
+                                        Tümünü Seç
+                                    </label>
+                                    <hr className="mb-3 border-stone-300" />
+                                    {directorates.map(dir => (
+                                        <label key={dir.id} className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-stone-100 p-2 rounded transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4"
+                                                value={dir.id}
+                                                checked={selectedDirectoratesForWizard.includes(dir.id)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedDirectoratesForWizard([...selectedDirectoratesForWizard, dir.id]);
+                                                    } else {
+                                                        setSelectedDirectoratesForWizard(selectedDirectoratesForWizard.filter(id => id !== dir.id));
+                                                    }
+                                                }}
+                                            />
+                                            {dir.name}
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <div className="flex gap-3 mt-6 justify-end">
+                                    <button
+                                        onClick={() => {
+                                            setWizardActive(false);
+                                            setSelectedDirectoratesForWizard([]);
+                                            setSelectedModelsForWizard([]);
+                                        }}
+                                        className="px-6 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-100 transition-colors font-medium"
+                                    >
+                                        Geri
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (selectedDirectoratesForWizard.length === 0) {
+                                                alert('Lütfen en az bir müdürlük seçin.');
+                                                return;
+                                            }
+                                            setWizardStep(2);
+                                        }}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                                    >
+                                        İlerle
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                };
+
+                // Wizard Step 2 - İzleme Modeli Seçimi
+                const renderWizardStep2 = () => {
+                    // Seçilen müdürlüklere ait modelleri filtrele
+                    const availableModels = data.models.filter(model =>
+                        selectedDirectoratesForWizard.includes(model.directorateId)
+                    );
+
+                    // Benzersiz model isimlerini al (aynı isimli modeller grupla)
+                    const uniqueModels = {};
+                    availableModels.forEach(m => {
+                        if (!uniqueModels[m.name]) {
+                            uniqueModels[m.name] = [];
+                        }
+                        uniqueModels[m.name].push(m.id);
+                    });
+
+                    return (
+                        <div className="h-full flex items-center justify-center p-6">
+                            <div className="bg-white/90 rounded-xl border border-stone-200 p-8 max-w-2xl w-full shadow-xl">
+                                <div className="text-center mb-6">
+                                    <h2 className="font-serif text-3xl font-bold text-stone-900 mb-2">
+                                        Adım 2: İzleme Modeli Seçimi
+                                    </h2>
+                                    <p className="text-stone-600">
+                                        Görüntülemek istediğiniz izleme modellerini seçin.
+                                    </p>
+                                </div>
+
+                                <div className="border border-stone-200 rounded-lg p-4 max-h-96 overflow-y-auto custom-scroll bg-stone-50">
+                                    <label className="flex items-center gap-2 mb-3 font-bold cursor-pointer hover:bg-stone-100 p-2 rounded">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4"
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    const allModelIds = [];
+                                                    Object.values(uniqueModels).forEach(ids => allModelIds.push(...ids));
+                                                    setSelectedModelsForWizard(allModelIds);
+                                                } else {
+                                                    setSelectedModelsForWizard([]);
+                                                }
+                                            }}
+                                            checked={selectedModelsForWizard.length === availableModels.length && availableModels.length > 0}
+                                        />
+                                        Tümünü Seç
+                                    </label>
+                                    <hr className="mb-3 border-stone-300" />
+                                    {Object.entries(uniqueModels).map(([name, ids]) => (
+                                        <label key={name} className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-stone-100 p-2 rounded transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4"
+                                                checked={ids.every(id => selectedModelsForWizard.includes(id))}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedModelsForWizard([...new Set([...selectedModelsForWizard, ...ids])]);
+                                                    } else {
+                                                        setSelectedModelsForWizard(selectedModelsForWizard.filter(id => !ids.includes(id)));
+                                                    }
+                                                }}
+                                            />
+                                            {name}
+                                        </label>
+                                    ))}
+                                </div>
+
+                                <div className="flex gap-3 mt-6 justify-end">
+                                    <button
+                                        onClick={() => setWizardStep(1)}
+                                        className="px-6 py-2 border border-stone-300 rounded-lg text-stone-700 hover:bg-stone-100 transition-colors font-medium"
+                                    >
+                                        Geri
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (selectedModelsForWizard.length === 0) {
+                                                alert('Lütfen en az bir izleme modeli seçin.');
+                                                return;
+                                            }
+                                            completeWizard();
+                                        }}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                                    >
+                                        Sunumu Başlat
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                };
+
+                // Wizard'ı tamamla - Filtreleri uygula ve wizard'ı kapat
+                const completeWizard = () => {
+                    setSelectedDirectorates(selectedDirectoratesForWizard);
+                    setSelectedModels(selectedModelsForWizard);
+                    setWizardActive(false);
+                    setIsFullScreen(true); // Automatically start full screen presentation
+                    setCurrentSlide(-1); // Start at cover
+                };
+
+                // COVER PAGE for Full Screen
+                const renderCoverPage = () => {
+                    // Get filtered model names
+                    const filteredModelNames = [...new Set(
+                        filteredIndicators.map(ind => data.models.find(m => m.id === ind.modelId)?.name).filter(Boolean)
+                    )].join(', ');
+
+                    const targetYear = filteredIndicators.length > 0 ? filteredIndicators[0].targetYear || 2025 : 2025;
+
+                    return (
+                        <div className="slide active" style={{ position: 'relative', overflow: 'hidden', background: '#f8f9fa' }}>
+                            {/* Custom 3D Cubes Background - Light Colors */}
+                            <svg
+                                style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '70%',
+                                    width: '100%',
+                                    zIndex: 0
+                                }}
+                                viewBox={isFullScreen ? "0 0 1600 700" : "0 0 800 700"}
+                                preserveAspectRatio="xMidYMax slice"
+                            >
+                                {/* Create isometric cubes pattern - ANIMATED */}
+                                {Array.from({ length: isFullScreen ? 24 : 12 }).map((_, i) => {
+                                    // Adjust grid based on mode
+                                    const cols = isFullScreen ? 8 : 4;
+                                    const x = (i % cols) * 200 + (i % 2) * 50;
+                                    const baseY = 400 + Math.floor(i / cols) * 150;
+
+                                    // Extended heights pattern
+                                    const heights = [140, 180, 120, 160, 200, 110, 150, 170, 130, 190, 140, 160, 150, 190, 130, 170, 210, 120, 160, 180, 140, 200, 150, 170];
+                                    const h = heights[i];
+                                    const y = baseY - h;
+                                    const isBlue = i % 5 === 0 || i % 7 === 0;
+
+                                    return (
+                                        <g key={i} className="animate-cube">
+                                            {/* Top face */}
+                                            <polygon
+                                                points={`${x},${y} ${x + 50},${y - 25} ${x + 100},${y} ${x + 50},${y + 25}`}
+                                                fill={isBlue ? '#dbeafe' : '#ffffff'}
+                                                stroke="#e0e0e0"
+                                                strokeWidth="1"
+                                            />
+                                            {/* Left face */}
+                                            <polygon
+                                                points={`${x},${y} ${x},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                fill={isBlue ? '#bfdbfe' : '#e5e7eb'}
+                                                stroke="#d0d0d0"
+                                                strokeWidth="1"
+                                            />
+                                            {/* Right face */}
+                                            <polygon
+                                                points={`${x + 100},${y} ${x + 100},${y + h} ${x + 50},${y + h + 25} ${x + 50},${y + 25}`}
+                                                fill={isBlue ? '#93c5fd' : '#d1d5db'}
+                                                stroke="#c0c0c0"
+                                                strokeWidth="1"
+                                            />
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+
+                            {/* Content Overlay */}
+                            <div className="h-full w-full relative flex flex-col justify-start items-center pt-24 px-16"
+                                style={{ zIndex: 10 }}>
+
+                                {/* Main Title - Fixed: "İzleme Modeli" */}
+                                <h1 style={{
+                                    fontFamily: 'Playfair Display, serif',
+                                    fontSize: '5.5rem',
+                                    fontWeight: '700',
+                                    color: '#1a1a1a',
+                                    marginBottom: '1.5rem',
+                                    letterSpacing: '-0.02em',
+                                    textAlign: 'center',
+                                    lineHeight: '1.1',
+                                    textShadow: '0 2px 4px rgba(255,255,255,0.9)'
+                                }}>
+                                    İzleme Modeli
+                                </h1>
+
+                                {/* Subtitle - Selected Model Name */}
+                                <h2 style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '1.875rem',
+                                    fontWeight: '400',
+                                    color: '#6b7280',
+                                    marginBottom: '2rem',
+                                    textAlign: 'center',
+                                    letterSpacing: '0.02em',
+                                    textShadow: '0 1px 2px rgba(255,255,255,0.8)'
+                                }}>
+                                    {filteredModelNames || 'Stratejik Hedefler'}
+                                </h2>
+
+                                {/* Year */}
+                                <div style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '1.5rem',
+                                    fontWeight: '600',
+                                    color: '#9ca3af',
+                                    textAlign: 'center',
+                                    textShadow: '0 1px 2px rgba(255,255,255,0.8)'
+                                }}>
+                                    {targetYear}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                };
+
+                // Wizard aktifse wizard'ı göster
+                if (wizardActive) {
+                    return wizardStep === 1 ? renderWizardStep1() : renderWizardStep2();
+                }
+
+                // Wizard tamamlandı, otomatik fullscreen başlat
+                if (!isFullScreen) {
+                    setTimeout(() => {
+                        setCurrentSlide(-1);
+                        setIsFullScreen(true);
+                        document.documentElement.requestFullscreen().catch(e => console.log(e));
+                    }, 100);
+                }
+
+                // Presentation Mode Render Logic
+                if (isFullScreen) {
+                    return createPortal(
+                        <div className="fixed inset-0 bg-[#334155] z-[9999] flex items-center justify-center overflow-hidden">
+                            {/* Viewport Container for A4 Scaling */}
+                            <div
+                                id="viewport"
+                                style={{
+                                    // Tam ekransa A4 boyutunu kır ve ekranı kapla (Responsive/Sunum Modu)
+                                    width: document.fullscreenElement ? '100vw' : '800px',
+                                    height: document.fullscreenElement ? '100vh' : '1131px',
+                                    transform: document.fullscreenElement ? 'none' : `scale(${Math.min((window.innerWidth - 40) / 800, (window.innerHeight - 40) / 1131)})`,
+                                    transition: 'all 0.3s ease'
+                                }}
+                                onContextMenu={handleContextMenu}
+                            >
+                                {currentSlide === -1 ? renderCoverPage() :
+                                    currentSlide === 0 ? renderSummaryTable() :
+                                        renderDetailView(selectedInd)}
+                            </div>
+
+                            {/* Context Menu */}
+                            {contextMenu.visible && (
+                                <div
+                                    className="fixed bg-white rounded-lg shadow-2xl border border-stone-200 py-2 w-56 z-[10000]"
+                                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                                >
+                                    <div className="px-4 py-2 hover:bg-stone-50 cursor-pointer flex items-center gap-2 text-stone-700" onClick={() => {
+                                        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+                                        else document.exitFullscreen();
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                    }}>
+                                        <Maximize size={16} /> Tam Ekran Yap / Çık
+                                    </div>
+                                    <div className="px-4 py-2 hover:bg-stone-50 cursor-pointer flex items-center gap-2 text-stone-700" onClick={() => {
+                                        if (currentSlide < filteredIndicators.length) {
+                                            const next = currentSlide + 1;
+                                            setCurrentSlide(next);
+                                            if (next > 0) setSelectedIndId(filteredIndicators[next - 1].id);
+                                        }
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                    }}>
+                                        <ArrowRight size={16} /> Sonraki Sayfa
+                                    </div>
+                                    <div className="px-4 py-2 hover:bg-stone-50 cursor-pointer flex items-center gap-2 text-stone-700" onClick={() => {
+                                        if (currentSlide > -1) {
+                                            const prev = currentSlide - 1;
+                                            setCurrentSlide(prev);
+                                            if (prev > 0) setSelectedIndId(filteredIndicators[prev - 1].id);
+                                        }
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                    }}>
+                                        <ArrowLeft size={16} /> Önceki Sayfa
+                                    </div>
+                                    <div className="h-px bg-stone-200 my-1"></div>
+                                    <div className="px-4 py-2 hover:bg-red-50 cursor-pointer flex items-center gap-2 text-red-600 font-bold" onClick={() => {
+                                        handlePdfDownload();
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                    }}>
+                                        <Download size={16} /> PDF Olarak İndir
+                                    </div>
+                                </div>
+                            )}
+                        </div>,
+                        document.body
+                    );
+                }
+
+                // Normal Dashboard View
+                return (
+                    <div
+                        className="h-full flex flex-col bg-white"
+                        onContextMenu={handleContextMenu}
+                    >
+                        {/* Üst Bar - Geri Dön ve Tam Ekran Butonları */}
+                        <div className="h-16 bg-stone-50/80 border-b border-stone-200 flex items-center justify-between px-6 backdrop-blur-sm z-20 shrink-0">
+                            <button
+                                onClick={() => {
+                                    setWizardActive(true);
+                                    setWizardStep(1);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-stone-500 hover:bg-stone-200 hover:text-stone-800 transition-colors text-sm font-medium"
+                            >
+                                ← Filtre Değiştir
+                            </button>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setCurrentSlide(-1);
+                                        setIsFullScreen(true);
+                                        document.documentElement.requestFullscreen().catch(e => console.log(e));
+                                    }}
+                                    className="flex items-center gap-2 bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-stone-900 transition-all shadow-sm"
+                                >
+                                    ⛶ Tam Ekran Sunum
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Sunum İçeriği - Slide Navigation */}
+                        <div className="flex-1 overflow-hidden relative">
+                            {!isFullScreen && (
+                                currentSlide === -1 ? (
+                                    // Cover Page
+                                    <div className="h-full">{renderCoverPage()}</div>
+                                ) : currentSlide === 0 ? (
+                                    // Summary Table
+                                    <div className="h-full overflow-auto">{renderSummaryTable()}</div>
+                                ) : (
+                                    // Individual Indicator Detail - NO WRAPPER, renderDetailView has its own .slide container
+                                    renderDetailView(selectedInd)
+                                )
+                            )}
+                        </div>
+
+                        {/* Alt Navigation - Slide Geçiş Butonları */}
+                        <div className="h-16 bg-stone-50/80 border-t border-stone-200 flex items-center justify-between px-6 backdrop-blur-sm z-20 shrink-0">
+                            <button
+                                onClick={prevSlide}
+                                disabled={currentSlide === -1}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-200 text-stone-700 hover:bg-stone-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                            >
+                                ← Önceki
+                            </button>
+
+                            <div className="text-sm text-stone-600 font-medium">
+                                {currentSlide === -1 ? 'Kapak' : currentSlide === 0 ? 'Özet' : `Gösterge ${currentSlide}/${filteredIndicators.length}`}
+                            </div>
+
+                            <button
+                                onClick={nextSlide}
+                                disabled={currentSlide === filteredIndicators.length}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-200 text-stone-700 hover:bg-stone-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                            >
+                                Sonraki →
+                            </button>
+                        </div>
+
+                        {/* Full Screen Overlay - Using Portal to escape stacking context */}
+                        {isFullScreen && createPortal(
+                            <div
+                                className="fixed inset-0 z-[9999] flex items-center justify-center font-sans pointer-events-none"
+                                onContextMenu={(e) => {
+                                    // Full screen modunda da context menu çalışsın
+                                    e.preventDefault();
+                                    // Pointer events none olduğu için bu event tetiklenmeyebilir,
+                                    // ama içerideki div pointer-events-auto olduğu için oradan bubble olabilir.
+                                    handleContextMenu(e);
+                                }}
+                            >
+                                {/* Hide glass-card based on current slide */}
+                                <style>{`
+                                    ${currentSlide === -1
+                                        ? '.glass-card { opacity: 0 !important; pointer-events: none !important; }'
+                                        : '.glass-card > div:first-child { opacity: 0 !important; pointer-events: none !important; }'
+                                    }
+                                `}</style>
+
+                                {/* Cover page (no frames) */}
+                                {currentSlide === -1 ? (
+                                    <div className="w-full h-full flex items-center justify-center pointer-events-auto" onContextMenu={handleContextMenu}>
+                                        {renderCoverPage()}
+                                    </div>
+                                ) : (
+                                    /* Other slides (only white frame, no outer yellow) */
+                                    <div className="w-full max-w-[98%] h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-stone-200 relative pointer-events-auto" onContextMenu={handleContextMenu}>
+                                        {currentSlide === 0 ? renderSummaryTable() : renderDetailView(selectedInd)}
+                                    </div>
+                                )}
+                            </div>,
+                            document.body
+                        )}
+
+                        {/* Context Menu */}
+                        {contextMenu.visible && createPortal(
+                            <div
+                                id="custom-context-menu"
+                                style={{ top: contextMenu.y, left: contextMenu.x }}
+                            >
+                                <div
+                                    className="context-menu-item"
+                                    onClick={() => {
+                                        setContextMenu({ ...contextMenu, visible: false });
+                                        handlePdfDownload();
+                                    }}
+                                >
+                                    Raporu İndir (PDF)
+                                </div>
+                            </div>,
+                            document.body
+                        )}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="h-screen flex flex-col bg-[#F9F8F4] text-stone-800 relative">
+                    <header className="absolute inset-0 z-0 overflow-hidden"><HeroScene /><div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(249,248,244,0.85)_0%,rgba(249,248,244,0.5)_40%,rgba(249,248,244,0.2)_100%)]" /></header>
+
+                    <main className="relative z-10 flex-1 flex items-center justify-center p-4 overflow-hidden">
+                        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-[98%] h-[90vh] glass-card rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+                            {/* Header */}
+                            <div className="h-16 bg-stone-50/80 border-b border-stone-200 flex items-center justify-between px-6 backdrop-blur-sm z-20">
+                                <div className="flex items-center gap-1 h-full pt-2">
+                                    {[{ id: 'configuration', l: 'Yapılandırma' }, { id: 'dataEntry', l: 'Veri Girişi' }, { id: 'reports', l: 'Raporlar' }].map(t => (
+                                        <button key={t.id} onClick={() => setActiveTab(t.id)} className={`px-6 py-3 text-sm font-medium rounded-t-lg border-t border-x relative top-[1px] transition-colors ${activeTab === t.id ? 'border-stone-200 bg-white text-nobel-gold shadow-sm' : 'border-transparent text-stone-500 hover:text-stone-700 hover:bg-stone-100/50'}`}>{t.l}</button>
+                                    ))}
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-4 py-2 rounded-lg text-stone-500 hover:bg-stone-200 hover:text-stone-800 transition-colors text-sm font-medium"><ArrowLeft size={16} /> Geri Dön</button>
+                                    <button onClick={() => setIsDataModalOpen(true)} className="flex items-center gap-2 bg-white border border-stone-300 px-4 py-2 rounded-lg text-xs font-bold text-stone-700 hover:text-nobel-gold hover:border-nobel-gold transition-all shadow-sm"><Database size={14} className="text-nobel-gold" /> Veri Yönetimi</button>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 overflow-hidden relative z-10 bg-white/30">
+                                <AnimatePresence mode="wait">
+                                    <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="h-full">
+                                        {activeTab === 'configuration' && <ConfigurationTab />}
+                                        {activeTab === 'dataEntry' && <DataEntryTab />}
+                                        {activeTab === 'reports' && <ReportsTab indicators={indicators} rawData={rawData} data={data} />}
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </motion.div>
+                    </main>
+
+                    {/* Modals & Toasts */}
+                    <AnimatePresence>
+                        {isDataModalOpen && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-4">
+                                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-stone-200">
+                                    <div className="p-6 border-b flex justify-between items-center bg-stone-50"><h2 className="text-lg font-serif font-bold flex items-center gap-2 text-stone-800"><Database className="text-nobel-gold" /> Veri Yönetimi</h2><button onClick={() => setIsDataModalOpen(false)}><X size={20} className="text-stone-500 hover:text-stone-800" /></button></div>
+                                    <div className="p-6 space-y-6">
+                                        <div><h3 className="font-semibold mb-2 flex items-center gap-2 text-sm text-stone-800"><Folder size={16} className="text-yellow-500 fill-yellow-500" /> Ham Veri Yükle</h3><div className="bg-stone-50 p-4 rounded-lg border border-stone-200 text-center"><label className="cursor-pointer block"><input type="file" className="hidden" accept=".xlsx" onChange={handleRawDataUpload} /><div className="custom-btn btn-primary w-full"><Upload size={16} /> Excel Seç</div></label><div className="mt-2 text-xs text-stone-400">Mevcut: {rawData.length} satır</div></div></div>
+                                        <div className="border-t pt-4">
+                                            <h3 className="font-semibold mb-2 flex items-center gap-2 text-sm text-stone-800"><Settings size={16} className="text-stone-500" /> Ayarları Yönet</h3>
+                                            <div className="flex gap-2">
+                                                <button onClick={exportSettings} className="flex-1 custom-btn btn-secondary text-xs"><Download size={14} /> İndir</button>
+                                                <button onClick={() => document.getElementById('settings-upload').click()} className="flex-1 custom-btn btn-primary text-xs"><Upload size={14} /> Yükle</button>
+                                                <input type="file" id="settings-upload" className="hidden" accept=".xlsx" onChange={importSettings} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-stone-50 border-t text-right"><button onClick={() => setIsDataModalOpen(false)} className="custom-btn btn-secondary py-1.5 text-sm">Kapat</button></div>
+                                </motion.div>
+                            </div>
+                        )}
+                        {toast && (
+                            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className={`fixed bottom-8 right-8 px-6 py-3 rounded-lg shadow-xl text-white font-medium z-50 flex items-center gap-2 ${toast.type === 'error' ? 'bg-red-500' : 'bg-stone-900'}`}>
+                                {toast.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} className="text-green-400" />} {toast.msg}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    {/* Hidden Presentation Container */}
+                    <div id="presentation-container" style={{ display: 'none', position: 'fixed', inset: 0, zIndex: 9999, background: 'white', overflow: 'auto' }}></div>
+                </div>
+            );
+        };
+
+        // Icon component helper for toast
+        const CheckCircle = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<MonitoringApp />);
+    </script>
+</body>
+
+</html>
