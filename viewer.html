@@ -35,8 +35,36 @@
     <!-- Yükleme Ekranı -->
     <div id="flipbook-loading">
         <div class="spinner"></div>
-        <p>Rapor oluşturuluyor...</p>
+        <p id="loading-message">Rapor oluşturuluyor...</p>
+        <div id="error-message"
+            style="display: none; color: #ef4444; margin-top: 20px; max-width: 80%; text-align: center; font-size: 14px;">
+        </div>
     </div>
+
+    <script>
+        // Global error handler for debugging
+        window.addEventListener('error', function (e) {
+            const errorDiv = document.getElementById('error-message');
+            const loadingMsg = document.getElementById('loading-message');
+            if (errorDiv && loadingMsg) {
+                loadingMsg.textContent = 'Hata oluştu:';
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `<strong>${e.message}</strong><br><small>${e.filename}:${e.lineno}</small>`;
+            }
+            console.error('Global error:', e);
+        });
+
+        window.addEventListener('unhandledrejection', function (e) {
+            const errorDiv = document.getElementById('error-message');
+            const loadingMsg = document.getElementById('loading-message');
+            if (errorDiv && loadingMsg) {
+                loadingMsg.textContent = 'Promise hatası:';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = e.reason?.message || e.reason || 'Bilinmeyen hata';
+            }
+            console.error('Unhandled promise rejection:', e);
+        });
+    </script>
 
     <!-- Flipbook Wrapper -->
     <div id="flipbook-wrapper">
