@@ -40,6 +40,12 @@ function mainApp() {
     let pageFlip = null;
     let currentZoom = 0;
 
+    // Mobile Detection
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    const isLowMemory = isMobile && (locationFilter === 'İstanbul Geneli' || !locationFilter);
+
+    console.log('Mobile:', isMobile, 'Low Memory Mode:', isLowMemory);
+
     // URL Parametreleri ve Filtreleme
     const urlParams = new URLSearchParams(window.location.search);
     const locationFilter = urlParams.get('location');
@@ -1188,11 +1194,18 @@ function mainApp() {
                 }
             } // else bloğu kapanışı
 
-            // GeoJSON yükle (her iki yol için ortak)
-            try {
-                const geoRes = await fetch('data/istanbul.geojson');
-                istanbulGeoJSON = await geoRes.json();
-            } catch (e) { console.error('GeoJSON hatası'); }
+            // GeoJSON yükle (her iki yol için ortak) - SKIP ON MOBILE LOW MEMORY
+            if (!isLowMemory) {
+                try {
+                    const geoRes = await fetch('data/istanbul.geojson');
+                    istanbulGeoJSON = await geoRes.json();
+                    console.log('GeoJSON yüklendi');
+                } catch (e) {
+                    console.error('GeoJSON hatası:', e);
+                }
+            } else {
+                console.log('Low memory mode: GeoJSON atlandı');
+            }
 
             // Raporu oluştur
             const reportHTML = renderReport();
