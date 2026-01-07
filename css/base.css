@@ -321,3 +321,83 @@ a:hover {
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
+
+/* ==================== MOBİL UYUMLULUK ==================== */
+
+/* Touch-friendly minimum sizes */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.75rem 1.2rem;
+    }
+
+    .btn-sm {
+        min-height: 40px;
+        padding: 0.5rem 0.8rem;
+    }
+
+    .input,
+    .form-input {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents iOS zoom on focus */
+    }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+    :root {
+        --text-3xl: 1.75rem;
+        --text-2xl: 1.25rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Phone Landscape */
+@media (max-width: 768px) {
+    :root {
+        --text-3xl: 1.5rem;
+        --text-2xl: 1.125rem;
+        --space-6: 1rem;
+        --space-8: 1.5rem;
+    }
+
+    body {
+        font-size: var(--text-sm);
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.125rem;
+    }
+}
+
+/* Phone Portrait */
+@media (max-width: 480px) {
+    :root {
+        --text-3xl: 1.25rem;
+        --space-4: 0.75rem;
+        --space-5: 1rem;
+    }
+
+    .card-body {
+        padding: var(--space-4);
+    }
+
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        width: 100%;
+    }
+
+    .btn-sm {
+        width: auto;
+    }
+}
