@@ -344,7 +344,7 @@ function mainApp() {
 
     function renderOzetSayfasi(data, sutunBasligi) {
         const byMud = groupBy(data, 'mudurluk');
-        const bolumAdi = sutunBasligi === 'GENEL' ? 'Genel Hizmet İstatistikleri' : 'Aylık Hizmet İstatistikleri';
+        const bolumAdi = sutunBasligi === 'GENEL' ? '2019\'DAN BU YANA' : 'Aylık Hizmet İstatistikleri';
 
         const mudurlukler = [];
         for (const [mud, items] of Object.entries(byMud)) {
@@ -511,7 +511,7 @@ function mainApp() {
     </div>`;
 
         // Ara sayfa başlıkları (hep gösterilecek)
-        H += renderSectionPage('Genel Hizmet İstatistikleri', '2019 yılından bu yana vatandaşlarımıza sunduğumuz sosyal hizmetlerin genel özeti.');
+        H += renderSectionPage('2019\'DAN BU YANA', '2019 yılından bu yana vatandaşlarımıza sunduğumuz sosyal hizmetlerin genel özeti.');
         H += renderOzetSayfasi(filteredBggVeriler, 'GENEL');
 
         if (filteredAylikVeriler.length > 0) {
