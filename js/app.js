@@ -174,8 +174,35 @@ function mainApp() {
 
     console.log('Filtreler:', { locationFilter, selectedServices, selectedTurler, reportMonthParam });
 
-    // Renk Paleti
+    // Renk Paleti - Genel
     const palette = ['#2b6cb0', '#38a169', '#d69e2e', '#e53e3e', '#805ad5', '#00b5d8', '#ed8936', '#38b2ac', '#667eea', '#f56565'];
+
+    // Müdürlük bazlı renk paletleri (en koyu → en açık, sayıya göre sıralanacak)
+    // Renkler daha ayırt edilebilir olacak şekilde seçildi
+    const mudurlukPaletleri = {
+        'Çocuk Hizmetleri Şube Müdürlüğü': ['#7f1d1d', '#b91c1c', '#ef4444', '#fca5a5', '#fecaca', '#fee2e2', '#fef2f2', '#fff5f5'],
+        'Engelli Hizmetleri Şube Müdürlüğü': ['#14532d', '#15803d', '#22c55e', '#86efac', '#bbf7d0', '#dcfce7', '#ecfdf5', '#f0fdf4'],
+        'Sosyal Hizmetler Şube Müdürlüğü': ['#1e3a5f', '#1d4ed8', '#3b82f6', '#93c5fd', '#bfdbfe', '#dbeafe', '#eff6ff', '#f0f9ff'],
+        'Kadın ve Aile Hizmetleri Şube Müdürlüğü': ['#581c87', '#7c3aed', '#a78bfa', '#c4b5fd', '#ddd6fe', '#ede9fe', '#f5f3ff', '#faf5ff']
+    };
+
+    // Müdürlüğe göre renk al (türler sayıya göre sıralanarak en fazla olana en koyu renk)
+    function getMudurlukColor(mudurluk, tur, turCountMap) {
+        const palet = mudurlukPaletleri[mudurluk];
+        if (!palet) {
+            // Bilinmeyen müdürlük için varsayılan palette kullan
+            const turler = Object.keys(turCountMap);
+            return palette[turler.indexOf(tur) % palette.length];
+        }
+
+        // Türleri sayıya göre büyükten küçüğe sırala
+        const sortedTurler = Object.entries(turCountMap)
+            .sort((a, b) => b[1] - a[1])
+            .map(x => x[0]);
+
+        const idx = sortedTurler.indexOf(tur);
+        return palet[Math.min(idx, palet.length - 1)];
+    }
 
     // ==================== YARDIMCI FONKSİYONLAR ==================== //
 
@@ -338,12 +365,20 @@ function mainApp() {
 
         // Add center markers if provided
         if (filteredMerkezler && filteredMerkezler.length > 0) {
-            const turler = [...new Set(filteredMerkezler.map(m => m.tur))];
+            // Müdürlüklere göre grupla ve tür sayılarını hesapla
+            const mudurlukTurCounts = {};
             filteredMerkezler.forEach(m => {
-                const turIdx = turler.indexOf(m.tur);
-                const color = palette[turIdx % palette.length];
+                const mud = m.mudurluk || 'Diğer';
+                if (!mudurlukTurCounts[mud]) mudurlukTurCounts[mud] = {};
+                mudurlukTurCounts[mud][m.tur || 'Diğer'] = (mudurlukTurCounts[mud][m.tur || 'Diğer'] || 0) + 1;
+            });
+
+            filteredMerkezler.forEach(m => {
+                const mud = m.mudurluk || 'Diğer';
+                const turCountMap = mudurlukTurCounts[mud] || {};
+                const color = getMudurlukColor(mud, m.tur || 'Diğer', turCountMap);
                 L.circleMarker([m.lat, m.lon], {
-                    radius: 2,
+                    radius: 1.5,
                     fillColor: color,
                     color: '#fff',
                     weight: 0.5,
@@ -428,12 +463,20 @@ function mainApp() {
         const filteredMerkezler = mudurluk === 'ALL'
             ? merkezler.filter(m => m.lat && m.lon)
             : merkezler.filter(m => m.mudurluk === mudurluk && m.lat && m.lon);
-        const turler = [...new Set(filteredMerkezler.map(m => m.tur))];
+
+        // Müdürlüklere göre grupla ve her müdürlük için tür sayılarını hesapla
+        const mudurlukTurCounts = {};
+        filteredMerkezler.forEach(m => {
+            const mud = m.mudurluk || 'Diğer';
+            if (!mudurlukTurCounts[mud]) mudurlukTurCounts[mud] = {};
+            mudurlukTurCounts[mud][m.tur || 'Diğer'] = (mudurlukTurCounts[mud][m.tur || 'Diğer'] || 0) + 1;
+        });
 
         filteredMerkezler.forEach(m => {
-            const turIdx = turler.indexOf(m.tur);
-            const color = palette[turIdx % palette.length];
-            L.circleMarker([m.lat, m.lon], { radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.9 })
+            const mud = m.mudurluk || 'Diğer';
+            const turCountMap = mudurlukTurCounts[mud] || {};
+            const color = getMudurlukColor(mud, m.tur || 'Diğer', turCountMap);
+            L.circleMarker([m.lat, m.lon], { radius: 5, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.9 })
                 .bindTooltip(`<b>${m.ad}</b><br>${m.tur}<br>${m.ilce}`).addTo(map);
         });
 
@@ -462,7 +505,14 @@ function mainApp() {
 
     function renderOzetSayfasi(data, sutunBasligi) {
         const byMud = groupBy(data, 'mudurluk');
-        const bolumAdi = sutunBasligi === 'GENEL' ? '2019\'DAN BU YANA' : 'Aylık Hizmet İstatistikleri';
+        // Dinamik tarih başlığı oluştur
+        const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+        let bolumAdi = '2019\'DAN BU YANA';
+        if (sutunBasligi !== 'GENEL' && reportYear && reportMonth !== null) {
+            bolumAdi = `${reportYear} ${monthNames[reportMonth]}`;
+        } else if (sutunBasligi !== 'GENEL') {
+            bolumAdi = 'Bu Ay';
+        }
 
         const mudurlukler = [];
         for (const [mud, items] of Object.entries(byMud)) {
@@ -633,7 +683,9 @@ function mainApp() {
         H += renderOzetSayfasi(filteredBggVeriler, 'GENEL');
 
         if (filteredAylikVeriler.length > 0) {
-            H += renderSectionPage('Aylık Hizmet İstatistikleri', 'İçinde bulunduğumuz ayda gerçekleştirdiğimiz hizmetlerin özet istatistikleri.');
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            const aylikBaslik = (reportYear && reportMonth !== null) ? `${reportYear} ${monthNames[reportMonth]}` : 'Bu Ay';
+            H += renderSectionPage(aylikBaslik, 'İçinde bulunduğumuz ayda gerçekleştirdiğimiz hizmetlerin özet istatistikleri.');
             H += renderOzetSayfasi(filteredAylikVeriler, 'BU AY');
         }
 
@@ -651,9 +703,10 @@ function mainApp() {
             const renderMudurlukMerkezler = (mud, list) => {
                 const turGruplari = {};
                 list.forEach(m => { turGruplari[m.tur || 'Diğer'] = (turGruplari[m.tur || 'Diğer'] || 0) + 1; });
-                const turler = [...new Set(merkezler.map(m => m.tur))].filter(Boolean);
-                const turHTML = Object.entries(turGruplari).map(([tur, count]) => {
-                    const color = palette[turler.indexOf(tur) % palette.length];
+                // Türleri sayıya göre sırala (büyükten küçüğe)
+                const sortedTurEntries = Object.entries(turGruplari).sort((a, b) => b[1] - a[1]);
+                const turHTML = sortedTurEntries.map(([tur, count]) => {
+                    const color = getMudurlukColor(mud, tur, turGruplari);
                     return `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:7.5pt;color:#4a5568;">
                     <span style="width:8px;height:8px;border-radius:50%;background:${color};"></span>
                     <span>${tur}</span><span style="font-weight:600;color:#153d6f;">${count}</span></div>`;
