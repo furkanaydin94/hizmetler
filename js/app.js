@@ -783,6 +783,27 @@ function mainApp() {
                 };
 
                 pageNum++;
+
+                // Müdürlükleri dengeli 2 sütuna dağıt (en kısa sütuna ekle algoritması)
+                const solSutun = [];
+                const sagSutun = [];
+                let solYukseklik = 0;
+                let sagYukseklik = 0;
+
+                // Müdürlükleri büyükten küçüğe zaten sıralı (mudurlukListesi)
+                mudurlukListesi.forEach(([mud, merkezListesi]) => {
+                    // Tahmini yükseklik: başlık + merkez sayısı × kart yüksekliği
+                    const tahminiYukseklik = 1 + merkezListesi.length;
+
+                    if (solYukseklik <= sagYukseklik) {
+                        solSutun.push([mud, merkezListesi]);
+                        solYukseklik += tahminiYukseklik;
+                    } else {
+                        sagSutun.push([mud, merkezListesi]);
+                        sagYukseklik += tahminiYukseklik;
+                    }
+                });
+
                 H += `
             <div class="page detail-page">
                 <div class="detail-header"><div class="detail-header-text"><h2>${locationFilter}</h2><span>Hizmet Merkezleri</span></div><img src="logo/logo.png"></div>
@@ -791,8 +812,9 @@ function mainApp() {
                         <span style="font-weight:700;color:#153d6f;font-size:10pt;">Toplam Merkez Sayısı</span>
                         <span style="font-weight:800;color:#1a5490;font-size:13pt;">${ilceMerkezleri.length}</span>
                     </div>
-                    <div style="column-count:2;column-gap:25px;column-fill:auto;height:calc(100% - 50px);overflow:hidden;">
-                        ${mudurlukListesi.map(([m, l]) => renderMudurlukGrubu(m, l)).join('')}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 25px;height:calc(100% - 50px);overflow:hidden;">
+                        <div>${solSutun.map(([m, l]) => renderMudurlukGrubu(m, l)).join('')}</div>
+                        <div>${sagSutun.map(([m, l]) => renderMudurlukGrubu(m, l)).join('')}</div>
                     </div>
                 </div>
                 <div class="page-footer"><span class="footer-left">${window.footerText}</span><span class="page-num">${pageNum}</span></div>
