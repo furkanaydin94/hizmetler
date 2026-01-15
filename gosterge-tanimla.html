@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gösterge Tanımla - Rapor Sistemi</title>
+
+    <!-- Design System CSS -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/wizard.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Inter"', 'sans-serif'] },
+                    colors: { brand: { primary: '#3B82F6', dark: '#1e293b' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .custom-input {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.625rem;
+            font-size: 0.875rem;
+            background-color: white;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .custom-input:focus {
+            box-shadow: 0 0 0 2px #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .custom-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: #1e293b;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #334155;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            border: 1px solid #d1d5db;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f8fafc;
+        }
+
+        .btn-accent {
+            background-color: #3B82F6;
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background-color: #2563eb;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #3B82F6;
+            color: #3B82F6;
+            font-weight: 600;
+        }
+
+        .section-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tree-item {
+            padding: 0.5rem;
+            border-left: 2px solid #e2e8f0;
+            margin-left: 0.5rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            background: #10b981;
+        }
+
+        .toast.error {
+            background: #ef4444;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Context Menu Styles */
+        .context-menu {
+            position: fixed;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 180px;
+            padding: 4px 0;
+            display: none;
+        }
+
+        .context-menu.visible {
+            display: block;
+            animation: fadeIn 0.15s ease;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #374151;
+            transition: all 0.15s;
+        }
+
+        .context-menu-item:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .context-menu-item.danger:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 4px 0;
+        }
+
+        /* Tree item hover for context */
+        .tree-node {
+            cursor: context-menu;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin: 2px 0;
+            transition: background 0.15s;
+        }
+
+        .tree-node:hover {
+            background: #f8fafc;
+        }
+
+        /* Quick Add Modal */
+        .quick-add-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .quick-add-modal.visible {
+            display: flex;
+        }
+
+        .quick-add-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="page-header">
+        <div class="header-content">
+            <div class="brand">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                <span>Gösterge Tanımla</span>
+            </div>
+            <div class="header-actions">
+                <a href="index.html" class="btn-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Ana Sayfa
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="p-6 max-w-7xl mx-auto">
+        <!-- Tabs -->
+        <div class="flex gap-6 border-b border-gray-200 mb-6">
+            <button id="tab-config" class="pb-3 px-2 text-sm tab-active">
+                🏛️ Yapılandırma
+            </button>
+        </div>
+
+        <!-- Tab 1: Yapılandırma -->
+        <div id="panel-config">
+            <!-- Tam Genişlik Panel: Kurum Yapısı -->
+            <div
+                class="bg-white rounded-xl border border-gray-200 p-6 h-[calc(100vh-200px)] overflow-y-auto custom-scroll">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">🏛️ Kurum Yapısı</h2>
+                    <p class="text-sm text-gray-500">Sağ tık veya ➕ butonu ile öğe ekleyin</p>
+                </div>
+                <!-- Görünüm Filtreleme -->
+                <div class="flex items-center gap-2 mb-4 p-2 bg-gray-50 rounded-lg">
+                    <span class="text-xs text-gray-500 mr-2">Görünüm:</span>
+                    <button onclick="setViewLevel('model')" id="view-model"
+                        class="px-3 py-1 text-xs rounded-full border transition-colors view-btn">
+                        Model
+                    </button>
+                    <button onclick="setViewLevel('goal')" id="view-goal"
+                        class="px-3 py-1 text-xs rounded-full border transition-colors view-btn">
+                        Amaç
+                    </button>
+                    <button onclick="setViewLevel('action')" id="view-action"
+                        class="px-3 py-1 text-xs rounded-full border transition-colors view-btn">
+                        Eylem
+                    </button>
+                    <button onclick="setViewLevel('indicator')" id="view-indicator"
+                        class="px-3 py-1 text-xs rounded-full border transition-colors view-btn bg-blue-500 text-white border-blue-500">
+                        Gösterge
+                    </button>
+                </div>
+                <div id="structure-tree" class="space-y-3">
+                    <div class="text-center text-gray-400 text-sm py-8">Henüz veri girişi yapılmamış.</div>
+                </div>
+            </div>
+
+            <!-- Data Source Modal (Full Screen) -->
+            <div id="source-modal"
+                class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-2">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-[95vw] h-[90vh] flex flex-col">
+                    <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                        <h2 class="font-bold text-gray-800">📁 Veri Kaynağı ve Planlama</h2>
+                        <button onclick="closeSourceModal()"
+                            class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+                    </div>
+                    <div class="flex-1 flex overflow-hidden">
+                        <!-- Sol Panel: Kaynak Seçimi -->
+                        <div class="w-1/3 border-r overflow-y-auto custom-scroll p-4">
+                            <h3 class="font-bold text-sm text-gray-700 mb-3">🏛️ Veri Kaynağı Seçimi</h3>
+                            <div id="source-tree"></div>
+                        </div>
+                        <!-- Sağ Panel: Planlama -->
+                        <div class="w-2/3 overflow-y-auto custom-scroll p-4">
+                            <h3 class="font-bold text-sm text-gray-700 mb-3">📊 Seçili Kaynaklar ve Planlama</h3>
+                            <div id="source-planning"></div>
+                        </div>
+                    </div>
+                    <div class="p-4 border-t bg-gray-50 flex justify-between items-center">
+                        <span id="source-status" class="text-xs text-gray-500"></span>
+                        <button onclick="closeSourceModal()" class="custom-btn btn-primary">Kaydet ve Kapat</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="fixed bottom-6 right-6">
+                <button class="custom-btn btn-primary" onclick="exportSettings()">
+                    📤 Ayarları İndir
+                </button>
+            </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu">
+        <div class="context-menu-item" id="ctx-add-child" onclick="contextAddChild()">
+            <span>➕</span> <span id="ctx-add-label">Alt Öğe Ekle</span>
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" id="ctx-delete" onclick="contextDelete()">
+            <span>🗑️</span> Sil
+        </div>
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div id="quick-add-modal" class="quick-add-modal" onclick="closeQuickAddModal(event)">
+        <div class="quick-add-content" onclick="event.stopPropagation()">
+            <h3 id="quick-add-title" class="text-lg font-bold mb-4 text-gray-900">Yeni Ekle</h3>
+            <input id="quick-add-input" class="custom-input mb-4" placeholder="İsim giriniz...">
+            <div class="flex justify-end gap-2">
+                <button class="custom-btn btn-secondary" onclick="closeQuickAddModal()">İptal</button>
+                <button class="custom-btn btn-primary" onclick="submitQuickAdd()">Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicator Quick Define Modal -->
+    <div id="indicator-modal" class="quick-add-modal" onclick="closeIndicatorModal(event)">
+        <div class="quick-add-content" style="max-width: 500px;" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-bold mb-2 text-gray-900">📊 Gösterge Tanımla</h3>
+            <p id="indicator-modal-context" class="text-sm text-gray-500 mb-4"></p>
+
+            <!-- Gösterge Adı -->
+            <div class="mb-4">
+                <label class="text-xs font-bold text-gray-500 mb-1 block">Gösterge Adı</label>
+                <input id="ind-modal-name" class="custom-input" placeholder="Örn: Nakdi Yardım Alan Kişi Sayısı">
+            </div>
+
+            <!-- Yıl ve Q Hedefleri -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-bold text-sm text-gray-700">📅 Dönemsel Hedefler</h4>
+                    <div class="flex items-center gap-2 bg-white px-2 py-1 rounded border border-gray-200">
+                        <label class="text-xs font-bold text-gray-500">Yıl:</label>
+                        <input id="ind-modal-year" type="number"
+                            class="w-16 text-center font-bold text-sm text-gray-700 outline-none bg-transparent"
+                            value="2025">
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q1</label>
+                        <input id="ind-modal-q1" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q2</label>
+                        <input id="ind-modal-q2" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q3</label>
+                        <input id="ind-modal-q3" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q4</label>
+                        <input id="ind-modal-q4" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button class="custom-btn btn-secondary" onclick="closeIndicatorModal()">Atla</button>
+                <button class="custom-btn btn-accent" onclick="saveIndicatorFromModal()">💾 Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Target Edit Modal -->
+    <div id="target-modal" class="quick-add-modal" onclick="closeTargetModal(event)">
+        <div class="quick-add-content" style="max-width: 450px;" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-bold mb-2 text-gray-900">📅 Hedef Düzenle</h3>
+            <p id="target-modal-name" class="text-sm text-purple-600 font-medium mb-4"></p>
+
+            <!-- Yıl ve Q Hedefleri -->
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-bold text-sm text-gray-700">Hedef Yılı</h4>
+                    <input id="target-modal-year" type="number" class="custom-input w-24 text-center font-bold"
+                        value="2025">
+                </div>
+                <div class="grid grid-cols-4 gap-3">
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q1</label>
+                        <input id="target-modal-q1" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q2</label>
+                        <input id="target-modal-q2" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q3</label>
+                        <input id="target-modal-q3" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                    <div>
+                        <label class="text-xs block text-center mb-1 font-bold text-gray-400">Q4</label>
+                        <input id="target-modal-q4" type="number" class="custom-input text-center font-bold" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button class="custom-btn btn-secondary" onclick="closeTargetModal()">İptal</button>
+                <button class="custom-btn btn-accent" onclick="saveTargetFromModal()">💾 Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== DATA STATE ====================
+        let data = {
+            directorates: [],
+            models: [],
+            goals: [],
+            actions: []
+        };
+        let indicators = [];
+        let selectedIndicatorId = null;
+        let rawData = [];
+        let treeData = {};
+        let currentSelections = [];
+        let viewLevel = 'indicator'; // 'model', 'goal', 'action', 'indicator'
+
+        // View level controller
+        function setViewLevel(level) {
+            viewLevel = level;
+            // Update button styles
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white', 'border-blue-500');
+                btn.classList.add('bg-white', 'text-gray-600', 'border-gray-300');
+            });
+            const activeBtn = document.getElementById('view-' + level);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-gray-600', 'border-gray-300');
+                activeBtn.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
+            }
+            renderStructureTree();
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+        function notify(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ==================== TAB NAVIGATION ====================
+        function showTab(tab) {
+            document.getElementById('panel-config').classList.toggle('hidden', tab !== 'config');
+            document.getElementById('panel-data').classList.toggle('hidden', tab !== 'data');
+            document.getElementById('tab-config').classList.toggle('tab-active', tab === 'config');
+            document.getElementById('tab-data').classList.toggle('tab-active', tab === 'data');
+            document.getElementById('tab-config').classList.toggle('text-gray-500', tab !== 'config');
+            document.getElementById('tab-data').classList.toggle('text-gray-500', tab !== 'data');
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        function renderStructureTree() {
+            const container = document.getElementById('structure-tree');
+            if (data.directorates.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 text-sm py-8">
+                        <p class="mb-4">Henüz veri girişi yapılmamış.</p>
+                        <button class="custom-btn btn-primary text-xs" onclick="openQuickAdd('dir', null)">
+                            + Müdürlük Ekle
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            let html = `<div class="mb-2">
+                <button class="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1" onclick="openQuickAdd('dir', null)">
+                    <span>+</span> Yeni Müdürlük
+                </button>
+            </div>`;
+
+            data.directorates.forEach(dir => {
+                html += `<div class="mb-3">
+                    <div class="tree-node flex items-center justify-between group" 
+                         oncontextmenu="showContextMenu(event, 'dir', '${dir.id}')">
+                        <div class="font-bold text-gray-800 flex items-center gap-2">
+                            🏛️ ${dir.name}
+                        </div>
+                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                            <button onclick="event.stopPropagation(); openQuickAdd('model', '${dir.id}')" 
+                                    class="text-blue-500 hover:text-blue-700 text-xs" title="Model Ekle">➕</button>
+                            <button onclick="event.stopPropagation(); deleteItem('dir', '${dir.id}')" 
+                                    class="text-red-400 hover:text-red-600" title="Sil">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="tree-item space-y-2">`;
+
+                data.models.filter(m => m.directorateId === dir.id).forEach(model => {
+                    html += `<div class="mb-2">
+                        <div class="tree-node flex items-center justify-between group"
+                             oncontextmenu="showContextMenu(event, 'model', '${model.id}')">
+                            <div class="font-semibold text-gray-700 text-sm flex items-center gap-2">📦 ${model.name}</div>
+                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                                <button onclick="event.stopPropagation(); openQuickAdd('goal', '${model.id}')" 
+                                        class="text-blue-500 hover:text-blue-700 text-xs" title="Amaç Ekle">➕</button>
+                                <button onclick="event.stopPropagation(); deleteItem('model', '${model.id}')" 
+                                        class="text-red-400 hover:text-red-600 text-xs" title="Sil">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="tree-item space-y-1">`;
+
+                    // Model görünümünde amaç/eylem gösterme
+                    if (viewLevel === 'model') {
+                        html += `<div class="text-gray-400 text-xs italic px-2 py-1">Amaç: ${data.goals.filter(g => g.modelId === model.id).length}, Eylem: ${data.actions.filter(a => data.goals.filter(g => g.modelId === model.id).some(g => g.id === a.goalId)).length}</div>`;
+                        html += '</div></div>';
+                        return;
+                    }
+
+                    data.goals.filter(g => g.modelId === model.id).forEach(goal => {
+                        html += `<div class="mb-1">
+                            <div class="tree-node flex items-center justify-between group"
+                                 oncontextmenu="showContextMenu(event, 'goal', '${goal.id}')">
+                                <div class="text-gray-600 text-xs flex items-center gap-2">🔑 ${goal.name}</div>
+                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                                    <button onclick="event.stopPropagation(); openQuickAdd('action', '${goal.id}')" 
+                                            class="text-blue-500 hover:text-blue-700 text-xs" title="Eylem Ekle">➕</button>
+                                    <button onclick="event.stopPropagation(); deleteItem('goal', '${goal.id}')" 
+                                            class="text-red-400 hover:text-red-600 text-xs" title="Sil">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="tree-item space-y-1">`;
+
+                        // Amaç görünümünde eylemleri gösterme
+                        if (viewLevel === 'goal') {
+                            const actionCount = data.actions.filter(a => a.goalId === goal.id).length;
+                            html += `<div class="text-gray-400 text-xs italic px-2 py-1">🎯 ${actionCount} eylem</div>`;
+                            html += '</div></div>';
+                            return;
+                        }
+
+                        data.actions.filter(a => a.goalId === goal.id).forEach(action => {
+                            html += `<div class="mb-1">
+                                <div class="tree-node flex items-center justify-between group"
+                                     oncontextmenu="showContextMenu(event, 'action', '${action.id}')">
+                                    <span class="text-gray-500 text-xs">🎯 ${action.name}</span>
+                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                                        <button onclick="event.stopPropagation(); openQuickAdd('indicator', '${action.id}')" 
+                                                class="text-green-500 hover:text-green-700 text-xs" title="Gösterge Ekle">➕</button>
+                                        <button onclick="event.stopPropagation(); deleteItem('action', '${action.id}')" 
+                                                class="text-red-400 hover:text-red-600 text-xs" title="Sil">🗑️</button>
+                                    </div>
+                                </div>
+                                <div class="tree-item space-y-1">`;
+
+                            // Eylem görünümünde göstergeleri gösterme
+                            if (viewLevel === 'action') {
+                                const indCount = indicators.filter(ind => ind.actionId === action.id).length;
+                                if (indCount > 0) {
+                                    html += `<div class="text-gray-400 text-xs italic px-2 py-1">📊 ${indCount} gösterge</div>`;
+                                }
+                                html += `</div></div>`;
+                                return;
+                            }
+
+                            // Göstergeleri göster
+                            indicators.filter(ind => ind.actionId === action.id).forEach(ind => {
+                                const t = ind.targets || { q1: 0, q2: 0, q3: 0, q4: 0 };
+                                const srcCount = ind.selections?.length || 0;
+                                html += `<div class="tree-node flex items-center justify-between group cursor-pointer hover:bg-purple-50 py-1"
+                                             onclick="openTargetModal('${ind.id}')">
+                                    <div class="flex flex-col">
+                                        <span class="text-purple-600 text-xs font-medium">📊 ${ind.name}</span>
+                                        <span class="text-gray-400 text-xs">${ind.targetYear || '-'} | Q1:${t.q1} Q2:${t.q2} Q3:${t.q3} Q4:${t.q4} ${srcCount > 0 ? '| 📁' + srcCount : ''}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                                        <button onclick="event.stopPropagation(); openSourceModalForIndicator('${ind.id}')" 
+                                                class="text-blue-500 hover:text-blue-700 text-xs" title="Veri Kaynağı (${srcCount})">📁</button>
+                                        <button onclick="event.stopPropagation(); deleteIndicatorItem('${ind.id}')" 
+                                                class="text-red-400 hover:text-red-600 text-xs" title="Sil">🗑️</button>
+                                    </div>
+                                </div>`;
+                            });
+
+                            html += `</div></div>`;
+                        });
+
+                        html += '</div></div>';
+                    });
+
+                    html += '</div></div>';
+                });
+
+                html += '</div></div>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderDropdowns() {
+            // Config dropdowns
+            const modelDirSelect = document.getElementById('model-dir');
+            modelDirSelect.innerHTML = '<option value="">Müdürlük Seç...</option>' +
+                data.directorates.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+            const goalModelSelect = document.getElementById('goal-model');
+            goalModelSelect.innerHTML = '<option value="">Model Seç...</option>' +
+                data.models.map(m => {
+                    const dir = data.directorates.find(d => d.id === m.directorateId);
+                    return `<option value="${m.id}">${dir?.name || ''} → ${m.name}</option>`;
+                }).join('');
+
+            const actionGoalSelect = document.getElementById('action-goal');
+            actionGoalSelect.innerHTML = '<option value="">Amaç Seç...</option>' +
+                data.goals.map(g => {
+                    const model = data.models.find(m => m.id === g.modelId);
+                    const dir = data.directorates.find(d => d.id === model?.directorateId);
+                    return `<option value="${g.id}">${dir?.name || ''} → ${model?.name || ''} → ${g.name}</option>`;
+                }).join('');
+
+            // Indicator form dropdowns
+            document.getElementById('ind-dir').innerHTML = '<option value="">Seçiniz...</option>' +
+                data.directorates.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+
+        function renderIndicatorList() {
+            const container = document.getElementById('indicator-list');
+            if (indicators.length === 0) {
+                container.innerHTML = '<div class="text-center text-sm text-gray-400 mt-4">Kayıt yok.</div>';
+                return;
+            }
+
+            container.innerHTML = indicators.map(ind => `
+                <div class="p-3 rounded border cursor-pointer group relative ${selectedIndicatorId === ind.id ? 'bg-blue-50 border-blue-500' : 'bg-white border-gray-200 hover:border-blue-300'}"
+                     onclick="loadIndicator('${ind.id}')">
+                    <div class="text-xs text-gray-500 font-mono mb-1">ID: ${ind.id.substring(0, 8)}...</div>
+                    <div class="font-bold text-sm text-gray-800">${ind.name || 'İsimsiz Gösterge'}</div>
+                    <button onclick="event.stopPropagation(); deleteIndicator('${ind.id}')" 
+                            class="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        // ==================== ADD FUNCTIONS ====================
+        function addDirectorate() {
+            const name = document.getElementById('dir-name').value.trim();
+            if (!name) return notify('Müdürlük adı giriniz.', 'error');
+            data.directorates.push({ id: generateId(), name });
+            document.getElementById('dir-name').value = '';
+            renderStructureTree();
+            renderDropdowns();
+            notify('Müdürlük eklendi.');
+        }
+
+        function addModel() {
+            const dirId = document.getElementById('model-dir').value;
+            const name = document.getElementById('model-name').value.trim();
+            if (!dirId || !name) return notify('Müdürlük seçin ve model adı girin.', 'error');
+            data.models.push({ id: generateId(), directorateId: dirId, name });
+            document.getElementById('model-name').value = '';
+            renderStructureTree();
+            renderDropdowns();
+            notify('Model eklendi.');
+        }
+
+        function addGoal() {
+            const modelId = document.getElementById('goal-model').value;
+            const name = document.getElementById('goal-name').value.trim();
+            if (!modelId || !name) return notify('Model seçin ve amaç tanımı girin.', 'error');
+            data.goals.push({ id: generateId(), modelId, name });
+            document.getElementById('goal-name').value = '';
+            renderStructureTree();
+            renderDropdowns();
+            notify('Amaç eklendi.');
+        }
+
+        function addAction() {
+            const goalId = document.getElementById('action-goal').value;
+            const name = document.getElementById('action-name').value.trim();
+            if (!goalId || !name) return notify('Amaç seçin ve eylem tanımı girin.', 'error');
+            data.actions.push({ id: generateId(), goalId, name });
+            document.getElementById('action-name').value = '';
+            renderStructureTree();
+            renderDropdowns();
+            notify('Eylem eklendi.');
+        }
+
+        function deleteItem(type, id) {
+            if (!confirm('Bu öğeyi silmek istediğinize emin misiniz?')) return;
+            if (type === 'dir') data.directorates = data.directorates.filter(x => x.id !== id);
+            else if (type === 'model') data.models = data.models.filter(x => x.id !== id);
+            else if (type === 'goal') data.goals = data.goals.filter(x => x.id !== id);
+            else if (type === 'action') data.actions = data.actions.filter(x => x.id !== id);
+            renderStructureTree();
+            renderDropdowns();
+            notify('Silindi.');
+        }
+
+        // ==================== CONTEXT MENU ====================
+        let contextMenuState = { type: null, id: null };
+
+        function showContextMenu(event, type, id) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            contextMenuState = { type, id };
+
+            const menu = document.getElementById('context-menu');
+            const addLabel = document.getElementById('ctx-add-label');
+            const addChild = document.getElementById('ctx-add-child');
+
+            // Set label based on type
+            const labels = {
+                'dir': '📦 Model Ekle',
+                'model': '🔑 Amaç Ekle',
+                'goal': '🎯 Eylem Ekle',
+                'action': null // Actions don't have children
+            };
+
+            if (labels[type]) {
+                addLabel.textContent = labels[type];
+                addChild.style.display = 'flex';
+            } else {
+                addChild.style.display = 'none';
+            }
+
+            // Position menu
+            menu.style.left = event.clientX + 'px';
+            menu.style.top = event.clientY + 'px';
+            menu.classList.add('visible');
+
+            // Close on click outside
+            setTimeout(() => {
+                document.addEventListener('click', closeContextMenu);
+                document.addEventListener('contextmenu', closeContextMenu);
+            }, 0);
+        }
+
+        function closeContextMenu() {
+            document.getElementById('context-menu').classList.remove('visible');
+            document.removeEventListener('click', closeContextMenu);
+            document.removeEventListener('contextmenu', closeContextMenu);
+        }
+
+        function contextAddChild() {
+            closeContextMenu();
+            const { type, id } = contextMenuState;
+
+            const childTypes = {
+                'dir': 'model',
+                'model': 'goal',
+                'goal': 'action'
+            };
+
+            if (childTypes[type]) {
+                openQuickAdd(childTypes[type], id);
+            }
+        }
+
+        function contextDelete() {
+            closeContextMenu();
+            const { type, id } = contextMenuState;
+            deleteItem(type, id);
+        }
+
+        // ==================== QUICK ADD MODAL ====================
+        let quickAddState = { type: null, parentId: null };
+
+        function openQuickAdd(type, parentId) {
+            quickAddState = { type, parentId };
+
+            const modal = document.getElementById('quick-add-modal');
+            const title = document.getElementById('quick-add-title');
+            const input = document.getElementById('quick-add-input');
+
+            const titles = {
+                'dir': '🏛️ Yeni Müdürlük',
+                'model': '📦 Yeni İzleme Modeli',
+                'goal': '🔑 Yeni Stratejik Amaç',
+                'action': '🎯 Yeni Eylem / Hedef',
+                'indicator': '📊 Yeni Gösterge'
+            };
+
+            const placeholders = {
+                'dir': 'Örn: Sosyal Hizmetler Şube Md.',
+                'model': 'Örn: Stratejik Hedefler',
+                'goal': 'Örn: A5.Sosyal İhtiyaçları Eşit ve Kapsayıcı...',
+                'action': 'Örn: Nakdi Yardım Sayısını Artırmak',
+                'indicator': 'Örn: Nakdi Yardım Alan Kişi Sayısı'
+            };
+
+            title.textContent = titles[type] || 'Yeni Ekle';
+            input.placeholder = placeholders[type] || 'İsim giriniz...';
+            input.value = '';
+
+            modal.classList.add('visible');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closeQuickAddModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('quick-add-modal').classList.remove('visible');
+            quickAddState = { type: null, parentId: null };
+        }
+
+        function submitQuickAdd() {
+            const { type, parentId } = quickAddState;
+            const name = document.getElementById('quick-add-input').value.trim();
+
+            if (!name) {
+                notify('İsim giriniz.', 'error');
+                return;
+            }
+
+            const id = generateId();
+
+            switch (type) {
+                case 'dir':
+                    data.directorates.push({ id, name });
+                    notify('Müdürlük eklendi.');
+                    break;
+                case 'model':
+                    if (!parentId) { notify('Müdürlük seçilmedi.', 'error'); return; }
+                    data.models.push({ id, directorateId: parentId, name });
+                    notify('Model eklendi.');
+                    break;
+                case 'goal':
+                    if (!parentId) { notify('Model seçilmedi.', 'error'); return; }
+                    data.goals.push({ id, modelId: parentId, name });
+                    notify('Amaç eklendi.');
+                    break;
+                case 'action':
+                    if (!parentId) { notify('Amaç seçilmedi.', 'error'); return; }
+                    data.actions.push({ id, goalId: parentId, name });
+                    notify('Eylem eklendi.');
+                    break;
+                case 'indicator':
+                    if (!parentId) { notify('Eylem seçilmedi.', 'error'); return; }
+                    // Get hierarchy IDs from action
+                    const action = data.actions.find(a => a.id === parentId);
+                    const goal = action ? data.goals.find(g => g.id === action.goalId) : null;
+                    const model = goal ? data.models.find(m => m.id === goal.modelId) : null;
+                    const dir = model ? data.directorates.find(d => d.id === model.directorateId) : null;
+
+                    indicators.push({
+                        id,
+                        actionId: parentId,
+                        goalId: goal?.id || '',
+                        modelId: model?.id || '',
+                        directorateId: dir?.id || '',
+                        name,
+                        type: 'birim',
+                        targetYear: new Date().getFullYear(),
+                        targets: { q1: 0, q2: 0, q3: 0, q4: 0 },
+                        selections: []
+                    });
+                    notify('Gösterge eklendi. Hedef girmek için tıklayın.');
+                    break;
+            }
+
+            closeQuickAddModal();
+            renderStructureTree();
+            renderDropdowns();
+        }
+
+        // Handle Enter key in quick add input
+        document.getElementById('quick-add-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submitQuickAdd();
+            if (e.key === 'Escape') closeQuickAddModal();
+        });
+
+        // ==================== INDICATOR MODAL ====================
+        let indicatorModalState = { actionId: null, actionName: null, goalId: null };
+
+        function openIndicatorModal(actionId, actionName, goalId) {
+            indicatorModalState = { actionId, actionName, goalId };
+
+            // Get hierarchy info for context
+            const goal = data.goals.find(g => g.id === goalId);
+            const model = goal ? data.models.find(m => m.id === goal.modelId) : null;
+            const dir = model ? data.directorates.find(d => d.id === model.directorateId) : null;
+
+            const contextParts = [];
+            if (dir) contextParts.push(dir.name);
+            if (model) contextParts.push(model.name);
+            if (goal) contextParts.push(goal.name);
+            contextParts.push(actionName);
+
+            document.getElementById('indicator-modal-context').innerHTML =
+                `<span class="text-gray-400">${contextParts.slice(0, -1).join(' → ')}</span> → <strong class="text-gray-700">${actionName}</strong>`;
+
+            // Reset form
+            document.getElementById('ind-modal-name').value = '';
+            document.getElementById('ind-modal-year').value = new Date().getFullYear();
+            document.getElementById('ind-modal-q1').value = '0';
+            document.getElementById('ind-modal-q2').value = '0';
+            document.getElementById('ind-modal-q3').value = '0';
+            document.getElementById('ind-modal-q4').value = '0';
+
+            document.getElementById('indicator-modal').classList.add('visible');
+            setTimeout(() => document.getElementById('ind-modal-name').focus(), 100);
+        }
+
+        function closeIndicatorModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('indicator-modal').classList.remove('visible');
+            indicatorModalState = { actionId: null, actionName: null, goalId: null };
+        }
+
+        function saveIndicatorFromModal() {
+            const { actionId, goalId } = indicatorModalState;
+            const name = document.getElementById('ind-modal-name').value.trim();
+
+            if (!name) {
+                notify('Gösterge adı giriniz.', 'error');
+                return;
+            }
+
+            // Get full hierarchy IDs
+            const goal = data.goals.find(g => g.id === goalId);
+            const model = goal ? data.models.find(m => m.id === goal.modelId) : null;
+            const dir = model ? data.directorates.find(d => d.id === model.directorateId) : null;
+
+            const newInd = {
+                id: generateId(),
+                directorateId: dir?.id || '',
+                modelId: model?.id || '',
+                goalId: goalId,
+                actionId: actionId,
+                name: name,
+                type: 'birim',
+                targetYear: parseInt(document.getElementById('ind-modal-year').value) || 2025,
+                targets: {
+                    q1: parseFloat(document.getElementById('ind-modal-q1').value) || 0,
+                    q2: parseFloat(document.getElementById('ind-modal-q2').value) || 0,
+                    q3: parseFloat(document.getElementById('ind-modal-q3').value) || 0,
+                    q4: parseFloat(document.getElementById('ind-modal-q4').value) || 0
+                },
+                selections: []
+            };
+
+            indicators.push(newInd);
+            closeIndicatorModal();
+            updateIndicatorSelect();
+            notify('Gösterge kaydedildi.');
+        }
+
+        // Handle Enter key in indicator modal
+        document.getElementById('ind-modal-name').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveIndicatorFromModal();
+            if (e.key === 'Escape') closeIndicatorModal();
+        });
+
+        // ==================== TARGET MODAL ====================
+        let targetModalState = { indicatorId: null };
+
+        function openTargetModal(indicatorId) {
+            const ind = indicators.find(i => i.id === indicatorId);
+            if (!ind) return;
+
+            targetModalState = { indicatorId };
+
+            document.getElementById('target-modal-name').textContent = '📊 ' + ind.name;
+            document.getElementById('target-modal-year').value = ind.targetYear || new Date().getFullYear();
+            document.getElementById('target-modal-q1').value = ind.targets?.q1 || 0;
+            document.getElementById('target-modal-q2').value = ind.targets?.q2 || 0;
+            document.getElementById('target-modal-q3').value = ind.targets?.q3 || 0;
+            document.getElementById('target-modal-q4').value = ind.targets?.q4 || 0;
+
+            document.getElementById('target-modal').classList.add('visible');
+            setTimeout(() => document.getElementById('target-modal-year').focus(), 100);
+        }
+
+        function closeTargetModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('target-modal').classList.remove('visible');
+            targetModalState = { indicatorId: null };
+        }
+
+        function saveTargetFromModal() {
+            const { indicatorId } = targetModalState;
+            const ind = indicators.find(i => i.id === indicatorId);
+            if (!ind) return;
+
+            ind.targetYear = parseInt(document.getElementById('target-modal-year').value) || new Date().getFullYear();
+            ind.targets = {
+                q1: parseFloat(document.getElementById('target-modal-q1').value) || 0,
+                q2: parseFloat(document.getElementById('target-modal-q2').value) || 0,
+                q3: parseFloat(document.getElementById('target-modal-q3').value) || 0,
+                q4: parseFloat(document.getElementById('target-modal-q4').value) || 0
+            };
+
+            closeTargetModal();
+            renderStructureTree();
+            updateIndicatorSelect();
+            notify('Hedefler kaydedildi.');
+        }
+
+        function deleteIndicatorItem(id) {
+            if (!confirm('Bu göstergeyi silmek istediğinize emin misiniz?')) return;
+            indicators = indicators.filter(i => i.id !== id);
+            renderStructureTree();
+            updateIndicatorSelect();
+            notify('Gösterge silindi.');
+        }
+
+        // ==================== SOURCE MODAL FOR INDICATORS ====================
+        let currentSourceIndicatorId = null;
+        let sourceData = { hizmetler: [], mudurlukler: [], turler: [] };
+        let indicatorSelections = [];
+        let sourceDataLoaded = false;
+
+        // Varsayılan Excel dosyasından veya localStorage'dan veri yükle
+        async function loadSourceData() {
+            if (sourceDataLoaded && sourceData.hizmetler.length > 0) return true;
+
+            // Önce localStorage'dan dene (customExcelData)
+            try {
+                const stored = localStorage.getItem('customExcelData');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed.hizmetler && parsed.hizmetler.length > 0) {
+                        sourceData.hizmetler = parsed.hizmetler.map(r => ({
+                            mudurluk: r.mudurluk || '',
+                            hizmet: r.hizmet || '',
+                            tur: r.tur || ''
+                        })).filter(r => r.mudurluk && r.hizmet);
+
+                        sourceData.mudurlukler = [...new Set(sourceData.hizmetler.map(h => h.mudurluk))].sort((a, b) => a.localeCompare(b, 'tr'));
+                        sourceData.turler = [...new Set(sourceData.hizmetler.map(h => h.tur).filter(Boolean))];
+
+                        console.log('📊 LocalStorage\'dan veri yüklendi:', sourceData.mudurlukler.length, 'müdürlük');
+                        sourceDataLoaded = true;
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('LocalStorage okunamadı:', e);
+            }
+
+            // LocalStorage'da yoksa varsayılan Excel'den yükle
+            try {
+                const response = await fetch('hizmet-verileri/veri.xlsx');
+                if (response.ok) {
+                    const buffer = await response.arrayBuffer();
+                    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+                    const sheet = wb.Sheets['Hizmetler'];
+
+                    if (sheet) {
+                        const rows = XLSX.utils.sheet_to_json(sheet, { cellDates: true });
+                        sourceData.hizmetler = rows.map(r => ({
+                            mudurluk: (r['Müdürlük'] || '').toString().trim(),
+                            hizmet: (r['Hizmet Başlığı'] || r['Hizmet'] || '').toString().trim(),
+                            tur: (r['Tür'] || '').toString().trim()
+                        })).filter(r => r.mudurluk && r.hizmet);
+
+                        sourceData.mudurlukler = [...new Set(sourceData.hizmetler.map(h => h.mudurluk))].sort((a, b) => a.localeCompare(b, 'tr'));
+                        sourceData.turler = [...new Set(sourceData.hizmetler.map(h => h.tur).filter(Boolean))];
+
+                        console.log('📊 Excel dosyasından veri yüklendi:', sourceData.mudurlukler.length, 'müdürlük,', sourceData.hizmetler.length, 'hizmet');
+                        sourceDataLoaded = true;
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('Excel dosyası yüklenemedi:', e);
+            }
+
+            return false;
+        }
+
+        async function openSourceModalForIndicator(indId) {
+            currentSourceIndicatorId = indId;
+            const ind = indicators.find(i => i.id === indId);
+            if (!ind) return;
+
+            indicatorSelections = ind.selections ? JSON.parse(JSON.stringify(ind.selections)) : [];
+
+            const modal = document.getElementById('source-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Yükleme mesajı göster
+            document.getElementById('source-tree').innerHTML = '<div class="text-center text-gray-400 py-10">Veri yükleniyor...</div>';
+
+            // Veriyi yükle
+            await loadSourceData();
+
+            renderSourceTree();
+        }
+
+        function closeSourceModal() {
+            const modal = document.getElementById('source-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            // Save selections back to indicator
+            if (currentSourceIndicatorId) {
+                const ind = indicators.find(i => i.id === currentSourceIndicatorId);
+                if (ind) {
+                    ind.selections = indicatorSelections;
+                    renderStructureTree();
+                    notify('Veri kaynakları kaydedildi.');
+                }
+            }
+            currentSourceIndicatorId = null;
+        }
+
+        function renderSourceTree() {
+            const container = document.getElementById('source-tree');
+            if (!container) {
+                console.warn('source-tree element bulunamadı');
+                return;
+            }
+
+            if (sourceData.hizmetler.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-10">
+                    <p class="mb-4">📊 Veri bulunamadı</p>
+                    <p class="text-sm">Ana sayfadan bir Excel dosyası yükleyin.</p>
+                    <a href="index.html" class="text-blue-500 hover:underline text-sm mt-2 inline-block">Ana Sayfaya Git →</a>
+                </div>`;
+                return;
+            }
+
+            // Status bar
+            document.getElementById('source-status').textContent =
+                `${sourceData.mudurlukler.length} müdürlük, ${sourceData.hizmetler.length} hizmet | Seçili: ${indicatorSelections.length}`;
+
+            let html = '';
+
+            // Müdürlüklere göre grupla
+            sourceData.mudurlukler.forEach(mud => {
+                const mudId = mud.replace(/[^a-zA-Z0-9]/g, '_');
+                const hizmetler = sourceData.hizmetler.filter(h => h.mudurluk === mud);
+                const uniqueHizmetler = [...new Set(hizmetler.map(h => h.hizmet))];
+                const mudSelectedCount = indicatorSelections.filter(s => s.mudurluk === mud).length;
+
+                html += `<div class="mb-2 border rounded-lg overflow-hidden">
+                    <div class="bg-gray-100 px-4 py-3 font-bold text-sm text-gray-700 flex items-center justify-between cursor-pointer hover:bg-gray-200" onclick="toggleMudurluk('${mudId}')">
+                        <span>🏛️ ${mud}</span>
+                        <div class="flex items-center gap-2">
+                            ${mudSelectedCount > 0 ? `<span class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">${mudSelectedCount}</span>` : ''}
+                            <span class="text-xs text-gray-400">${uniqueHizmetler.length} hizmet</span>
+                            <span class="mud-arrow text-gray-400" id="arrow-${mudId}">▶</span>
+                        </div>
+                    </div>
+                    <div id="mud-${mudId}" class="hidden divide-y bg-white">`;
+
+                uniqueHizmetler.forEach(hizmet => {
+                    const hizId = (mud + '_' + hizmet).replace(/[^a-zA-Z0-9]/g, '_');
+                    const turler = [...new Set(hizmetler.filter(h => h.hizmet === hizmet).map(h => h.tur).filter(Boolean))];
+                    const hizSelectedCount = indicatorSelections.filter(s => s.mudurluk === mud && s.hizmet === hizmet).length;
+
+                    html += `<div class="border-b last:border-b-0">
+                        <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between" onclick="toggleHizmet('${hizId}')">
+                            <div class="flex-1 flex items-center gap-2">
+                                <span class="hiz-arrow text-gray-400 text-xs" id="arrow-${hizId}">▶</span>
+                                <span class="text-sm text-gray-700">${hizmet}</span>
+                                ${hizSelectedCount > 0 ? `<span class="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">${hizSelectedCount}</span>` : ''}
+                            </div>
+                            <span class="text-xs text-gray-400">${turler.length} tür</span>
+                        </div>
+                        <div id="hiz-${hizId}" class="hidden pl-8 pb-2 space-y-1 bg-gray-50">`;
+
+                    // Türler (seçilebilir)
+                    turler.forEach(tur => {
+                        const isSelected = indicatorSelections.some(s => s.mudurluk === mud && s.hizmet === hizmet && s.tur === tur);
+                        html += `<label class="flex items-center gap-2 text-xs p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 text-blue-700 font-medium' : 'hover:bg-gray-100 text-gray-600'}">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleTurSelection('${mud.replace(/'/g, "\\'")}', '${hizmet.replace(/'/g, "\\'")}', '${tur.replace(/'/g, "\\'")}', this.checked)" 
+                                   class="rounded border-gray-300 text-blue-600">
+                            ${tur}
+                        </label>`;
+                    });
+
+                    // Tür yoksa sadece hizmeti seç
+                    if (turler.length === 0) {
+                        const isSelected = indicatorSelections.some(s => s.mudurluk === mud && s.hizmet === hizmet);
+                        html += `<label class="flex items-center gap-2 text-xs p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 text-blue-700 font-medium' : 'hover:bg-gray-100 text-gray-600'}">
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleTurSelection('${mud.replace(/'/g, "\\'")}', '${hizmet.replace(/'/g, "\\'")}', '', this.checked)" 
+                                   class="rounded border-gray-300 text-blue-600">
+                            Bu hizmeti seç
+                        </label>`;
+                    }
+
+                    html += '</div></div>';
+                });
+
+                html += '</div></div>';
+            });
+
+            container.innerHTML = html;
+
+            // Sağ panelde planlama alanını render et
+            renderSourcePlanning();
+        }
+
+        function toggleMudurluk(mudId) {
+            const el = document.getElementById('mud-' + mudId);
+            const arrow = document.getElementById('arrow-' + mudId);
+            if (el) {
+                el.classList.toggle('hidden');
+                if (arrow) arrow.textContent = el.classList.contains('hidden') ? '▶' : '▼';
+            }
+        }
+
+        function toggleHizmet(hizId) {
+            const el = document.getElementById('hiz-' + hizId);
+            const arrow = document.getElementById('arrow-' + hizId);
+            if (el) {
+                el.classList.toggle('hidden');
+                if (arrow) arrow.textContent = el.classList.contains('hidden') ? '▶' : '▼';
+            }
+        }
+
+        function toggleTurSelection(mudurluk, hizmet, tur, checked) {
+            if (checked) {
+                if (!indicatorSelections.some(s => s.mudurluk === mudurluk && s.hizmet === hizmet && s.tur === tur)) {
+                    indicatorSelections.push({
+                        mudurluk: mudurluk,
+                        hizmet: hizmet,
+                        tur: tur || '',
+                        plans: Array(12).fill(null),
+                        useForecast: false
+                    });
+                }
+            } else {
+                indicatorSelections = indicatorSelections.filter(s => !(s.mudurluk === mudurluk && s.hizmet === hizmet && s.tur === tur));
+            }
+            renderSourceTree();
+        }
+
+        function removeSourceSelection(idx) {
+            indicatorSelections.splice(idx, 1);
+            renderSourceTree();
+        }
+
+        // Planlama panelini render et
+        function renderSourcePlanning() {
+            const container = document.getElementById('source-planning');
+            if (!container) return;
+
+            if (indicatorSelections.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-10">
+                    <p class="mb-2">📋 Henüz kaynak seçilmedi</p>
+                    <p class="text-sm">Sol taraftan veri kaynağı seçin</p>
+                </div>`;
+                return;
+            }
+
+            const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+            let html = `<div class="text-center text-green-600 bg-green-50 p-2 rounded-lg mb-4 text-sm">
+                ✓ ${indicatorSelections.length} veri kaynağı seçildi
+            </div>`;
+
+            indicatorSelections.forEach((sel, idx) => {
+                const planValues = sel.plans || Array(12).fill('');
+
+                html += `<div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <span class="font-bold text-sm text-gray-800">${sel.mudurluk}</span>
+                            <span class="text-gray-400 mx-1">→</span>
+                            <span class="text-blue-600 text-sm">${sel.hizmet}</span>
+                            ${sel.tur ? `<span class="text-gray-400 mx-1">→</span><span class="text-purple-600 text-sm">${sel.tur}</span>` : ''}
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="flex items-center gap-2 text-xs cursor-pointer">
+                                <input type="checkbox" ${sel.useForecast ? 'checked' : ''} 
+                                       onchange="toggleUseForecast(${idx}, this.checked)"
+                                       class="rounded border-gray-300 text-blue-600">
+                                <span class="text-gray-600">Otomatik Tahmin</span>
+                            </label>
+                            <button onclick="removeSourceSelection(${idx})" 
+                                    class="text-red-500 hover:text-red-700 text-sm" title="Kaldır">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-1">`;
+
+                months.forEach((month, mIdx) => {
+                    html += `<div class="text-center">
+                        <label class="text-xs text-gray-400 block mb-1">${month}</label>
+                        <input type="number" value="${planValues[mIdx] || ''}" 
+                               onchange="updatePlanValue(${idx}, ${mIdx}, this.value)"
+                               class="w-full text-center text-xs p-1 border border-gray-200 rounded focus:border-blue-500 focus:outline-none"
+                               placeholder="-">
+                    </div>`;
+                });
+
+                html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function toggleUseForecast(idx, checked) {
+            if (indicatorSelections[idx]) {
+                indicatorSelections[idx].useForecast = checked;
+            }
+        }
+
+        function updatePlanValue(selIdx, monthIdx, value) {
+            if (indicatorSelections[selIdx]) {
+                if (!indicatorSelections[selIdx].plans) {
+                    indicatorSelections[selIdx].plans = Array(12).fill('');
+                }
+                indicatorSelections[selIdx].plans[monthIdx] = value ? parseInt(value) : '';
+            }
+        }
+
+        // ==================== INDICATOR FUNCTIONS ====================
+        function updateIndicatorSelect() {
+            const select = document.getElementById('indicator-select');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">Gösterge seçin veya yeni ekleyin...</option>' +
+                indicators.map(ind => `<option value="${ind.id}" ${selectedIndicatorId === ind.id ? 'selected' : ''}>${ind.name || 'İsimsiz Gösterge'}</option>`).join('');
+        }
+
+        function loadIndicatorFromSelect() {
+            const select = document.getElementById('indicator-select');
+            const id = select.value;
+            if (id) {
+                loadIndicator(id);
+            } else {
+                newIndicator();
+            }
+        }
+
+        function newIndicator() {
+            selectedIndicatorId = null;
+            document.getElementById('form-title').textContent = 'Yeni Gösterge';
+            document.getElementById('ind-dir').value = '';
+            document.getElementById('ind-model').value = '';
+            document.getElementById('ind-goal').value = '';
+            document.getElementById('ind-action').value = '';
+            document.getElementById('ind-name').value = '';
+            document.getElementById('ind-year').value = '2025';
+            document.getElementById('ind-q1').value = '0';
+            document.getElementById('ind-q2').value = '0';
+            document.getElementById('ind-q3').value = '0';
+            document.getElementById('ind-q4').value = '0';
+            currentSelections = [];
+            updateSourceButton();
+            renderSelectedSources();
+            updateIndicatorSelect();
+
+            // Clear dropdown selection
+            const select = document.getElementById('indicator-select');
+            if (select) select.value = '';
+        }
+
+        function loadIndicator(id) {
+            const ind = indicators.find(i => i.id === id);
+            if (!ind) return;
+            selectedIndicatorId = id;
+            document.getElementById('form-title').textContent = 'Gösterge Düzenle';
+            document.getElementById('ind-dir').value = ind.directorateId || '';
+            updateModelDropdown();
+            document.getElementById('ind-model').value = ind.modelId || '';
+            updateGoalDropdown();
+            document.getElementById('ind-goal').value = ind.goalId || '';
+            updateActionDropdown();
+            document.getElementById('ind-action').value = ind.actionId || '';
+            document.getElementById('ind-name').value = ind.name || '';
+            document.getElementById('ind-year').value = ind.targetYear || '2025';
+            document.getElementById('ind-q1').value = ind.targets?.q1 || '0';
+            document.getElementById('ind-q2').value = ind.targets?.q2 || '0';
+            document.getElementById('ind-q3').value = ind.targets?.q3 || '0';
+            document.getElementById('ind-q4').value = ind.targets?.q4 || '0';
+            currentSelections = ind.selections ? JSON.parse(JSON.stringify(ind.selections)) : [];
+            updateSourceButton();
+            renderSelectedSources();
+            updateIndicatorSelect();
+        }
+
+        function saveIndicator() {
+            const actionId = document.getElementById('ind-action').value;
+            const name = document.getElementById('ind-name').value.trim();
+            if (!actionId || !name) return notify('Eylem seçin ve gösterge adı girin.', 'error');
+
+            const newInd = {
+                id: selectedIndicatorId || generateId(),
+                directorateId: document.getElementById('ind-dir').value,
+                modelId: document.getElementById('ind-model').value,
+                goalId: document.getElementById('ind-goal').value,
+                actionId,
+                name,
+                type: 'birim',
+                targetYear: parseInt(document.getElementById('ind-year').value) || 2025,
+                targets: {
+                    q1: parseFloat(document.getElementById('ind-q1').value) || 0,
+                    q2: parseFloat(document.getElementById('ind-q2').value) || 0,
+                    q3: parseFloat(document.getElementById('ind-q3').value) || 0,
+                    q4: parseFloat(document.getElementById('ind-q4').value) || 0
+                },
+                selections: JSON.parse(JSON.stringify(currentSelections))
+            };
+
+            if (selectedIndicatorId) {
+                indicators = indicators.map(i => i.id === selectedIndicatorId ? newInd : i);
+            } else {
+                indicators.push(newInd);
+            }
+
+            notify('Gösterge kaydedildi.');
+            newIndicator();
+        }
+
+        function deleteIndicator(id) {
+            if (!confirm('Bu göstergeyi silmek istediğinize emin misiniz?')) return;
+            indicators = indicators.filter(i => i.id !== id);
+            if (selectedIndicatorId === id) newIndicator();
+            renderIndicatorList();
+            notify('Gösterge silindi.');
+        }
+
+        // ==================== CASCADING DROPDOWNS ====================
+        function updateModelDropdown() {
+            const dirId = document.getElementById('ind-dir').value;
+            const select = document.getElementById('ind-model');
+            const filtered = data.models.filter(m => m.directorateId === dirId);
+            select.innerHTML = '<option value="">Seçiniz...</option>' +
+                filtered.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+        }
+
+        function updateGoalDropdown() {
+            const modelId = document.getElementById('ind-model').value;
+            const select = document.getElementById('ind-goal');
+            const filtered = data.goals.filter(g => g.modelId === modelId);
+            select.innerHTML = '<option value="">Seçiniz...</option>' +
+                filtered.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+        }
+
+        function updateActionDropdown() {
+            const goalId = document.getElementById('ind-goal').value;
+            const select = document.getElementById('ind-action');
+            const filtered = data.actions.filter(a => a.goalId === goalId);
+            select.innerHTML = '<option value="">Seçiniz...</option>' +
+                filtered.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+        }
+
+        // Event listeners for cascading dropdowns - REMOVED (panel-data was deleted)
+
+        // ==================== IMPORT/EXPORT ====================
+        function importSettings() {
+            document.getElementById('file-import').click();
+        }
+
+        async function handleImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const buffer = await file.arrayBuffer();
+                const wb = XLSX.read(buffer, { type: 'array' });
+                const sheet = wb.Sheets['Sistem_Tanimlari'];
+
+                if (!sheet) {
+                    return notify('Geçersiz dosya formatı (Sistem_Tanimlari sayfası bulunamadı)', 'error');
+                }
+
+                const rows = XLSX.utils.sheet_to_json(sheet);
+                const dirMap = new Map();
+                const modMap = new Map();
+                const goalMap = new Map();
+                const actMap = new Map();
+                const newIndicators = [];
+
+                rows.forEach(r => {
+                    if (r.DirectorateID && !dirMap.has(r.DirectorateID))
+                        dirMap.set(r.DirectorateID, { id: String(r.DirectorateID), name: r.DirectorateName });
+
+                    if (r.ModelID && !modMap.has(r.ModelID))
+                        modMap.set(r.ModelID, { id: String(r.ModelID), directorateId: String(r.DirectorateID), name: r.ModelName });
+
+                    if (r.GoalID && !goalMap.has(r.GoalID))
+                        goalMap.set(r.GoalID, { id: String(r.GoalID), modelId: String(r.ModelID), name: r.GoalName });
+
+                    if (r.ActionID && !actMap.has(r.ActionID))
+                        actMap.set(r.ActionID, { id: String(r.ActionID), goalId: String(r.GoalID), name: r.ActionName });
+
+                    if (r.GostergeID) {
+                        let ind = newIndicators.find(i => i.id == r.GostergeID);
+                        if (!ind) {
+                            ind = {
+                                id: String(r.GostergeID),
+                                modelId: String(r.ModelID),
+                                directorateId: String(r.DirectorateID),
+                                goalId: String(r.GoalID),
+                                actionId: String(r.ActionID),
+                                name: r.GostergeAdi,
+                                type: r.GostergeTipi || 'birim',
+                                targetYear: r.HedefYili || 2025,
+                                targets: { q1: r.H_Q1 || 0, q2: r.H_Q2 || 0, q3: r.H_Q3 || 0, q4: r.H_Q4 || 0 },
+                                selections: []
+                            };
+                            newIndicators.push(ind);
+                        }
+
+                        if (r.SrcMud && r.SrcHiz && r.SrcTur) {
+                            const plans = [];
+                            for (let i = 1; i <= 12; i++) plans.push(r[`P_${i}`] || null);
+                            ind.selections.push({
+                                mudurluk: r.SrcMud,
+                                hizmet: r.SrcHiz,
+                                tur: r.SrcTur,
+                                plans,
+                                useForecast: r.TahminAktif !== 0
+                            });
+                        }
+                    }
+                });
+
+                data = {
+                    directorates: Array.from(dirMap.values()),
+                    models: Array.from(modMap.values()),
+                    goals: Array.from(goalMap.values()),
+                    actions: Array.from(actMap.values())
+                };
+                indicators = newIndicators;
+
+                renderStructureTree();
+                renderDropdowns();
+                renderIndicatorList();
+                notify(`Ayarlar yüklendi: ${data.directorates.length} müdürlük, ${indicators.length} gösterge`);
+
+            } catch (err) {
+                console.error(err);
+                notify('Dosya okunamadı: ' + err.message, 'error');
+            }
+
+            e.target.value = '';
+        }
+
+        function exportSettings() {
+            if (data.directorates.length === 0) {
+                return notify('Henüz hiç tanım yok!', 'error');
+            }
+
+            const rows = [];
+            const header = [
+                "DirectorateID", "DirectorateName", "ModelID", "ModelName",
+                "GoalID", "GoalName", "ActionID", "ActionName",
+                "GostergeID", "GostergeAdi", "GostergeTipi", "HedefYili",
+                "H_Q1", "H_Q2", "H_Q3", "H_Q4",
+                "SrcMud", "SrcHiz", "SrcTur", "TahminAktif",
+                "P_1", "P_2", "P_3", "P_4", "P_5", "P_6", "P_7", "P_8", "P_9", "P_10", "P_11", "P_12"
+            ];
+
+            data.directorates.forEach(dir => {
+                const models = data.models.filter(m => m.directorateId === dir.id);
+                if (models.length === 0) {
+                    rows.push({ DirectorateID: dir.id, DirectorateName: dir.name });
+                    return;
+                }
+
+                models.forEach(model => {
+                    const goals = data.goals.filter(g => g.modelId === model.id);
+                    if (goals.length === 0) {
+                        rows.push({
+                            DirectorateID: dir.id, DirectorateName: dir.name,
+                            ModelID: model.id, ModelName: model.name
+                        });
+                        return;
+                    }
+
+                    goals.forEach(goal => {
+                        const actions = data.actions.filter(a => a.goalId === goal.id);
+                        if (actions.length === 0) {
+                            rows.push({
+                                DirectorateID: dir.id, DirectorateName: dir.name,
+                                ModelID: model.id, ModelName: model.name,
+                                GoalID: goal.id, GoalName: goal.name
+                            });
+                            return;
+                        }
+
+                        actions.forEach(action => {
+                            const inds = indicators.filter(i => i.actionId === action.id);
+                            if (inds.length === 0) {
+                                rows.push({
+                                    DirectorateID: dir.id, DirectorateName: dir.name,
+                                    ModelID: model.id, ModelName: model.name,
+                                    GoalID: goal.id, GoalName: goal.name,
+                                    ActionID: action.id, ActionName: action.name
+                                });
+                            } else {
+                                inds.forEach(ind => {
+                                    if (!ind.selections || ind.selections.length === 0) {
+                                        rows.push({
+                                            DirectorateID: dir.id, DirectorateName: dir.name,
+                                            ModelID: model.id, ModelName: model.name,
+                                            GoalID: goal.id, GoalName: goal.name,
+                                            ActionID: action.id, ActionName: action.name,
+                                            GostergeID: ind.id, GostergeAdi: ind.name,
+                                            GostergeTipi: ind.type, HedefYili: ind.targetYear,
+                                            H_Q1: ind.targets.q1, H_Q2: ind.targets.q2,
+                                            H_Q3: ind.targets.q3, H_Q4: ind.targets.q4
+                                        });
+                                    } else {
+                                        ind.selections.forEach(sel => {
+                                            const row = {
+                                                DirectorateID: dir.id, DirectorateName: dir.name,
+                                                ModelID: model.id, ModelName: model.name,
+                                                GoalID: goal.id, GoalName: goal.name,
+                                                ActionID: action.id, ActionName: action.name,
+                                                GostergeID: ind.id, GostergeAdi: ind.name,
+                                                GostergeTipi: ind.type, HedefYili: ind.targetYear,
+                                                H_Q1: ind.targets.q1, H_Q2: ind.targets.q2,
+                                                H_Q3: ind.targets.q3, H_Q4: ind.targets.q4,
+                                                SrcMud: sel.mudurluk, SrcHiz: sel.hizmet, SrcTur: sel.tur,
+                                                TahminAktif: sel.useForecast ? 1 : 0
+                                            };
+                                            if (sel.plans) {
+                                                sel.plans.forEach((p, i) => row[`P_${i + 1}`] = p || '');
+                                            }
+                                            rows.push(row);
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    });
+                });
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(rows, { header });
+            XLSX.utils.book_append_sheet(wb, ws, 'Sistem_Tanimlari');
+            XLSX.writeFile(wb, 'stratejiayarlar.xlsx');
+            notify('Ayarlar indirildi!');
+        }
+
+        // ==================== DATA SOURCE FUNCTIONS ====================
+        async function loadRawData() {
+            try {
+                const response = await fetch('hizmet-verileri/veri.xlsx');
+                if (!response.ok) return;
+
+                const buffer = await response.arrayBuffer();
+                const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+                const sheet = wb.Sheets['Hizmetler'];
+                if (!sheet) return;
+
+                const rows = XLSX.utils.sheet_to_json(sheet, { cellDates: true });
+                rawData = rows.map(r => ({
+                    mudurluk: r['Müdürlük'] || '',
+                    hizmet: r['Hizmet Başlığı'] || r['Hizmet'] || '',
+                    tur: r['Tür'] || ''
+                })).filter(r => r.mudurluk && r.hizmet && r.tur);
+
+                buildTreeData();
+                document.getElementById('data-status').textContent = `📁 ${rawData.length} kayıt yüklendi`;
+            } catch (err) {
+                console.error('Veri yüklenirken hata:', err);
+            }
+        }
+
+        function buildTreeData() {
+            treeData = {};
+            rawData.forEach(row => {
+                if (!treeData[row.mudurluk]) treeData[row.mudurluk] = {};
+                if (!treeData[row.mudurluk][row.hizmet]) treeData[row.mudurluk][row.hizmet] = new Set();
+                treeData[row.mudurluk][row.hizmet].add(row.tur);
+            });
+        }
+
+        function openSourceModal() {
+            document.getElementById('source-modal').classList.remove('hidden');
+            document.getElementById('source-modal').classList.add('flex');
+            renderSourceTree();
+        }
+
+        function closeSourceModal() {
+            document.getElementById('source-modal').classList.add('hidden');
+            document.getElementById('source-modal').classList.remove('flex');
+        }
+
+        function toggleSelection(mud, hiz, tur, checked) {
+            if (checked) {
+                if (!currentSelections.some(s => s.mudurluk === mud && s.hizmet === hiz && s.tur === tur)) {
+                    currentSelections.push({
+                        mudurluk: mud,
+                        hizmet: hiz,
+                        tur: tur,
+                        plans: Array(12).fill(null),
+                        useForecast: true
+                    });
+                }
+            } else {
+                currentSelections = currentSelections.filter(s => !(s.mudurluk === mud && s.hizmet === hiz && s.tur === tur));
+            }
+
+            updateSourceButton();
+            renderSelectedSources();
+            renderSourceTree();
+        }
+
+        function updateSourceButton() {
+            const btn = document.getElementById('source-btn-text');
+            if (currentSelections.length > 0) {
+                btn.textContent = `✓ ${currentSelections.length} veri kaynağı seçildi`;
+            } else {
+                btn.textContent = '+ Veri Kaynağı Ekle';
+            }
+        }
+
+        function renderSelectedSources() {
+            const container = document.getElementById('selected-sources');
+
+            if (currentSelections.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+            container.innerHTML = currentSelections.map((sel, idx) => `
+                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="text-xs font-bold text-gray-700">${sel.mudurluk} → ${sel.hizmet} → ${sel.tur}</div>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1 text-xs cursor-pointer bg-blue-50 px-2 py-1 rounded text-blue-700">
+                                <input type="checkbox" ${sel.useForecast ? 'checked' : ''} onchange="toggleForecast(${idx})"> Otomatik Tahmin
+                            </label>
+                            <button onclick="removeSelection(${idx})" class="text-red-500 hover:bg-red-50 p-1 rounded">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-1">
+                        ${months.map((m, mi) => `
+                            <div>
+                                <label class="text-[9px] block text-center text-gray-400">${m}</label>
+                                <input type="number" class="w-full text-center border border-gray-200 rounded text-xs py-1 focus:border-blue-500 outline-none" 
+                                       value="${sel.plans[mi] || ''}" 
+                                       onchange="updatePlan(${idx}, ${mi}, this.value)">
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeSelection(idx) {
+            currentSelections.splice(idx, 1);
+            updateSourceButton();
+            renderSelectedSources();
+            renderSourceTree();
+        }
+
+        function toggleForecast(idx) {
+            currentSelections[idx].useForecast = !currentSelections[idx].useForecast;
+        }
+
+        function updatePlan(selIdx, monthIdx, val) {
+            currentSelections[selIdx].plans[monthIdx] = val === '' ? null : parseFloat(val);
+        }
+
+        // ==================== AUTO-LOAD SETTINGS ====================
+        async function loadSettingsFromFile() {
+            try {
+                console.log('🔄 loadSettingsFromFile başlıyor...');
+
+                // First check sessionStorage for temp uploaded gösterge data
+                const tempGosterge = sessionStorage.getItem('temp_strateji_indicators');
+                if (tempGosterge) {
+                    const parsed = JSON.parse(tempGosterge);
+                    if (parsed && parsed.data && parsed.indicators) {
+                        data = parsed.data;
+                        indicators = parsed.indicators;
+                        console.log('📁 Geçici veri kullanılıyor');
+                        return;
+                    }
+                }
+
+                // Otherwise load from stratejiayarlar.xlsx
+                console.log('📂 stratejiayarlar.xlsx yükleniyor...');
+                const response = await fetch('stratejiayarlar.xlsx');
+                console.log('📥 Response status:', response.status, response.ok);
+                if (!response.ok) {
+                    console.error('❌ Dosya yüklenemedi:', response.status);
+                    return;
+                }
+
+                const buffer = await response.arrayBuffer();
+                console.log('📦 Buffer size:', buffer.byteLength);
+
+                const wb = XLSX.read(buffer, { type: 'array' });
+                console.log('📊 Sheet names:', wb.SheetNames);
+
+                // Use first sheet (avoid encoding issues with Turkish characters)
+                const sheetName = wb.SheetNames[0];
+                const sheet = wb.Sheets[sheetName];
+                if (!sheet) {
+                    console.error('❌ Sheet bulunamadı:', sheetName);
+                    return;
+                }
+
+                const rows = XLSX.utils.sheet_to_json(sheet);
+                console.log('📋 Row count:', rows.length);
+                console.log('📋 First row:', rows[0]);
+
+                const dirMap = new Map();
+                const modMap = new Map();
+                const goalMap = new Map();
+                const actMap = new Map();
+                const newIndicators = [];
+
+                rows.forEach(r => {
+                    if (r.DirectorateID && !dirMap.has(r.DirectorateID))
+                        dirMap.set(r.DirectorateID, { id: String(r.DirectorateID), name: r.DirectorateName });
+
+                    if (r.ModelID && !modMap.has(r.ModelID))
+                        modMap.set(r.ModelID, { id: String(r.ModelID), directorateId: String(r.DirectorateID), name: r.ModelName });
+
+                    if (r.GoalID && !goalMap.has(r.GoalID))
+                        goalMap.set(r.GoalID, { id: String(r.GoalID), modelId: String(r.ModelID), name: r.GoalName });
+
+                    if (r.ActionID && !actMap.has(r.ActionID))
+                        actMap.set(r.ActionID, { id: String(r.ActionID), goalId: String(r.GoalID), name: r.ActionName });
+
+                    if (r.GostergeID) {
+                        let ind = newIndicators.find(i => i.id == r.GostergeID);
+                        if (!ind) {
+                            ind = {
+                                id: String(r.GostergeID),
+                                modelId: String(r.ModelID),
+                                directorateId: String(r.DirectorateID),
+                                goalId: String(r.GoalID),
+                                actionId: String(r.ActionID),
+                                name: r.GostergeAdi,
+                                type: r.GostergeTipi || 'birim',
+                                targetYear: r.HedefYili || 2025,
+                                targets: { q1: r.H_Q1 || 0, q2: r.H_Q2 || 0, q3: r.H_Q3 || 0, q4: r.H_Q4 || 0 },
+                                selections: []
+                            };
+                            newIndicators.push(ind);
+                        }
+
+                        if (r.SrcMud && r.SrcHiz && r.SrcTur) {
+                            const plans = [];
+                            for (let i = 1; i <= 12; i++) plans.push(r[`P_${i}`] || null);
+                            ind.selections.push({
+                                mudurluk: r.SrcMud,
+                                hizmet: r.SrcHiz,
+                                tur: r.SrcTur,
+                                plans,
+                                useForecast: r.TahminAktif !== 0
+                            });
+                        }
+                    }
+                });
+
+                data = {
+                    directorates: Array.from(dirMap.values()),
+                    models: Array.from(modMap.values()),
+                    goals: Array.from(goalMap.values()),
+                    actions: Array.from(actMap.values())
+                };
+                indicators = newIndicators;
+
+                console.log('✅ Yükleme tamamlandı:', data.directorates.length, 'müdürlük,', data.models.length, 'model,', indicators.length, 'gösterge');
+
+            } catch (err) {
+                console.error('❌ Ayarlar yüklenemedi:', err.message, err);
+            }
+        }
+
+        // Check sessionStorage for temp hizmet verileri
+        async function loadTempHizmetData() {
+            const tempHizmetJson = sessionStorage.getItem('temp_strateji_rawdata');
+            if (tempHizmetJson) {
+                try {
+                    const tempRows = JSON.parse(tempHizmetJson);
+                    if (Array.isArray(tempRows) && tempRows.length > 0) {
+                        rawData = tempRows.map(r => ({
+                            mudurluk: r['Müdürlük'] || r.mudurluk || '',
+                            hizmet: r['Hizmet Başlığı'] || r['Hizmet'] || r.hizmet || '',
+                            tur: r['Tür'] || r.tur || ''
+                        })).filter(r => r.mudurluk && r.hizmet && r.tur);
+
+                        buildTreeData();
+                        document.getElementById('data-status').textContent = `📁 ${rawData.length} kayıt (geçici)`;
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Geçici hizmet verisi parse hatası:', e);
+                }
+            }
+            return false;
+        }
+
+        // ==================== INIT ====================
+        (async function init() {
+            // Load settings (göstergeler & yapı)
+            await loadSettingsFromFile();
+            renderStructureTree();
+            renderDropdowns();
+            renderIndicatorList();
+
+            // Load raw data (hizmet verileri)
+            const hasTemp = await loadTempHizmetData();
+            if (!hasTemp) {
+                await loadRawData();
+            }
+        })();
+    </script>
+</body>
+
+</html>

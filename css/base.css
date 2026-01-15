@@ -1,0 +1,403 @@
+/* =====================================================
+   DESIGN SYSTEM - Strateji Design Language
+   Minimal & Corporate
+   ===================================================== */
+
+/* ==================== DESIGN TOKENS ==================== */
+:root {
+    /* Colors - Slate & Blue */
+    --bg-body: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --primary: #0f172a;
+    --primary-hover: #1e293b;
+    --accent: #2563eb;
+    --border: #e2e8f0;
+
+    /* Status Colors */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    /* Legacy aliases */
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+    --white: #ffffff;
+
+    /* Typography */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 2rem;
+
+    /* Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+}
+
+/* ==================== RESET ==================== */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--text-main);
+    background: var(--bg-body);
+    min-height: 100vh;
+}
+
+/* ==================== TYPOGRAPHY ==================== */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-main);
+}
+
+h1 {
+    font-size: var(--text-3xl);
+}
+
+h2 {
+    font-size: var(--text-xl);
+}
+
+h3 {
+    font-size: var(--text-lg);
+}
+
+h4 {
+    font-size: var(--text-base);
+}
+
+p {
+    color: var(--text-muted);
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--text-main);
+}
+
+/* ==================== BUTTONS ==================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0.6rem 1.2rem;
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Primary - Dark */
+.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Secondary - Outline */
+.btn-secondary {
+    background: transparent;
+    color: var(--text-main);
+    border-color: var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--gray-100);
+    border-color: var(--gray-300);
+}
+
+/* Ghost - Text only */
+.btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    padding: 0.4rem 0.8rem;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    color: var(--text-main);
+    background: var(--gray-100);
+}
+
+/* Button Sizes */
+.btn-sm {
+    padding: 0.35rem 0.7rem;
+    font-size: var(--text-xs);
+}
+
+.btn-lg {
+    padding: 0.8rem 1.6rem;
+    font-size: var(--text-base);
+}
+
+/* ==================== CARDS ==================== */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.card-body {
+    padding: var(--space-5);
+}
+
+/* ==================== FORMS ==================== */
+.input,
+.form-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    font-family: var(--font-family);
+    font-size: var(--text-sm);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--text-main);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input:focus,
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input::placeholder,
+.form-input::placeholder {
+    color: var(--gray-400);
+}
+
+/* ==================== UTILITIES ==================== */
+.hidden {
+    display: none !important;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: var(--space-2);
+}
+
+.gap-4 {
+    gap: var(--space-4);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==================== SPINNER ==================== */
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--gray-200);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ==================== MOBİL UYUMLULUK ==================== */
+
+/* Touch-friendly minimum sizes */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.75rem 1.2rem;
+    }
+
+    .btn-sm {
+        min-height: 40px;
+        padding: 0.5rem 0.8rem;
+    }
+
+    .input,
+    .form-input {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents iOS zoom on focus */
+    }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+    :root {
+        --text-3xl: 1.75rem;
+        --text-2xl: 1.25rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Phone Landscape */
+@media (max-width: 768px) {
+    :root {
+        --text-3xl: 1.5rem;
+        --text-2xl: 1.125rem;
+        --space-6: 1rem;
+        --space-8: 1.5rem;
+    }
+
+    body {
+        font-size: var(--text-sm);
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.125rem;
+    }
+}
+
+/* Phone Portrait */
+@media (max-width: 480px) {
+    :root {
+        --text-3xl: 1.25rem;
+        --space-4: 0.75rem;
+        --space-5: 1rem;
+    }
+
+    .card-body {
+        padding: var(--space-4);
+    }
+
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        width: 100%;
+    }
+
+    .btn-sm {
+        width: auto;
+    }
+}

@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sosyal Hizmetler Portal</title>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+
+    <!-- XLSX Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- JSZip Library (for Excel protection) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <style>
+        /* Portal Dashboard */
+        .portal-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .portal-header {
+            padding: var(--space-4) var(--space-6);
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .portal-header h1 {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .portal-content {
+            flex: 1;
+            padding: var(--space-8);
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Section Styling */
+        .portal-section {
+            margin-bottom: var(--space-8);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--text-muted);
+        }
+
+        .section-title {
+            font-size: var(--text-sm);
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .section-desc {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--space-4);
+        }
+
+        .tool-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-5);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .tool-card:hover {
+            border-color: var(--text-main);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .tool-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: var(--space-2);
+            color: var(--text-main);
+        }
+
+        .tool-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text-main);
+        }
+
+        .tool-name {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .tool-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .tool-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tool-card.disabled:hover {
+            border-color: var(--border);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .coming-soon {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: var(--gray-100);
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-top: var(--space-2);
+        }
+
+        .footer-text {
+            text-align: center;
+            padding: var(--space-4);
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        /* Section Colors */
+        .section-view .section-icon {
+            color: #3b82f6;
+        }
+
+        .section-view .section-title {
+            color: #3b82f6;
+        }
+
+        .section-create .section-icon {
+            color: #16a34a;
+        }
+
+        .section-create .section-title {
+            color: #16a34a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="portal-container">
+        <header class="portal-header">
+            <h1>Sosyal Hizmetler Portal</h1>
+        </header>
+
+        <main class="portal-content">
+            <!-- Rapor Görüntüle Bölümü -->
+            <section class="portal-section section-view">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <h2 class="section-title">Rapor Görüntüle</h2>
+                    <span class="section-desc" style="display:flex;align-items:center;gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        Veri Dönemi: <strong id="data-period" style="color:#3b82f6;">Yükleniyor...</strong>
+                        <button id="temp-data-btn" title="Geçici Veri Yükle"
+                            style="margin-left:8px;padding:4px;background:#eff6ff;border:1px solid #3b82f6;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6"
+                                stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            </svg>
+                        </button>
+                    </span>
+                </div>
+
+                <div class="tools-grid">
+                    <!-- Hizmet Kartları -->
+                    <a href="./gallery.html?autoGenerate=true" class="tool-card" id="hizmet-kartlari-btn">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Hizmet Kartları</span>
+                        <span class="tool-desc">Lokasyon bazlı raporlar</span>
+                    </a>
+
+                    <!-- Stratejik Yönetim -->
+                    <a href="strateji-viewer.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 20V10"></path>
+                                <path d="M18 20V4"></path>
+                                <path d="M6 20v-4"></path>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Stratejik Yönetim</span>
+                        <span class="tool-desc">Hedef ve gösterge takibi</span>
+                    </a>
+
+                    <!-- Harita (Placeholder) -->
+                    <div class="tool-card disabled">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                                <line x1="8" y1="2" x2="8" y2="18"></line>
+                                <line x1="16" y1="6" x2="16" y2="22"></line>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Harita</span>
+                        <span class="tool-desc">Coğrafi görselleştirme</span>
+                        <span class="coming-soon">Yakında</span>
+                    </div>
+
+                    <!-- İstatistikler -->
+                    <a href="istatistikler.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </div>
+                        <span class="tool-name">İstatistikler</span>
+                        <span class="tool-desc">Veri analizi</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Rapor Oluştur Bölümü -->
+            <section class="portal-section section-create">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    <h2 class="section-title">Rapor Oluştur</h2>
+                    <span class="section-desc">Veri hazırlama ve yapılandırma</span>
+                </div>
+
+                <div class="tools-grid">
+                    <!-- Veri Kontrol -->
+                    <a href="veri-kontrol.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Veri Kontrol</span>
+                        <span class="tool-desc">Ham veri doğrulama</span>
+                    </a>
+
+                    <!-- Dosya Hazırlama -->
+                    <a href="dosya-hazirlama.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="12" y1="18" x2="12" y2="12"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Dosya Hazırlama</span>
+                        <span class="tool-desc">Rapor dosyası oluştur</span>
+                    </a>
+
+                    <!-- Gösterge Tanımla -->
+                    <a href="gosterge-tanimla.html" class="tool-card">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 6v6l4 2"></path>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Gösterge Tanımla</span>
+                        <span class="tool-desc">Stratejik hedef yapılandırma</span>
+                    </a>
+
+                    <!-- Veri Giriş Taslağı -->
+                    <div class="tool-card" onclick="openTemplateWizard()" style="cursor:pointer;">
+                        <div class="tool-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <line x1="10" y1="9" x2="8" y2="9"></line>
+                            </svg>
+                        </div>
+                        <span class="tool-name">Veri Giriş Taslağı</span>
+                        <span class="tool-desc">Excel şablonu oluştur</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer-text">
+            Sosyal Hizmetler Portal v15.0.0
+        </footer>
+    </div>
+
+    <!-- Veri Giriş Taslağı Modal -->
+    <style>
+        .tpl-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tpl-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+    <div id="template-modal" class="tpl-modal-overlay" style="display: none;">
+        <div class="tpl-modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: #1e293b;">📋 Veri Giriş Taslağı Oluştur</h3>
+                <button onclick="closeTemplateWizard()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+
+            <!-- Step 1 -->
+            <div id="template-step-1">
+                <!-- Mode Seçimi -->
+                <div
+                    style="margin-bottom: 1.5rem; padding: 12px; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px;">
+                    <label
+                        style="font-weight: 600; font-size: 14px; color: #1e40af; display: block; margin-bottom: 10px;">📦
+                        İndirme Modu</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; background: white; border-radius: 6px;">
+                            <input type="radio" name="tpl-mode" value="single" checked onchange="handleModeChange()">
+                            <div>
+                                <div style="font-weight: 500; font-size: 13px;">Tek Dosya</div>
+                                <div style="font-size: 11px; color: #64748b;">Bir müdürlük/hizmet için Excel oluştur
+                                </div>
+                            </div>
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px; background: white; border-radius: 6px;">
+                            <input type="radio" name="tpl-mode" value="bulk" onchange="handleModeChange()">
+                            <div>
+                                <div style="font-weight: 500; font-size: 13px;">Çoklu Excel İndir (Toplu)</div>
+                                <div style="font-size: 11px; color: #64748b;">Tüm hizmetler için ZIP paketi oluştur
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Toplu Mod Müdürlük Seçimi -->
+                <div id="bulk-mode-mudurluk-select" style="display: none; margin-bottom: 1.5rem;">
+                    <div style="padding: 12px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label style="font-weight: 600; font-size: 14px; color: #166534;">📋 Hangi
+                                Müdürlükler?</label>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" onclick="toggleAllMudurlukler(true)"
+                                    style="padding: 4px 8px; font-size: 11px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    ✓ Tümünü Seç
+                                </button>
+                                <button type="button" onclick="toggleAllMudurlukler(false)"
+                                    style="padding: 4px 8px; font-size: 11px; background: #64748b; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    ✗ Temizle
+                                </button>
+                            </div>
+                        </div>
+                        <div id="bulk-mudurluk-list"
+                            style="max-height: 180px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px;">
+                            <!-- Dinamik doldurulacak -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tek Dosya Modu İçerikleri -->
+                <div id="single-mode-content">
+                    <!-- Müdürlük -->
+                    <div style="margin-bottom: 1rem;">
+                        <label
+                            style="font-weight: 500; font-size: 14px; display: block; margin-bottom: 6px;">Müdürlük</label>
+                        <select id="tpl-mudurluk"
+                            style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;"
+                            onchange="handleMudurlukChange()">
+                            <option value="">Yükleniyor...</option>
+                        </select>
+                        <div id="tpl-mudurluk-new-container" style="display: none; margin-top: 8px;">
+                            <input type="text" id="tpl-mudurluk-new" placeholder="Yeni müdürlük adını girin..."
+                                style="width: 100%; padding: 10px; border: 1px solid #10b981; border-radius: 6px; background: #ecfdf5;">
+                        </div>
+                    </div>
+
+                    <!-- Hizmet Başlığı -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="font-weight: 500; font-size: 14px; display: block; margin-bottom: 6px;">Hizmet
+                            Başlığı</label>
+                        <select id="tpl-hizmet"
+                            style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;"
+                            onchange="handleHizmetChange()">
+                            <option value="">Önce müdürlük seçin...</option>
+                        </select>
+                        <div id="tpl-hizmet-new-container" style="display: none; margin-top: 8px;">
+                            <input type="text" id="tpl-hizmet-new" placeholder="Yeni hizmet adını girin..."
+                                style="width: 100%; padding: 10px; border: 1px solid #10b981; border-radius: 6px; background: #ecfdf5;">
+                        </div>
+                    </div>
+
+                    <!-- Tür(ler) -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="font-weight: 500; font-size: 14px; display: block; margin-bottom: 6px;">Tür(ler)
+                            <span style="color: #64748b; font-weight: 400;">(Her tür için sorumlu ve şifre
+                                belirleyin)</span></label>
+                        <div id="tpl-turler"
+                            style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; max-height: 280px; overflow-y: auto; background: #f8fafc;">
+                            <p style="color: #64748b; font-size: 12px;">Önce hizmet seçin...</p>
+                        </div>
+                        <!-- Yeni Tür Ekleme -->
+                        <div
+                            style="margin-top: 10px; padding: 10px; background: #f0fdf4; border: 1px dashed #10b981; border-radius: 6px;">
+                            <div style="font-size: 12px; font-weight: 500; color: #166534; margin-bottom: 8px;">➕ Yeni
+                                Tür
+                                Ekle</div>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <input type="text" id="tpl-tur-new" placeholder="Tür adı"
+                                    style="flex: 1; min-width: 100px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                                <input type="text" id="tpl-tur-new-sorumlu" placeholder="Sorumlu"
+                                    style="flex: 1; min-width: 100px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                                <input type="text" id="tpl-tur-new-sifre" placeholder="Şifre"
+                                    style="width: 80px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                                <button onclick="addNewTur()" type="button"
+                                    style="padding: 8px 12px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                    Ekle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- İlçe Detayı -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="font-weight: 500; font-size: 14px; display: block; margin-bottom: 6px;">İlçe
+                            Detayı
+                            Var mı?</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="tpl-ilce" value="yes" checked> Evet (40 ilçe)
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="radio" name="tpl-ilce" value="no"> Hayır (İstanbul Geneli)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="showTemplateStep(2)"
+                    style="width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">Devam
+                    →</button>
+            </div>
+
+            <!-- Step 2 -->
+            <div id="template-step-2" style="display: none;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="font-weight: 500; font-size: 14px; display: block; margin-bottom: 6px;">Hangi Yıl
+                        İçin?</label>
+                    <input type="number" id="tpl-year" value="2025" min="2020" max="2050"
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+
+                <!-- BGG Tarihi (Sadece tek dosya modu için) -->
+                <div id="single-mode-bgg-date" style="margin-bottom: 1rem;">
+                    <label style="font-weight: 500; font-size: 14px; display: block; margin-bottom: 6px;">BGG
+                        Başlangıç
+                        Tarihi</label>
+                    <input type="date" id="tpl-bgg-start"
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+
+                <!-- Koruma Ayarları (Tek Dosya Modu) -->
+                <div id="single-mode-protection"
+                    style="margin-bottom: 1.5rem; padding: 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
+                    <div style="font-weight: 600; font-size: 14px; color: #92400e; margin-bottom: 10px;">🔒 Koruma
+                        Ayarları</div>
+                    <div style="margin-bottom: 10px;">
+                        <label
+                            style="font-size: 12px; font-weight: 500; color: #78350f; display: block; margin-bottom: 4px;">
+                            Çalışma Kitabı Şifresi <span style="font-weight: 400; color: #a16207;">(yapı
+                                koruması)</span>
+                        </label>
+                        <input type="text" id="tpl-kitap-sifre" placeholder="Örn: kitap123"
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #fbbf24; border-radius: 6px; font-size: 13px;">
+                    </div>
+                    <p style="font-size: 11px; color: #a16207; margin: 0;">
+                        💡 Her tür için K-L sütunu şifreleri Step 1'de belirlendi.
+                    </p>
+                </div>
+
+                <!-- Toplu Mod Detay Tablosu -->
+                <div id="bulk-mode-protection" style="display: none; margin-bottom: 1.5rem;">
+                    <div
+                        style="padding: 12px; background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; margin-bottom: 1rem;">
+                        <div style="font-weight: 600; font-size: 13px; color: #166534; margin-bottom: 8px;">📋
+                            Hizmet ve Tür Detayları</div>
+
+                        <!-- Şifre Koruma Checkbox -->
+                        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" id="bulk-protection-checkbox"
+                                    onchange="handleBulkProtectionCheckbox()">
+                                <span style="font-size: 12px; font-weight: 500; color: #166534;">🔒 Şifre Koruması
+                                    Ekle</span>
+                            </label>
+                            <div id="bulk-kitap-sifre-container" style="display: none; flex: 1;">
+                                <input type="text" id="bulk-kitap-sifre"
+                                    placeholder="Çalışma Kitabı Şifresi (Tümü için)"
+                                    style="width: 100%; padding: 6px 10px; border: 1px solid #10b981; border-radius: 6px; font-size: 12px;">
+                            </div>
+                        </div>
+
+                        <div
+                            style="max-height: 350px; overflow-y: auto; border: 1px solid #10b981; border-radius: 6px; background: white;">
+                            <table id="bulk-hizmet-tur-table"
+                                style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <thead style="background: #ecfdf5; position: sticky; top: 0;">
+                                    <tr>
+                                        <th
+                                            style="padding: 6px; text-align: left; border-bottom: 1px solid #10b981; min-width: 100px;">
+                                            Müdürlük</th>
+                                        <th
+                                            style="padding: 6px; text-align: left; border-bottom: 1px solid #10b981; min-width: 120px;">
+                                            Hizmet</th>
+                                        <th
+                                            style="padding: 6px; text-align: left; border-bottom: 1px solid #10b981; min-width: 60px;">
+                                            Tür</th>
+                                        <th
+                                            style="padding: 6px; text-align: left; border-bottom: 1px solid #10b981; width: 90px;">
+                                            İlçe Detayı</th>
+                                        <th
+                                            style="padding: 6px; text-align: left; border-bottom: 1px solid #10b981; width: 100px;">
+                                            BGG Tarihi</th>
+                                        <th
+                                            style="padding: 6px; text-align: left; border-bottom: 1px solid #10b981; min-width: 90px;">
+                                            Sorumlu</th>
+                                        <th id="bulk-sifre-header"
+                                            style="padding: 6px; text-align: left; border-bottom: 1px solid #10b981; width: 70px; display: none;">
+                                            K-L Şifresi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bulk-hizmet-tur-tbody">
+                                    <!-- Dinamik doldurulacak -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="showTemplateStep(1)"
+                        style="flex: 1; padding: 12px; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">←
+                        Geri</button>
+                    <button onclick="generateDataTemplate()"
+                        style="flex: 2; padding: 12px; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">📥
+                        Excel Oluştur</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    // ==================== IndexedDB Storage for Large Data ==================== //
+    const DB_NAME = 'HizmetlerDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'excelData';
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+        });
+    }
+
+    async function saveToIndexedDB(key, data) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put({ id: key, data, timestamp: Date.now() });
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+
+    async function loadFromIndexedDB(key) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const request = tx.objectStore(STORE_NAME).get(key);
+            request.onsuccess = () => resolve(request.result?.data);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function clearIndexedDB() {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).clear();
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+
+    // ==================== Page Load: Restore from IndexedDB ==================== //
+    (async function restoreFromIndexedDB() {
+        try {
+            const savedPeriod = await loadFromIndexedDB('data_period');
+            const sheetsData = await loadFromIndexedDB('hizmet_sheets');
+            const rawData = await loadFromIndexedDB('hizmet_rawdata');
+
+            if (savedPeriod) {
+                const periodEl = document.getElementById('data-period');
+                if (periodEl) {
+                    periodEl.textContent = savedPeriod;
+                    periodEl.style.color = '#10b981';
+                    console.log('📦 IndexedDB\'den veri dönemi yüklendi:', savedPeriod);
+                }
+            }
+
+            if (rawData && rawData.length > 0) {
+                // Veriyi bellekte tut, localStorage/sessionStorage'a KOPYALAMA (5MB sınırı!)
+                window._indexedDBRawData = rawData; // Bellekte sakla
+                console.log('📦 IndexedDB\'den', rawData.length, 'kayıt yüklendi');
+            }
+
+            if (sheetsData && sheetsData.length > 0) {
+                console.log('📦 IndexedDB\'den', sheetsData.length, 'sayfa yüklendi (indirme için hazır)');
+            }
+        } catch (err) {
+            console.log('IndexedDB yüklenemedi:', err.message);
+        }
+    })();
+
+    // Load data period from localStorage (temp data) or Excel (default)
+    (async function loadDataPeriod() {
+        const periodEl = document.getElementById('data-period');
+
+        // Önce localStorage'dan geçici veri dönemi kontrolü
+        const tempPeriod = localStorage.getItem('temp_data_period');
+        if (tempPeriod) {
+            periodEl.textContent = tempPeriod;
+            periodEl.style.color = '#10b981'; // Yeşil: geçici veri aktif
+            console.log('📅 Geçici veri dönemi yüklendi:', tempPeriod);
+            return; // Geçici veri varsa veri.xlsx'i yükleme
+        }
+
+        try {
+            const response = await fetch('hizmet-verileri/veri.xlsx');
+            if (!response.ok) throw new Error('Dosya bulunamadı');
+            const buffer = await response.arrayBuffer();
+            const wb = XLSX.read(buffer, { type: 'array' });
+
+            let maxDate = null;
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+            // Search all sheets for Son Tarih column
+            wb.SheetNames.forEach(sheetName => {
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+                rows.forEach(row => {
+                    let tarih = row['Son Tarih'];
+                    if (tarih) {
+                        let d = null;
+                        if (typeof tarih === 'number') {
+                            d = new Date((tarih - 25569) * 86400 * 1000);
+                        } else if (typeof tarih === 'string') {
+                            const parts = tarih.split('.');
+                            if (parts.length === 3) d = new Date(parts[2], parts[1] - 1, parts[0]);
+                        }
+                        if (d && !isNaN(d) && (maxDate === null || d > maxDate)) {
+                            maxDate = d;
+                        }
+                    }
+                });
+            });
+
+            if (maxDate) {
+                periodEl.textContent = monthNames[maxDate.getMonth()] + ' ' + maxDate.getFullYear();
+            } else {
+                periodEl.textContent = 'Bilinmiyor';
+            }
+        } catch (err) {
+            console.error('Veri dönemi okunamadı:', err);
+            periodEl.textContent = 'Okunamadı';
+        }
+    })();
+
+    // Temp Data Modal Logic
+    const tempDataBtn = document.getElementById('temp-data-btn');
+    let tempModal = null;
+
+    tempDataBtn.addEventListener('click', () => {
+        if (tempModal) {
+            tempModal.remove();
+        }
+
+        tempModal = document.createElement('div');
+        tempModal.innerHTML = `
+            <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;">
+                <div style="background:white;border-radius:12px;padding:24px;max-width:400px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,0.2);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <h3 style="margin:0;font-size:18px;font-weight:600;color:#1e293b;">Geçici Veri Yükle</h3>
+                        <button id="close-temp-modal" style="background:none;border:none;cursor:pointer;padding:4px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <p style="color:#64748b;font-size:13px;margin-bottom:16px;">Yüklenen veriler sadece bu oturum için geçerlidir. Sayfa yenilendiğinde varsayılan veriler kullanılır.</p>
+                    
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                        <label style="display:flex;align-items:center;gap:12px;padding:14px;border:1px dashed #cbd5e1;border-radius:8px;cursor:pointer;transition:all 0.2s;" id="hizmet-upload-label">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            <div>
+                                <div style="font-weight:500;color:#1e293b;">Hizmet Verileri</div>
+                                <div style="font-size:12px;color:#64748b;" id="hizmet-status">Excel dosyaları seçin (birden fazla olabilir)</div>
+                            </div>
+                            <input type="file" id="hizmet-file" accept=".xlsx,.xls" multiple style="display:none;">
+                        </label>
+                        
+                        <label style="display:flex;align-items:center;gap:12px;padding:14px;border:1px dashed #cbd5e1;border-radius:8px;cursor:pointer;transition:all 0.2s;" id="gosterge-upload-label">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                                <path d="M12 20V10"></path>
+                                <path d="M18 20V4"></path>
+                                <path d="M6 20v-4"></path>
+                            </svg>
+                            <div>
+                                <div style="font-weight:500;color:#1e293b;">Göstergeler</div>
+                                <div style="font-size:12px;color:#64748b;" id="gosterge-status">Excel dosyası seçin</div>
+                            </div>
+                            <input type="file" id="gosterge-file" accept=".xlsx,.xls" style="display:none;">
+                        </label>
+                    </div>
+                    
+                    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+                        <button id="clear-temp-data" style="padding:8px 16px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Temizle</button>
+                        <button id="download-merged-data" style="padding:8px 16px;background:#10b981;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;display:none;">İndir</button>
+                        <button id="apply-temp-data" style="padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Uygula</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(tempModal);
+
+        // Event Listeners
+        document.getElementById('close-temp-modal').onclick = () => tempModal.remove();
+        tempModal.querySelector('div').onclick = (e) => { if (e.target === tempModal.querySelector('div')) tempModal.remove(); };
+
+        // Modal açıldığında IndexedDB'den mevcut veriyi kontrol et
+        (async function checkExistingData() {
+            try {
+                const sheetsData = await loadFromIndexedDB('hizmet_sheets');
+                const rawData = await loadFromIndexedDB('hizmet_rawdata');
+
+                if (sheetsData && sheetsData.length > 0) {
+                    // Veri var - İndir butonunu göster ve durumu güncelle
+                    document.getElementById('download-merged-data').style.display = 'block';
+                    document.getElementById('hizmet-status').textContent = '✓ ' + (rawData?.length || 0) + ' kayıt, ' + sheetsData.length + ' sayfa mevcut';
+                    document.getElementById('hizmet-upload-label').style.borderColor = '#3b82f6';
+                    document.getElementById('hizmet-upload-label').style.background = '#eff6ff';
+                    console.log('📦 Modal: IndexedDB\'den mevcut veri bulundu:', sheetsData.length, 'sayfa');
+                }
+            } catch (e) {
+                // IndexedDB erişim hatası - sessizce devam et
+            }
+        })();
+
+        // File handlers
+        document.getElementById('hizmet-file').onchange = async (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+            try {
+                const rawData = [];
+                const allSheets = []; // TÜM sayfaları sakla (indirme için - aynı isimli sayfalar birleştirilir)
+                let maxDate = null;
+                const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+                for (const file of files) {
+                    const buffer = await file.arrayBuffer();
+                    const wb = XLSX.read(buffer, { type: 'array' });
+
+                    // TÜM sayfaları işle (sadece ilk sayfayı değil)
+                    wb.SheetNames.forEach(sheetName => {
+                        if (sheetName === 'Sistem_Tanimlari') return;
+
+                        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+
+                        // Aynı isimli sayfa varsa satırları alt alta ekle (birleştir)
+                        const existingSheet = allSheets.find(s => s.name === sheetName);
+                        if (existingSheet) {
+                            // Mevcut sayfaya satırları ekle
+                            existingSheet.rows = existingSheet.rows.concat(rows);
+                            existingSheet.sourceFiles.push(file.name);
+                        } else {
+                            // Yeni sayfa oluştur
+                            allSheets.push({
+                                name: sheetName,
+                                rows: rows,
+                                sourceFiles: [file.name]
+                            });
+                        }
+
+                        rows.forEach(row => {
+                            const mudurluk = row['Müdürlük'] || row['Müdürluk'] || row['Mudurluk'];
+                            const hizmet = row['Hizmet'] || row['Hizmet Başlığı'] || row['Hizmet Basligi'];
+                            const tur = row['Tür'] || row['Tur'];
+                            let tarih = null;
+                            const sonTarih = row['Son Tarih'];
+                            if (sonTarih) {
+                                if (typeof sonTarih === 'number') {
+                                    tarih = new Date((sonTarih - 25569) * 86400 * 1000);
+                                } else if (typeof sonTarih === 'string') {
+                                    const parts = sonTarih.split('.');
+                                    if (parts.length === 3) tarih = new Date(parts[2], parts[1] - 1, parts[0]);
+                                }
+                            }
+                            const deger = parseFloat(row['Değer'] || row['Deger']) || 0;
+                            // Veri Aralığı: Birden fazla sütun adı ve Türkçe karakter desteği
+                            const veriAraligiRaw = row['Veri Aralığı'] || row['Veri Araligi'] || row['VeriAraligi'] || row['veri_araligi'] || '';
+                            const veriAraligi = veriAraligiRaw.toString().trim().toLocaleUpperCase('tr-TR');
+
+                            // İlk Tarih ve Sorumlu bilgisini de al
+                            const ilkTarih = row['İlk Tarih'] || row['Ilk Tarih'] || null;
+                            const veriSorumlusu = row['Veri Sorumlusu'] || row['Sorumlu'] || '';
+
+                            if (mudurluk && hizmet && tur && tarih && !isNaN(tarih)) {
+                                rawData.push({
+                                    mudurluk, hizmet, tur, deger, tarih: tarih.toISOString(),
+                                    lokasyon: row['Lokasyon'] || row['lokasyon'] || 'İstanbul Geneli',
+                                    veriAraligi: veriAraligi || 'BGG',
+                                    ilkTarih,
+                                    veriSorumlusu,
+                                    _sheetName: sheetName // Kaynak sayfa adını sakla
+                                });
+                                // Track max date for data period display
+                                if (!maxDate || tarih > maxDate) maxDate = tarih;
+                            }
+                        });
+                    });
+                }
+
+                // NOT: sessionStorage/localStorage 5MB sınırı var - KULLANMA!
+                // Büyük veriler SADECE IndexedDB'ye kaydedilir
+
+                // IndexedDB'ye kaydet (5MB sınırı yok, sayfa yenilemesinde kaybolmaz)
+                try {
+                    await saveToIndexedDB('hizmet_rawdata', rawData);
+                    await saveToIndexedDB('hizmet_sheets', allSheets);
+                    console.log('💾 IndexedDB\'ye kaydedildi:', rawData.length, 'kayıt,', allSheets.length, 'sayfa');
+                } catch (dbErr) {
+                    console.warn('IndexedDB kayıt hatası:', dbErr.message);
+                }
+
+                // Veri aralığı dağılımını göster (debug)
+                const bggCount = rawData.filter(r => r.veriAraligi === 'BGG').length;
+                const kumCount = rawData.filter(r => r.veriAraligi === 'KÜMÜLATİF').length;
+                const aylikCount = rawData.filter(r => r.veriAraligi === 'AYLIK').length;
+                console.log('📊 Veri Aralığı Dağılımı:', bggCount, 'BGG,', kumCount, 'KÜMÜLATİF,', aylikCount, 'AYLIK');
+                console.log('📋 Toplam sayfa sayısı:', allSheets.length);
+
+                document.getElementById('hizmet-status').textContent = '✓ ' + rawData.length + ' kayıt, ' + allSheets.length + ' sayfa yüklendi (' + files.length + ' dosya)';
+                document.getElementById('hizmet-upload-label').style.borderColor = '#3b82f6';
+                document.getElementById('hizmet-upload-label').style.background = '#eff6ff';
+
+                // İndir butonunu göster
+                document.getElementById('download-merged-data').style.display = 'block';
+
+                // Update data period display on main page
+                if (maxDate) {
+                    const periodStr = monthNames[maxDate.getMonth()] + ' ' + maxDate.getFullYear();
+                    document.getElementById('data-period').textContent = periodStr;
+                    sessionStorage.setItem('temp_data_period', periodStr);
+                    localStorage.setItem('temp_data_period', periodStr);
+
+                    // IndexedDB'ye de kaydet
+                    try {
+                        await saveToIndexedDB('data_period', periodStr);
+                    } catch (e) { }
+
+                    // Gallery.js için YYYY-MM formatında kaydet (otomatik rapor tarihi)
+                    const autoMonth = `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}`;
+                    localStorage.setItem('auto_report_month', autoMonth);
+                    console.log('📅 auto_report_month kaydedildi:', autoMonth);
+                }
+            } catch (err) {
+                document.getElementById('hizmet-status').textContent = 'Hata: ' + err.message;
+            }
+        };
+
+        document.getElementById('gosterge-file').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const buffer = await file.arrayBuffer();
+                const wb = XLSX.read(buffer, { type: 'array' });
+                const sheet = wb.Sheets['Sistem_Tanimlari'];
+                if (!sheet) throw new Error('Sistem_Tanimlari sayfası bulunamadı');
+
+                const rows = XLSX.utils.sheet_to_json(sheet);
+                const dirMap = new Map();
+                const modMap = new Map();
+                const goalMap = new Map();
+                const actMap = new Map();
+                const indicators = [];
+
+                rows.forEach(r => {
+                    if (r.DirectorateID && !dirMap.has(r.DirectorateID))
+                        dirMap.set(r.DirectorateID, { id: String(r.DirectorateID), name: r.DirectorateName });
+                    if (r.ModelID && !modMap.has(r.ModelID))
+                        modMap.set(r.ModelID, { id: String(r.ModelID), directorateId: String(r.DirectorateID), name: r.ModelName });
+                    if (r.GoalID && !goalMap.has(r.GoalID))
+                        goalMap.set(r.GoalID, { id: String(r.GoalID), modelId: String(r.ModelID), name: r.GoalName });
+                    if (r.ActionID && !actMap.has(r.ActionID))
+                        actMap.set(r.ActionID, { id: String(r.ActionID), goalId: String(r.GoalID), name: r.ActionName });
+                    if (r.GostergeID) {
+                        let ind = indicators.find(i => i.id == r.GostergeID);
+                        if (!ind) {
+                            ind = {
+                                id: String(r.GostergeID), modelId: String(r.ModelID), directorateId: String(r.DirectorateID),
+                                goalId: String(r.GoalID), actionId: String(r.ActionID), name: r.GostergeAdi,
+                                type: r.GostergeTipi || 'birim', targetYear: r.HedefYili || 2025,
+                                targets: { q1: r.H_Q1 || 0, q2: r.H_Q2 || 0, q3: r.H_Q3 || 0, q4: r.H_Q4 || 0 },
+                                selections: []
+                            };
+                            indicators.push(ind);
+                        }
+                        if (r.SrcMud && r.SrcHiz && r.SrcTur) {
+                            const plans = [];
+                            for (let i = 1; i <= 12; i++) plans.push(r['P_' + i] || null);
+                            const useForecastVal = (r.TahminAktif !== undefined) ? r.TahminAktif : 1;
+                            ind.selections.push({ mudurluk: r.SrcMud, hizmet: r.SrcHiz, tur: r.SrcTur, plans, useForecast: useForecastVal == 1 });
+                        }
+                    }
+                });
+
+                const data = {
+                    directorates: Array.from(dirMap.values()),
+                    models: Array.from(modMap.values()),
+                    goals: Array.from(goalMap.values()),
+                    actions: Array.from(actMap.values())
+                };
+                sessionStorage.setItem('temp_strateji_indicators', JSON.stringify({ data, indicators }));
+                document.getElementById('gosterge-status').textContent = '✓ ' + indicators.length + ' gösterge yüklendi';
+                document.getElementById('gosterge-upload-label').style.borderColor = '#10b981';
+                document.getElementById('gosterge-upload-label').style.background = '#ecfdf5';
+            } catch (err) {
+                document.getElementById('gosterge-status').textContent = 'Hata: ' + err.message;
+            }
+        };
+
+        document.getElementById('clear-temp-data').onclick = async () => {
+            // Clear all temporary data and browser storage
+            sessionStorage.clear();
+            localStorage.clear();
+
+            // IndexedDB'yi de temizle
+            try {
+                await clearIndexedDB();
+                console.log('🗑️ IndexedDB temizlendi');
+            } catch (e) {
+                console.warn('IndexedDB temizleme hatası:', e.message);
+            }
+
+            tempModal.remove();
+            // Reload page to restore default data
+            location.reload();
+        };
+
+        // İndir butonu - Tüm sayfaları birleşik Excel olarak indir
+        document.getElementById('download-merged-data').onclick = async () => {
+            try {
+                // Önce IndexedDB'den dene, yoksa bellekteki veriyi kullan
+                let sheetsData = await loadFromIndexedDB('hizmet_sheets');
+
+                if (!sheetsData || sheetsData.length === 0) {
+                    alert('İndirilecek veri yok. Önce Excel dosyası yükleyin.');
+                    return;
+                }
+
+                // Yeni Excel çalışma kitabı oluştur
+                const wb = XLSX.utils.book_new();
+
+                sheetsData.forEach(sheet => {
+                    // Excel sayfa adı max 31 karakter
+                    const safeName = sheet.name.substring(0, 31).replace(/[\[\]\*\?\/\\:]/g, '_');
+                    const ws = XLSX.utils.json_to_sheet(sheet.rows);
+                    XLSX.utils.book_append_sheet(wb, ws, safeName);
+                });
+
+                // Dosya adı: birlesik_veri_YYYYMMDD.xlsx
+                const today = new Date();
+                const dateStr = today.getFullYear() +
+                    String(today.getMonth() + 1).padStart(2, '0') +
+                    String(today.getDate()).padStart(2, '0');
+
+                XLSX.writeFile(wb, `birlesik_veri_${dateStr}.xlsx`);
+                console.log('📥 Birleşik Excel indirildi:', sheetsData.length, 'sayfa');
+            } catch (err) {
+                alert('İndirme hatası: ' + err.message);
+                console.error('İndirme hatası:', err);
+            }
+        };
+
+        document.getElementById('apply-temp-data').onclick = async () => {
+            try {
+                const rawData = await loadFromIndexedDB('hizmet_rawdata');
+                const indicators = sessionStorage.getItem('temp_strateji_indicators');
+
+                if ((rawData && rawData.length > 0) || indicators) {
+                    alert('Geçici veriler kaydedildi!');
+                } else {
+                    alert('Henüz veri yüklenmedi.');
+                }
+            } catch (e) {
+                alert('Henüz veri yüklenmedi.');
+            }
+            tempModal.remove();
+        };
+    });
+
+    // Hizmet Kartları butonu için click handler - veri dönemini localStorage'a kaydet
+    const hizmetKartlariBtn = document.getElementById('hizmet-kartlari-btn');
+    if (hizmetKartlariBtn) {
+        hizmetKartlariBtn.addEventListener('click', function (e) {
+            e.preventDefault(); // Önce navigate etmeyi durdur
+
+            const periodEl = document.getElementById('data-period');
+            const periodText = periodEl.textContent.trim(); // "Ekim 2025"
+
+            // Ay ismini sayıya çevir
+            const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+                'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+            const parts = periodText.split(' ');
+            if (parts.length === 2) {
+                const monthIndex = monthNames.indexOf(parts[0]);
+                const year = parts[1];
+                if (monthIndex >= 0) {
+                    const monthStr = String(monthIndex + 1).padStart(2, '0');
+                    localStorage.setItem('auto_report_month', `${year}-${monthStr}`);
+                    console.log('📅 Otomatik rapor tarihi kaydedildi:', `${year}-${monthStr}`);
+                }
+            }
+
+            // Şimdi navigate et - localStorage ile autoGenerate flag'i at
+            localStorage.setItem('gallery_auto_generate', 'true');
+            window.location.href = 'gallery.html';
+        });
+    }
+
+    // Sayfa yüklendiğinde veri dönemini göster
+    async function initDataPeriod() {
+        const periodEl = document.getElementById('data-period');
+
+        // Önce localStorage/sessionStorage kontrol et
+        const savedPeriod = localStorage.getItem('temp_data_period') || sessionStorage.getItem('temp_data_period');
+        if (savedPeriod) {
+            periodEl.textContent = savedPeriod;
+            return;
+        }
+
+        // Yoksa varsayılan veri.xlsx'den yükle
+        try {
+            const response = await fetch('hizmet-verileri/veri.xlsx');
+            if (!response.ok) throw new Error('Dosya bulunamadı');
+            const buffer = await response.arrayBuffer();
+            const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+
+            let maxDate = null;
+            const hizSheet = wb.Sheets['Hizmetler'];
+            if (hizSheet) {
+                const rows = XLSX.utils.sheet_to_json(hizSheet, { cellDates: true });
+                rows.forEach(row => {
+                    const sonTarih = row['Son Tarih'];
+                    if (sonTarih instanceof Date && !isNaN(sonTarih)) {
+                        if (!maxDate || sonTarih > maxDate) maxDate = sonTarih;
+                    } else if (typeof sonTarih === 'number' && sonTarih > 25569) {
+                        const d = new Date(Math.round((sonTarih - 25569) * 86400 * 1000));
+                        if (!maxDate || d > maxDate) maxDate = d;
+                    }
+                });
+            }
+
+            if (maxDate) {
+                const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+                    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+                const periodStr = monthNames[maxDate.getMonth()] + ' ' + maxDate.getFullYear();
+                periodEl.textContent = periodStr;
+
+                // auto_report_month'u da ayarla
+                const autoMonth = `${maxDate.getFullYear()}-${String(maxDate.getMonth() + 1).padStart(2, '0')}`;
+                localStorage.setItem('auto_report_month', autoMonth);
+                console.log('📅 Varsayılan veri dönemi yüklendi:', periodStr);
+            } else {
+                periodEl.textContent = 'Veri yok';
+            }
+        } catch (err) {
+            console.log('Varsayılan veri yüklenemedi:', err.message);
+            periodEl.textContent = 'Veri yok';
+        }
+    }
+
+    // Sayfa yüklendiğinde çalıştır
+    initDataPeriod();
+
+    // ==================== VERİ GİRİŞ TASLAK OLUŞTURUCU ==================== //
+
+    const ISTANBUL_ILCELERI = [
+        'Adalar', 'Arnavutköy', 'Ataşehir', 'Avcılar', 'Bağcılar', 'Bahçelievler', 'Bakırköy',
+        'Başakşehir', 'Bayrampaşa', 'Beşiktaş', 'Beykoz', 'Beylikdüzü', 'Beyoğlu', 'Büyükçekmece',
+        'Çatalca', 'Çekmeköy', 'Esenler', 'Esenyurt', 'Eyüpsultan', 'Fatih', 'Gaziosmanpaşa',
+        'Güngören', 'Kadıköy', 'Kağıthane', 'Kartal', 'Küçükçekmece', 'Maltepe', 'Pendik',
+        'Sancaktepe', 'Sarıyer', 'Silivri', 'Sultanbeyli', 'Sultangazi', 'Şile', 'Şişli',
+        'Tuzla', 'Ümraniye', 'Üsküdar', 'Zeytinburnu', 'Diğer'
+    ];
+
+    let tplAllData = []; // Veri.xlsx'den yüklenen tüm veriler
+
+    async function loadTplData() {
+        if (tplAllData.length > 0) return;
+
+        try {
+            // Önce sessionStorage'dan geçici veri kontrolü
+            const tempRawData = sessionStorage.getItem('temp_strateji_rawdata');
+            let allRows = [];
+
+            if (tempRawData) {
+                // Geçici veri var - onu kullan
+                const parsedData = JSON.parse(tempRawData);
+                allRows = parsedData;
+                console.log('📊 Geçici veri kullanılıyor:', allRows.length, 'kayıt');
+            } else {
+                // Geçici veri yok - varsayılan Excel'den yükle
+                const response = await fetch('hizmet-verileri/veri.xlsx');
+                if (!response.ok) throw new Error('Dosya bulunamadı');
+                const buffer = await response.arrayBuffer();
+                const wb = XLSX.read(buffer, { type: 'array' });
+
+                wb.SheetNames.forEach(sheetName => {
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+                    allRows = allRows.concat(rows);
+                });
+                console.log('📊 Varsayılan veri yüklendi:', allRows.length, 'kayıt');
+            }
+
+            // Verileri parse et - hem büyük harfli hem küçük harfli key'leri destekle
+            allRows.forEach(row => {
+                // Geçici veri küçük harfli key'ler kullanıyor, Excel büyük harfli
+                const mudurluk = row['Müdürlük'] || row['Müdürluk'] || row['Mudurluk'] || row['mudurluk'];
+                const hizmet = row['Hizmet'] || row['Hizmet Başlığı'] || row['Hizmet Basligi'] || row['hizmet'];
+                const tur = row['Tür'] || row['Tur'] || row['tur'];
+                const veriAraligi = row['Veri Aralığı'] || row['Veri Araligi'] || row['veriAraligi'];
+                const ilkTarih = row['İlk Tarih'] || row['Ilk Tarih'] || row['ilkTarih'] || null;
+                const veriSorumlusu = row['Veri Sorumlusu'] || row['Sorumlu'] || row['veriSorumlusu'] || '';
+                const lokasyon = row['Lokasyon'] || row['İlçe'] || row['lokasyon'] || '';
+
+                if (mudurluk && hizmet && tur) {
+                    tplAllData.push({
+                        mudurluk,
+                        hizmet,
+                        tur,
+                        veriAraligi,
+                        ilkTarih,
+                        veriSorumlusu,
+                        lokasyon
+                    });
+                }
+            });
+
+            console.log('📊 Template veri hazır:', tplAllData.length, 'kayıt');
+        } catch (err) {
+            console.error('Veri yüklenemedi:', err);
+        }
+    }
+
+    async function openTemplateWizard() {
+        document.getElementById('template-modal').style.display = 'flex';
+        // Her açılışta veriyi yeniden yükle (geçici veri değişmiş olabilir)
+        tplAllData = [];
+        await loadTplData();
+        populateTplMudurlukler();
+        showTemplateStep(1);
+    }
+
+    function closeTemplateWizard() {
+        document.getElementById('template-modal').style.display = 'none';
+    }
+
+    function showTemplateStep(step) {
+        document.getElementById('template-step-1').style.display = step === 1 ? 'block' : 'none';
+        document.getElementById('template-step-2').style.display = step === 2 ? 'block' : 'none';
+
+        if (step === 2) {
+            // Step 2'ye geçerken mode'a göre UI'ı güncelle
+            const mode = document.querySelector('input[name="tpl-mode"]:checked').value;
+            document.getElementById('single-mode-protection').style.display = mode === 'single' ? 'block' : 'none';
+            document.getElementById('bulk-mode-protection').style.display = mode === 'bulk' ? 'block' : 'none';
+            document.getElementById('single-mode-bgg-date').style.display = mode === 'single' ? 'block' : 'none';
+
+            if (mode === 'bulk') {
+                // Toplu modda: Hizmet-Tür listesini oluştur
+                populateBulkHizmetTurTable();
+            }
+        }
+    }
+
+    function handleModeChange() {
+        const mode = document.querySelector('input[name="tpl-mode"]:checked').value;
+        const singleContent = document.getElementById('single-mode-content');
+        const bulkMudurlukSelect = document.getElementById('bulk-mode-mudurluk-select');
+
+        if (mode === 'single') {
+            singleContent.style.display = 'block';
+            bulkMudurlukSelect.style.display = 'none';
+        } else {
+            singleContent.style.display = 'none';
+            bulkMudurlukSelect.style.display = 'block';
+            populateBulkMudurlukList();
+        }
+    }
+
+    function populateBulkMudurlukList() {
+        const container = document.getElementById('bulk-mudurluk-list');
+        const mudurlukler = [...new Set(tplAllData.map(d => d.mudurluk))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
+
+        container.innerHTML = mudurlukler.map(m => `
+            <label style="display: flex; align-items: center; gap: 6px; padding: 6px; background: white; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                <input type="checkbox" class="bulk-mudurluk-cb" value="${m}" checked>
+                <span>${m}</span>
+            </label>
+        `).join('');
+    }
+
+    function toggleAllMudurlukler(checked) {
+        document.querySelectorAll('.bulk-mudurluk-cb').forEach(cb => cb.checked = checked);
+    }
+
+    function handleBulkProtectionCheckbox() {
+        const checked = document.getElementById('bulk-protection-checkbox').checked;
+
+        // Şifre input alanını göster/gizle
+        document.getElementById('bulk-kitap-sifre-container').style.display = checked ? 'block' : 'none';
+
+        // K-L Şifresi sütun başlığını göster/gizle
+        document.getElementById('bulk-sifre-header').style.display = checked ? 'table-cell' : 'none';
+
+        // Tablo hücrelerini güncelle (K-L şifresi sütunu)
+        document.querySelectorAll('.bulk-sifre-cell').forEach(cell => {
+            cell.style.display = checked ? 'table-cell' : 'none';
+        });
+    }
+
+    function populateBulkHizmetTurTable() {
+        const tbody = document.getElementById('bulk-hizmet-tur-tbody');
+
+        // Seçili müdürlükleri al
+        const selectedMudurlukler = Array.from(document.querySelectorAll('.bulk-mudurluk-cb:checked')).map(cb => cb.value);
+
+        if (selectedMudurlukler.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #64748b;">Lütfen en az bir müdürlük seçin</td></tr>';
+            return;
+        }
+
+        // Her müdürlük için hizmet-tür kombinasyonlarını topla
+        const hizmetTurList = [];
+        const seen = new Set();
+
+        tplAllData.forEach(d => {
+            if (!selectedMudurlukler.includes(d.mudurluk)) return;
+
+            const key = `${d.mudurluk}|||${d.hizmet}|||${d.tur}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            // BGG tarihini bul - önce BGG satırlarından, yoksa herhangi bir ilkTarih'i al
+            const matchingRows = tplAllData.filter(x => x.mudurluk === d.mudurluk && x.hizmet === d.hizmet && x.tur === d.tur);
+
+            // BGG satırlarından ilk tarihi bul
+            let bggDate = matchingRows
+                .filter(x => (x.veriAraligi === 'BGG' || x.veriAraligi === 'bgg') && x.ilkTarih)
+                .map(x => x.ilkTarih)
+                .sort()[0];
+
+            // BGG bulunamadıysa herhangi bir ilkTarih al
+            if (!bggDate) {
+                bggDate = matchingRows.filter(x => x.ilkTarih).map(x => x.ilkTarih)[0] || '';
+            }
+
+            // Sorumluyu bul (ilk bulunan değeri al)
+            const sorumlu = matchingRows.find(x => x.veriSorumlusu)?.veriSorumlusu || '';
+
+            // İlçe detayını belirle (40 ilçeden herhangi biri varsa ilçe detayı var)
+            const lokasyonlar = tplAllData
+                .filter(x => x.mudurluk === d.mudurluk && x.hizmet === d.hizmet && x.tur === d.tur && x.lokasyon)
+                .map(x => x.lokasyon);
+            const hasIlceDetail = lokasyonlar.some(l => l !== 'İstanbul Geneli');
+
+            hizmetTurList.push({
+                mudurluk: d.mudurluk,
+                hizmet: d.hizmet,
+                tur: d.tur,
+                bggDate,
+                sorumlu,
+                hasIlceDetail
+            });
+        });
+
+        // Müdürlük > Hizmet > Tür olarak sırala
+        hizmetTurList.sort((a, b) => {
+            if (a.mudurluk !== b.mudurluk) return a.mudurluk.localeCompare(b.mudurluk, 'tr');
+            if (a.hizmet !== b.hizmet) return a.hizmet.localeCompare(b.hizmet, 'tr');
+            return a.tur.localeCompare(b.tur, 'tr');
+        });
+
+        // Şifre koruması durumu
+        const showSifre = document.getElementById('bulk-protection-checkbox').checked;
+
+        tbody.innerHTML = hizmetTurList.map((item, idx) => {
+            // BGG tarihini Date'e çevirip input formatına dönüştür
+            const bggDateObj = item.bggDate ? parseTurkishDate(item.bggDate) : null;
+            const bggDateValue = bggDateObj ? formatDateForInput(bggDateObj) : '';
+
+            return `
+            <tr>
+                <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px;">${item.mudurluk}</td>
+                <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-weight: 500;">${item.hizmet}</td>
+                <td style="padding: 6px; border-bottom: 1px solid #e2e8f0;">${item.tur}</td>
+                <td style="padding: 6px; border-bottom: 1px solid #e2e8f0;">
+                    <select class="bulk-ilce-detay" data-key="${item.mudurluk}|||${item.hizmet}|||${item.tur}"
+                        style="width: 100%; padding: 3px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px;">
+                        <option value="ilce" ${item.hasIlceDetail ? 'selected' : ''}>40 İlçe</option>
+                        <option value="geneli" ${!item.hasIlceDetail ? 'selected' : ''}>İst. Geneli</option>
+                    </select>
+                </td>
+                <td style="padding: 6px; border-bottom: 1px solid #e2e8f0;">
+                    <input type="date" class="bulk-bgg-date" data-key="${item.mudurluk}|||${item.hizmet}|||${item.tur}" 
+                        value="${bggDateValue}"
+                        style="width: 100%; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 10px;">
+                </td>
+                <td style="padding: 6px; border-bottom: 1px solid #e2e8f0;">
+                    <input type="text" class="bulk-hizmet-tur-sorumlu" data-key="${item.mudurluk}|||${item.hizmet}|||${item.tur}" 
+                        value="${item.sorumlu || ''}" placeholder="Sorumlu"
+                        style="width: 100%; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;">
+                </td>
+                <td class="bulk-sifre-cell" style="padding: 6px; border-bottom: 1px solid #e2e8f0; display: ${showSifre ? 'table-cell' : 'none'};">
+                    <input type="text" class="bulk-hizmet-tur-sifre" data-key="${item.mudurluk}|||${item.hizmet}|||${item.tur}" placeholder="Şifre"
+                        style="width: 100%; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;">
+                </td>
+            </tr>
+        `}).join('');
+    }
+
+    // Eski populateBulkTurTable fonksiyonunu kaldır
+
+    function populateTplMudurlukler() {
+        const select = document.getElementById('tpl-mudurluk');
+        const mudurlukler = [...new Set(tplAllData.map(d => d.mudurluk))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
+        select.innerHTML = '<option value="">Seçiniz...</option>' +
+            mudurlukler.map(m => `<option value="${m}">${m}</option>`).join('') +
+            '<option value="__NEW__" style="color: #10b981; font-weight: 600;">➕ Yeni Müdürlük Ekle...</option>';
+
+        // Container'ı gizle
+        document.getElementById('tpl-mudurluk-new-container').style.display = 'none';
+        document.getElementById('tpl-mudurluk-new').value = '';
+    }
+
+    function handleMudurlukChange() {
+        const select = document.getElementById('tpl-mudurluk');
+        const newContainer = document.getElementById('tpl-mudurluk-new-container');
+
+        if (select.value === '__NEW__') {
+            newContainer.style.display = 'block';
+            document.getElementById('tpl-mudurluk-new').focus();
+            // Hizmet dropdown'ını "Yeni Ekle" modunda aç
+            updateTplHizmetlerForNew();
+        } else {
+            newContainer.style.display = 'none';
+            updateTplHizmetler();
+        }
+    }
+
+    function updateTplHizmetler() {
+        const mudurluk = document.getElementById('tpl-mudurluk').value;
+        const select = document.getElementById('tpl-hizmet');
+        const newContainer = document.getElementById('tpl-hizmet-new-container');
+        newContainer.style.display = 'none';
+
+        if (!mudurluk || mudurluk === '__NEW__') {
+            select.innerHTML = '<option value="">Önce müdürlük seçin...</option>';
+            document.getElementById('tpl-turler').innerHTML = '<p style="color: #64748b; font-size: 12px;">Önce hizmet seçin...</p>';
+            return;
+        }
+
+        const hizmetler = [...new Set(tplAllData.filter(d => d.mudurluk === mudurluk).map(d => d.hizmet))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
+        select.innerHTML = '<option value="">Seçiniz...</option>' +
+            hizmetler.map(h => `<option value="${h}">${h}</option>`).join('') +
+            '<option value="__NEW__" style="color: #10b981; font-weight: 600;">➕ Yeni Hizmet Ekle...</option>';
+        document.getElementById('tpl-turler').innerHTML = '<p style="color: #64748b; font-size: 12px;">Önce hizmet seçin...</p>';
+    }
+
+    function updateTplHizmetlerForNew() {
+        const select = document.getElementById('tpl-hizmet');
+        const newContainer = document.getElementById('tpl-hizmet-new-container');
+
+        select.innerHTML = '<option value="__NEW__" selected>➕ Yeni Hizmet Girin</option>';
+        newContainer.style.display = 'block';
+        document.getElementById('tpl-hizmet-new').value = '';
+
+        // Tür alanını da yeni modda aç
+        updateTplTurlerForNew();
+    }
+
+    function handleHizmetChange() {
+        const select = document.getElementById('tpl-hizmet');
+        const newContainer = document.getElementById('tpl-hizmet-new-container');
+
+        if (select.value === '__NEW__') {
+            newContainer.style.display = 'block';
+            document.getElementById('tpl-hizmet-new').focus();
+            updateTplTurlerForNew();
+        } else {
+            newContainer.style.display = 'none';
+            updateTplTurler();
+        }
+    }
+
+    function updateTplTurler() {
+        const mudurluk = document.getElementById('tpl-mudurluk').value;
+        const hizmet = document.getElementById('tpl-hizmet').value;
+        const container = document.getElementById('tpl-turler');
+
+        if (!hizmet || hizmet === '__NEW__') {
+            container.innerHTML = '<p style="color: #64748b; font-size: 12px;">Önce hizmet seçin...</p>';
+            return;
+        }
+
+        const turler = [...new Set(tplAllData.filter(d => d.mudurluk === mudurluk && d.hizmet === hizmet).map(d => d.tur))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
+
+        if (turler.length === 0) {
+            container.innerHTML = '<p style="color: #64748b; font-size: 12px;">Bu hizmet için mevcut tür yok. Aşağıdan yeni tür ekleyebilirsiniz.</p>';
+            return;
+        }
+
+        container.innerHTML = turler.map((t, idx) => `
+            <div class="tur-item" style="padding: 8px; margin-bottom: 6px; background: white; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <input type="checkbox" id="tur-cb-${idx}" value="${t}" checked style="width: 16px; height: 16px;">
+                    <label for="tur-cb-${idx}" style="font-weight: 500; cursor: pointer;">${t}</label>
+                </div>
+                <div style="display: flex; gap: 6px; padding-left: 24px;">
+                    <input type="text" class="tur-sorumlu" data-tur="${t}" placeholder="Sorumlu adı"
+                        style="flex: 1; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;">
+                    <input type="text" class="tur-sifre" data-tur="${t}" placeholder="Şifre"
+                        style="width: 80px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 11px;">
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateTplTurlerForNew() {
+        const container = document.getElementById('tpl-turler');
+        container.innerHTML = '<p style="color: #10b981; font-size: 12px;">✨ Yeni hizmet için aşağıdan tür(ler) ekleyin.</p>';
+    }
+
+    function addNewTur() {
+        const turInput = document.getElementById('tpl-tur-new');
+        const sorumluInput = document.getElementById('tpl-tur-new-sorumlu');
+        const sifreInput = document.getElementById('tpl-tur-new-sifre');
+
+        const turName = turInput.value.trim();
+        const sorumlu = sorumluInput.value.trim();
+        const sifre = sifreInput.value.trim();
+
+        if (!turName) {
+            alert('Lütfen tür adı girin!');
+            return;
+        }
+
+        if (!sorumlu || !sifre) {
+            alert('Lütfen sorumlu ve şifre bilgilerini girin!');
+            return;
+        }
+
+        const container = document.getElementById('tpl-turler');
+
+        // Eğer placeholder mesajı varsa temizle
+        if (container.querySelector('p')) {
+            container.innerHTML = '';
+        }
+
+        // Aynı tür zaten var mı kontrol et
+        const existingItems = container.querySelectorAll('.tur-item');
+        for (const item of existingItems) {
+            const cb = item.querySelector('input[type="checkbox"]');
+            if (cb && cb.value.toLowerCase() === turName.toLowerCase()) {
+                alert('Bu tür zaten mevcut!');
+                turInput.value = '';
+                return;
+            }
+        }
+
+        // Yeni tür ekle
+        const idx = existingItems.length;
+        const div = document.createElement('div');
+        div.className = 'tur-item';
+        div.style.cssText = 'padding: 8px; margin-bottom: 6px; background: #ecfdf5; border: 1px solid #10b981; border-radius: 6px;';
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <input type="checkbox" id="tur-cb-new-${idx}" value="${turName}" checked style="width: 16px; height: 16px;">
+                <label for="tur-cb-new-${idx}" style="font-weight: 500; cursor: pointer; color: #166534;">${turName}</label>
+                <span style="font-size: 10px; color: #64748b;">(yeni)</span>
+            </div>
+            <div style="display: flex; gap: 6px; padding-left: 24px;">
+                <input type="text" class="tur-sorumlu" data-tur="${turName}" value="${sorumlu}" placeholder="Sorumlu adı"
+                    style="flex: 1; padding: 6px 8px; border: 1px solid #10b981; border-radius: 4px; font-size: 11px; background: white;">
+                <input type="text" class="tur-sifre" data-tur="${turName}" value="${sifre}" placeholder="Şifre"
+                    style="width: 80px; padding: 6px 8px; border: 1px solid #10b981; border-radius: 4px; font-size: 11px; background: white;">
+            </div>
+        `;
+        container.appendChild(div);
+
+        // Inputları temizle
+        turInput.value = '';
+        sorumluInput.value = '';
+        sifreInput.value = '';
+        turInput.focus();
+    }
+
+    function getLastDayOfMonth(year, month) {
+        return new Date(year, month + 1, 0).getDate();
+    }
+
+    function formatDate(date) {
+        return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+    }
+
+    function parseTurkishDate(dateStr) {
+        // "1.1.2025" formatından veya Excel serial numarasından Date objesine çevir
+        if (!dateStr) return null;
+
+        // Eğer sayısal ise (Excel serial date), dönüştür
+        if (typeof dateStr === 'number') {
+            // Excel serial tarih: 1 Ocak 1900 = 1, her gün +1
+            const excelEpoch = new Date(1899, 11, 30); // Excel'in başlangıç tarihi
+            return new Date(excelEpoch.getTime() + dateStr * 24 * 60 * 60 * 1000);
+        }
+
+        // String formattaysa parse et
+        const parts = String(dateStr).split('.');
+        if (parts.length !== 3) return null;
+        return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    }
+
+    // Tarihi HTML date input formatına (yyyy-mm-dd) çevir
+    function formatDateForInput(date) {
+        if (!date || !(date instanceof Date) || isNaN(date)) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Excel şifre hash fonksiyonu (legacy Excel format)
+    function excelPasswordHash(password) {
+        if (!password) return '';
+        let hash = 0;
+        for (let i = 0; i < password.length; i++) {
+            let charCode = password.charCodeAt(i);
+            hash ^= ((charCode << (i + 1)) | (charCode >> (15 - i))) & 0x7FFF;
+        }
+        hash ^= password.length;
+        hash ^= 0xCE4B;
+        return hash.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    // Toplu Excel oluşturma fonksiyonu
+    async function generateBulkExcelFiles() {
+        const year = parseInt(document.getElementById('tpl-year').value);
+        const withProtection = document.getElementById('bulk-protection-checkbox').checked;
+
+        // Seçili müdürlükleri al
+        const selectedMudurlukler = Array.from(document.querySelectorAll('.bulk-mudurluk-cb:checked')).map(cb => cb.value);
+
+        if (selectedMudurlukler.length === 0) {
+            alert('Lütfen en az bir müdürlük seçin!');
+            showTemplateStep(1);
+            return;
+        }
+
+        // Hizmet-Tür kombinasyonlarını ve ayarlarını tabloda topla
+        const hizmetTurData = {}; // key -> { bggDate, sorumlu, sifre, ilceDetay }
+
+        // Kitap şifresi kontrolü
+        const kitapSifre = withProtection ? document.getElementById('bulk-kitap-sifre').value.trim() : '';
+        if (withProtection && !kitapSifre) {
+            alert('Lütfen çalışma kitabı şifresini girin!');
+            return;
+        }
+
+        // Tablo verilerini al - her satır için bgg, sorumlu, ilçe detayı ve (opsiyonel) şifre
+        const bggInputs = document.querySelectorAll('.bulk-bgg-date');
+        const sorumluInputs = document.querySelectorAll('.bulk-hizmet-tur-sorumlu');
+        const sifreInputs = document.querySelectorAll('.bulk-hizmet-tur-sifre');
+        const ilceSelects = document.querySelectorAll('.bulk-ilce-detay');
+
+        bggInputs.forEach((input, idx) => {
+            const key = input.dataset.key;
+            const sorumlu = sorumluInputs[idx].value.trim();
+            const sifre = withProtection ? sifreInputs[idx].value.trim() : '';
+            const ilceDetay = ilceSelects[idx].value; // 'ilce' veya 'geneli'
+
+            // Date input değerini (yyyy-mm-dd) parsela
+            let bggDate = null;
+            if (input.value) {
+                const parts = input.value.split('-');
+                bggDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            }
+
+            hizmetTurData[key] = {
+                bggDate,
+                sorumlu,
+                sifre: sifre || null,
+                kitapSifre,
+                ilceDetay
+            };
+        });
+
+        // Hizmet bazında grupla
+        const allHizmetler = {};
+        Object.keys(hizmetTurData).forEach(key => {
+            const [mudurluk, hizmet, tur] = key.split('|||');
+            if (!selectedMudurlukler.includes(mudurluk)) return;
+
+            if (!allHizmetler[mudurluk]) allHizmetler[mudurluk] = {};
+            if (!allHizmetler[mudurluk][hizmet]) allHizmetler[mudurluk][hizmet] = [];
+
+            allHizmetler[mudurluk][hizmet].push({
+                tur,
+                ...hizmetTurData[key]
+            });
+        });
+
+        // ZIP oluştur
+        const zip = new JSZip();
+        let fileCount = 0;
+
+        // Her hizmet için Excel oluştur
+        for (const mudurluk of Object.keys(allHizmetler)) {
+            for (const hizmet of Object.keys(allHizmetler[mudurluk])) {
+                const turlerData = allHizmetler[mudurluk][hizmet];
+
+                const wb = XLSX.utils.book_new();
+                const turlerForProtection = [];
+
+                turlerData.forEach(turData => {
+                    const rows = [];
+                    const bggStartDate = turData.bggDate || new Date(year, 0, 1);
+
+                    // Her tür için ilçe detayına göre lokasyonları belirle
+                    const locations = turData.ilceDetay === 'ilce' ? ISTANBUL_ILCELERI : ['İstanbul Geneli'];
+
+                    for (let month = 0; month < 12; month++) {
+                        const monthLastDay = getLastDayOfMonth(year, month);
+                        const yearStart = new Date(year, 0, 1);
+                        const monthStart = new Date(year, month, 1);
+                        const monthEnd = new Date(year, month, monthLastDay);
+
+                        ['Aylık', 'Kümülatif', 'BGG'].forEach(aralik => {
+                            locations.forEach(lokasyon => {
+                                let ilkTarih, sonTarih;
+
+                                if (aralik === 'Aylık') {
+                                    ilkTarih = monthStart;
+                                    sonTarih = monthEnd;
+                                } else if (aralik === 'Kümülatif') {
+                                    ilkTarih = yearStart;
+                                    sonTarih = monthEnd;
+                                } else {
+                                    ilkTarih = bggStartDate;
+                                    sonTarih = monthEnd;
+                                }
+
+                                rows.push({
+                                    'Müdürlük': mudurluk,
+                                    'Hizmet Başlığı': hizmet,
+                                    'Tür': turData.tur,
+                                    'Lokasyon': lokasyon,
+                                    'Veri Aralığı': aralik,
+                                    'İlk Tarih': formatDate(ilkTarih),
+                                    'Son Tarih': formatDate(sonTarih),
+                                    'Veri Sorumlusu': turData.sorumlu,
+                                    'Güncel Olup Olmadığı': '',
+                                    'Eksik Giriş': '',
+                                    'Değer': '',
+                                    'Veri Giriş Tarihi': ''
+                                });
+                            });
+                        });
+                    }
+
+                    const ws = XLSX.utils.json_to_sheet(rows);
+                    ws['!cols'] = [
+                        { wch: 30 }, { wch: 35 }, { wch: 15 }, { wch: 18 }, { wch: 12 },
+                        { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 15 }
+                    ];
+
+                    // Excel sheet adı için yasak karakterleri temizle (: \ / ? * [ ])
+                    const sanitizedTur = turData.tur.replace(/[:\\\/?*\[\]]/g, '-');
+                    const sheetName = sanitizedTur.length > 31 ? sanitizedTur.substring(0, 31) : sanitizedTur;
+                    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+                    if (withProtection) {
+                        // K-L şifresi yoksa kitap şifresini kullan
+                        turlerForProtection.push({
+                            tur: turData.tur,
+                            sifre: turData.sifre || kitapSifre,
+                            kitapSifre: kitapSifre,
+                            ilceDetay: turData.ilceDetay
+                        });
+                    }
+                });
+
+                // Excel'i buffer olarak oluştur
+                let xlsxBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+
+                // Eğer koruma aktifse XML manipüle et
+                if (withProtection && turlerForProtection.length > 0) {
+                    try {
+                        const fileZip = await JSZip.loadAsync(xlsxBuffer);
+                        const kitapSifre = turlerForProtection[0].kitapSifre;
+
+                        // Her sayfa için koruma ekle
+                        for (let i = 0; i < turlerForProtection.length; i++) {
+                            const sheetPath = `xl/worksheets/sheet${i + 1}.xml`;
+                            const sheetFile = fileZip.file(sheetPath);
+
+                            if (!sheetFile) {
+                                console.error('Sheet bulunamadı:', sheetPath);
+                                continue;
+                            }
+
+                            let sheetXml = await sheetFile.async('string');
+
+                            const turData = turlerForProtection[i];
+                            const sheetPasswordHash = excelPasswordHash(kitapSifre);
+                            const rangePasswordHash = excelPasswordHash(turData.sifre);
+
+                            // Bu sayfa için lokasyon sayısını hesapla
+                            const sheetLocations = turData.ilceDetay === 'ilce' ? ISTANBUL_ILCELERI : ['İstanbul Geneli'];
+                            const rowCount = sheetLocations.length * 12 * 3 + 1;
+                            const editableRange = `K2:L${rowCount}`;
+
+                            const protectionXml = `
+                                <sheetProtection password="${sheetPasswordHash}" sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="0" formatRows="0" insertColumns="0" insertRows="0" insertHyperlinks="0" deleteColumns="0" deleteRows="0" selectLockedCells="0" sort="0" autoFilter="0" pivotTables="0" selectUnlockedCells="0"/>
+                                <protectedRanges>
+                                    <protectedRange sqref="${editableRange}" name="VeriGirisi_${i + 1}" password="${rangePasswordHash}"/>
+                                </protectedRanges>
+                            `;
+
+                            sheetXml = sheetXml.replace('</sheetData>', '</sheetData>' + protectionXml);
+                            fileZip.file(sheetPath, sheetXml);
+                        }
+
+                        // Workbook koruması ekle
+                        let workbookXml = await fileZip.file('xl/workbook.xml').async('string');
+                        const wbPasswordHash = excelPasswordHash(kitapSifre);
+                        const workbookProtection = `<workbookProtection workbookPassword="${wbPasswordHash}" lockStructure="1"/>`;
+
+                        workbookXml = workbookXml.replace('<sheets>', workbookProtection + '<sheets>');
+                        fileZip.file('xl/workbook.xml', workbookXml);
+
+                        xlsxBuffer = await fileZip.generateAsync({ type: 'arraybuffer' });
+                    } catch (err) {
+                        console.error('Koruma eklenirken hata:', hizmet, err);
+                    }
+                }
+
+                // ZIP'e ekle
+                const safeHizmet = hizmet.replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ\s]/g, '').substring(0, 30);
+                const filename = `${safeHizmet}_Veri_Taslak_${year}.xlsx`;
+                zip.file(filename, xlsxBuffer);
+                fileCount++;
+            }
+        }
+
+        // ZIP'i indir
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipBlob);
+        link.download = `Tum_Hizmetler_Veri_Taslak_${year}.zip`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        closeTemplateWizard();
+
+        const protectionMsg = withProtection ? '\n\n🔒 Tüm dosyalar korumalı (Hizmet+Tür bazlı şifreler)' : '\n\n⚡ Şifresiz (hızlı)';
+        alert(`✅ Toplu Excel paketi oluşturuldu!\n\n📦 ${fileCount} Excel dosyası\n📁 ZIP boyutu: ${(zipBlob.size / 1024 / 1024).toFixed(2)} MB${protectionMsg}`);
+    }
+
+    async function generateDataTemplate() {
+        // Mode kontrolü
+        const mode = document.querySelector('input[name="tpl-mode"]:checked').value;
+
+        if (mode === 'bulk') {
+            // Toplu mod
+            await generateBulkExcelFiles();
+            return;
+        }
+
+        // Tek dosya modu (mevcut akış)
+        let mudurluk = document.getElementById('tpl-mudurluk').value;
+        let hizmet = document.getElementById('tpl-hizmet').value;
+
+        // Yeni müdürlük girildiyse onu kullan
+        if (mudurluk === '__NEW__') {
+            mudurluk = document.getElementById('tpl-mudurluk-new').value.trim();
+            if (!mudurluk) {
+                alert('Lütfen yeni müdürlük adını girin!');
+                showTemplateStep(1);
+                return;
+            }
+        }
+
+        // Yeni hizmet girildiyse onu kullan
+        if (hizmet === '__NEW__') {
+            hizmet = document.getElementById('tpl-hizmet-new').value.trim();
+            if (!hizmet) {
+                alert('Lütfen yeni hizmet adını girin!');
+                showTemplateStep(1);
+                return;
+            }
+        }
+
+        // Seçili türleri ve sorumlu/şifre bilgilerini topla
+        const turItems = document.querySelectorAll('#tpl-turler .tur-item');
+        const turlerData = [];
+
+        turItems.forEach(item => {
+            const cb = item.querySelector('input[type="checkbox"]');
+            if (cb && cb.checked) {
+                const turName = cb.value;
+                const sorumluInput = item.querySelector('.tur-sorumlu');
+                const sifreInput = item.querySelector('.tur-sifre');
+
+                turlerData.push({
+                    tur: turName,
+                    sorumlu: sorumluInput ? sorumluInput.value.trim() : '',
+                    sifre: sifreInput ? sifreInput.value.trim() : ''
+                });
+            }
+        });
+
+        if (turlerData.length === 0) {
+            alert('Lütfen en az bir tür seçin!');
+            showTemplateStep(1);
+            return;
+        }
+
+        // Şifresiz tür var mı kontrol et
+        const sifresiztTurler = turlerData.filter(t => !t.sifre);
+        if (sifresiztTurler.length > 0) {
+            alert(`Şu türler için şifre girilmedi: ${sifresiztTurler.map(t => t.tur).join(', ')}`);
+            showTemplateStep(1);
+            return;
+        }
+
+        const hasIlceDetail = document.querySelector('input[name="tpl-ilce"]:checked').value === 'yes';
+        const year = parseInt(document.getElementById('tpl-year').value);
+        const bggStart = document.getElementById('tpl-bgg-start').value;
+        const kitapSifre = document.getElementById('tpl-kitap-sifre').value.trim();
+
+        if (!bggStart) {
+            alert('Lütfen BGG başlangıç tarihini girin!');
+            return;
+        }
+
+        if (!kitapSifre) {
+            alert('Lütfen çalışma kitabı koruma şifresini girin!');
+            return;
+        }
+
+        const bggStartDate = new Date(bggStart);
+        const locations = hasIlceDetail ? ISTANBUL_ILCELERI : ['İstanbul Geneli'];
+
+        // Excel oluştur
+        const wb = XLSX.utils.book_new();
+
+        turlerData.forEach(turData => {
+            const rows = [];
+
+            for (let month = 0; month < 12; month++) {
+                const monthLastDay = getLastDayOfMonth(year, month);
+                const yearStart = new Date(year, 0, 1);
+                const monthStart = new Date(year, month, 1);
+                const monthEnd = new Date(year, month, monthLastDay);
+
+                ['Aylık', 'Kümülatif', 'BGG'].forEach(aralik => {
+                    locations.forEach(lokasyon => {
+                        let ilkTarih, sonTarih;
+
+                        if (aralik === 'Aylık') {
+                            ilkTarih = monthStart;
+                            sonTarih = monthEnd;
+                        } else if (aralik === 'Kümülatif') {
+                            ilkTarih = yearStart;
+                            sonTarih = monthEnd;
+                        } else {
+                            ilkTarih = bggStartDate;
+                            sonTarih = monthEnd;
+                        }
+
+                        rows.push({
+                            'Müdürlük': mudurluk,
+                            'Hizmet Başlığı': hizmet,
+                            'Tür': turData.tur,
+                            'Lokasyon': lokasyon,
+                            'Veri Aralığı': aralik,
+                            'İlk Tarih': formatDate(ilkTarih),
+                            'Son Tarih': formatDate(sonTarih),
+                            'Veri Sorumlusu': turData.sorumlu,
+                            'Güncel Olup Olmadığı': '',
+                            'Eksik Giriş': '',
+                            'Değer': '',
+                            'Veri Giriş Tarihi': ''
+                        });
+                    });
+                });
+            }
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            ws['!cols'] = [
+                { wch: 30 }, { wch: 35 }, { wch: 15 }, { wch: 18 }, { wch: 12 },
+                { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 15 }
+            ];
+
+            const sheetName = turData.tur.length > 31 ? turData.tur.substring(0, 31) : turData.tur;
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+
+        // Excel'i buffer olarak oluştur
+        const xlsxBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+
+        // JSZip ile aç ve XML'i manipüle et
+        try {
+            const zip = await JSZip.loadAsync(xlsxBuffer);
+
+            // Her sayfa için koruma ekle
+            for (let i = 0; i < turlerData.length; i++) {
+                const sheetPath = `xl/worksheets/sheet${i + 1}.xml`;
+                let sheetXml = await zip.file(sheetPath).async('string');
+
+                const turData = turlerData[i];
+                const sheetPasswordHash = excelPasswordHash(kitapSifre);
+                const rangePasswordHash = excelPasswordHash(turData.sifre);
+
+                // Satır sayısını hesapla (başlık + veri satırları)
+                const rowCount = locations.length * 12 * 3 + 1;
+
+                // K ve L sütunları için düzenlenebilir aralık (K2:L{rowCount})
+                const editableRange = `K2:L${rowCount}`;
+
+                // sheetProtection ve protectedRanges ekle
+                const protectionXml = `
+                    <sheetProtection password="${sheetPasswordHash}" sheet="1" objects="1" scenarios="1" formatCells="0" formatColumns="0" formatRows="0" insertColumns="0" insertRows="0" insertHyperlinks="0" deleteColumns="0" deleteRows="0" selectLockedCells="0" sort="0" autoFilter="0" pivotTables="0" selectUnlockedCells="0"/>
+                    <protectedRanges>
+                        <protectedRange sqref="${editableRange}" name="VeriGirisi_${i + 1}" password="${rangePasswordHash}"/>
+                    </protectedRanges>
+                `;
+
+                // </sheetData> tagından sonra ekle
+                sheetXml = sheetXml.replace('</sheetData>', '</sheetData>' + protectionXml);
+
+                zip.file(sheetPath, sheetXml);
+            }
+
+            // Workbook koruması ekle
+            let workbookXml = await zip.file('xl/workbook.xml').async('string');
+            const wbPasswordHash = excelPasswordHash(kitapSifre);
+            const workbookProtection = `<workbookProtection workbookPassword="${wbPasswordHash}" lockStructure="1"/>`;
+
+            // <sheets> tagından önce ekle
+            workbookXml = workbookXml.replace('<sheets>', workbookProtection + '<sheets>');
+            zip.file('xl/workbook.xml', workbookXml);
+
+            // Korumalı dosyayı oluştur
+            const protectedBlob = await zip.generateAsync({ type: 'blob' });
+
+            // İndir
+            const safeHizmet = hizmet.replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ\s]/g, '').substring(0, 30);
+            const filename = `${safeHizmet}_Veri_Taslak_${year}.xlsx`;
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(protectedBlob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+
+            closeTemplateWizard();
+
+            // Özet bilgi
+            const turSummary = turlerData.map(t => `• ${t.tur}: ${t.sorumlu} (şifre: ${t.sifre})`).join('\n');
+            alert(`✅ "${filename}" başarıyla oluşturuldu!\n\n📊 ${turlerData.length} sayfa, toplam ${locations.length * 12 * 3 * turlerData.length} satır\n\n🔒 Koruma Bilgileri:\n• Kitap şifresi: ${kitapSifre}\n• K-L sütunları düzenleme:\n${turSummary}`);
+
+        } catch (err) {
+            console.error('Excel koruma hatası:', err);
+            alert('Excel koruma eklenirken hata oluştu: ' + err.message);
+        }
+    }
+</script>
+
+</html>
